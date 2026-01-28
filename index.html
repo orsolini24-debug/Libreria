@@ -3,23 +3,18 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Libreria - Stanza v1.2</title>
+  <title>Libreria Immersiva v1.3</title>
   <style>
     :root{
-      --bg:#070a0f;
-      --panel:rgba(20,25,35,0.95); /* Più scuro e solido per leggibilità */
+      --bg:#050505;
+      /* Glassmorphism panel */
+      --panel:rgba(20, 25, 35, 0.7);
+      --panel-border:rgba(255,255,255,0.1);
       --text:#e9eef6;
       --muted:#9aa8bd;
-      --line:rgba(255,255,255,.12);
       --accent:#7aa2ff;
-      --ok:#6ee7b7;     
-      --warn:#fbbf24;   
-      --info:#38bdf8;   
-      --wish:#f472b6;   
-      --bad:#fb7185;
-      --shadow:0 20px 60px rgba(0,0,0,.6);
-      --radius:16px;
-      --font:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      --shadow:0 10px 40px rgba(0,0,0,0.8);
+      --font:system-ui,-apple-system,sans-serif;
     }
 
     *{box-sizing:border-box}
@@ -28,173 +23,196 @@
       min-height:100vh; overflow-x:hidden;
     }
 
-    /* Sfondo decorativo lista */
+    /* Sfondo generale (quando non sei in Stanza) */
     body:not(.is-room)::before{
       content:""; position:fixed; inset:0; z-index:-1;
-      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #070a0f 60%);
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #000 70%);
     }
 
-    .wrap{ max-width:1200px; margin:0 auto; padding:20px 16px 80px; position:relative; z-index:1; }
+    .wrap{ max-width:1400px; margin:0 auto; padding:20px; position:relative; z-index:1; }
 
-    /* HEADER */
-    header{ display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:20px; }
-    .title h1{ margin:0; font-size:24px; letter-spacing:-0.5px; }
-    .title p{ margin:4px 0 0; color:var(--muted); font-size:13px; }
+    /* HEADER & NAV */
+    header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; backdrop-filter:blur(5px); }
+    .title h1{ margin:0; font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+    
+    .nav-pills{ display:flex; background:rgba(255,255,255,0.05); padding:4px; border-radius:12px; border:1px solid var(--panel-border); }
+    .nav-btn{
+      background:transparent; border:0; color:var(--muted); padding:6px 16px; 
+      font-weight:600; font-size:13px; cursor:pointer; border-radius:8px; transition:all .2s;
+    }
+    .nav-btn.active{ background:rgba(255,255,255,0.1); color:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
 
-    /* BOTTONI */
     .btn{
-      border:1px solid var(--line); background:rgba(255,255,255,.05); color:var(--text);
-      padding:8px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px;
+      padding:8px 16px; border-radius:8px; border:1px solid var(--panel-border);
+      background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; font-size:13px; font-weight:600;
       transition:all .2s;
     }
-    .btn:hover{ background:rgba(255,255,255,.1); transform:translateY(-1px); }
-    .btn.primary{ background:rgba(122,162,255,.2); border-color:rgba(122,162,255,.4); color:#bfdbfe; }
-    .btn.danger{ color:var(--bad); border-color:rgba(251,113,133,.3); background:rgba(251,113,133,.05); }
+    .btn:hover{ background:rgba(255,255,255,0.15); }
+    .btn.primary{ background:var(--accent); border-color:var(--accent); color:#000; }
 
-    .view-toggle{ display:flex; background:rgba(0,0,0,.3); border-radius:10px; padding:2px; border:1px solid var(--line); }
-    .view-toggle button{
-      border:0; background:transparent; color:var(--muted); padding:6px 14px; cursor:pointer; font-weight:600; font-size:13px; border-radius:8px;
-    }
-    .view-toggle button.on{ background:var(--panel); color:var(--text); box-shadow:0 2px 4px rgba(0,0,0,.2); }
+    /* LAYOUT SWITCHER */
+    .view-section{ display:none; animation:fadeIn .3s ease; }
+    .view-section.active{ display:block; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
 
-    /* PANNELLI - CORREZIONE Z-INDEX CRITICA */
-    .panel{
-      border:1px solid var(--line); background:var(--panel); border-radius:var(--radius);
-      box-shadow:var(--shadow); backdrop-filter:blur(12px); margin-bottom:16px;
-      position: relative; 
+    /* --- VISTA LISTA (Classica) --- */
+    .form-panel{
+      background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
+      padding:20px; backdrop-filter:blur(20px); margin-bottom:20px;
+      display:grid; grid-template-columns: 2fr 1fr auto; gap:15px; align-items:end;
     }
-    .panel.pad{ padding:20px; }
     
-    /* FIX: Il pannello form deve stare SOPRA (z-index 50) a quello sotto (z-index 1) */
-    .panel.formpanel{ overflow:visible; z-index: 50; }
-    .panel.listpanel{ z-index: 1; }
-
-    /* FORM */
-    .grid-form{ display:grid; grid-template-columns: 2fr 1fr 0.5fr; gap:12px; align-items:end; }
-    @media (max-width: 700px){ .grid-form{ grid-template-columns:1fr; } }
-
-    label{ display:block; font-size:11px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
-    input, select, textarea{
-      width:100%; border:1px solid var(--line); background:rgba(0,0,0,.3); color:var(--text);
-      border-radius:10px; padding:10px 12px; outline:none; font-size:14px;
-      transition: border-color .2s;
+    input, select{
+      width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--panel-border);
+      color:#fff; padding:12px; border-radius:10px; outline:none; font-size:14px;
     }
-    input:focus, select:focus, textarea:focus{ border-color:var(--accent); }
-    textarea{ min-height:70px; resize:vertical; }
-
-    /* DROPDOWN DI RICERCA FIX */
-    .lookup-wrap{ position:relative; }
-    .dropdown{
-      position:absolute; top:calc(100% + 6px); left:0; right:0;
-      background:#1a1f29; border:1px solid var(--line); border-radius:12px;
-      z-index: 9999; /* Altissimo per stare sopra a tutto */
-      box-shadow:0 20px 50px rgba(0,0,0,1);
-      display:none; max-height:300px; overflow-y:auto;
-    }
-    .dropdown.on{ display:block; }
-    .dd-item{
-      display:flex; gap:10px; padding:10px; border-bottom:1px solid rgba(255,255,255,.05);
-      cursor:pointer; align-items:center;
-    }
-    .dd-item:hover{ background:rgba(255,255,255,.1); }
-    .dd-img{ width:32px; height:48px; background:#222; border-radius:4px; object-fit:cover; flex-shrink:0; }
-    .dd-info{ flex:1; min-width:0; }
-    .dd-title{ font-weight:600; font-size:13px; color:#fff; }
-    .dd-sub{ color:var(--muted); font-size:12px; }
-
-    /* LISTA CARD */
-    .list-grid{ display:grid; gap:10px; }
-    .card{
-      display:flex; gap:14px; padding:12px; border-radius:14px;
-      border:1px solid var(--line); background:rgba(255,255,255,.02);
-      cursor:pointer; transition: background .2s; align-items:center;
-    }
-    .card:hover{ background:rgba(255,255,255,.06); }
-    .c-img{ width:40px; height:60px; border-radius:6px; background:#222; object-fit:cover; border:1px solid var(--line); }
-    .c-main{ flex:1; min-width:0; }
-    .c-title{ font-weight:700; font-size:15px; margin-bottom:2px; color:#fff; }
-    .c-auth{ font-size:13px; color:var(--muted); }
-    .badge{
-      font-size:11px; padding:4px 8px; border-radius:20px; font-weight:600;
-      border:1px solid transparent;
-    }
-    .badge.read{ color:var(--ok); background:rgba(110,231,183,.1); border-color:rgba(110,231,183,.2); }
-    .badge.reading{ color:var(--warn); background:rgba(251,191,36,.1); border-color:rgba(251,191,36,.2); }
-    .badge.to_read{ color:var(--info); background:rgba(56,189,248,.1); border-color:rgba(56,189,248,.2); }
-    .badge.wishlist{ color:var(--wish); background:rgba(244,114,182,.1); border-color:rgba(244,114,182,.2); }
-
-    /* STANZA INTERATTIVA */
-    .scene-wrap{
-      position:relative; width:100%; aspect-ratio:16/8;
-      background:#000; border-radius:18px; overflow:hidden;
-      box-shadow:inset 0 0 100px rgba(0,0,0,.8);
-      border:1px solid var(--line);
-    }
-    .scene-bg{
-      width:100%; height:100%; object-fit:cover; opacity:0.6;
-      background: radial-gradient(circle at 50% 100%, #2a2018 0%, #050505 80%);
-      transition: opacity 1s;
-    }
-    .scene-bg.loaded{ opacity:1; }
-
-    /* Zone Scaffali */
-    .zone{ position:absolute; pointer-events:none; }
+    input:focus{ border-color:var(--accent); }
     
-    .zone-read { top: 14%; left: 10%; width: 80%; height: 26%; display:flex; align-items:flex-end; justify-content:center; gap:2px; border-bottom:4px solid rgba(255,255,255,0.05); }
-    .zone-toread { top: 46%; left: 10%; width: 80%; height: 18%; display:flex; align-items:flex-end; justify-content:flex-start; gap:2px; border-bottom:4px solid rgba(255,255,255,0.05); }
-    .zone-reading { bottom: 5%; left: 35%; width: 30%; height: 25%; z-index:10; display:flex; align-items:center; justify-content:center; gap:15px; perspective: 800px; }
-    .zone-wish { bottom: 20%; right: 5%; width: 15%; height: 15%; display:grid; grid-template-columns:repeat(3,1fr); gap:2px; transform: rotate(-5deg); opacity:0.9; }
-
-    .r-book{
-      position:relative; cursor:pointer; pointer-events:auto;
-      box-shadow:2px 4px 10px rgba(0,0,0,.6);
-      transition:transform .2s, filter .2s;
-      background: #333;
+    .list-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px; }
+    .book-card{
+      display:flex; gap:15px; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border);
+      padding:12px; border-radius:12px; cursor:pointer; transition:background .2s;
     }
-    .r-book:hover{ transform:scale(1.1) translateY(-5px); filter:brightness(1.2); z-index:100; }
-    .r-book img{ width:100%; height:100%; object-fit:cover; border-radius:2px; display:block;}
-    .r-book .spine{
-        width:100%; height:100%; background:linear-gradient(90deg, #222, #444, #222);
-        color:rgba(255,255,255,0.6); writing-mode:vertical-rl; font-size:8px; text-align:center; overflow:hidden; border-radius:1px;
-        display:flex; align-items:center; justify-content:center;
+    .book-card:hover{ background:rgba(255,255,255,0.08); }
+    .bc-img{ width:50px; height:75px; object-fit:cover; border-radius:4px; background:#222; }
+    
+    /* --- VISTA STANZA (IMMERSIVA) --- */
+    .room-container{
+      position:relative; width:100%; aspect-ratio: 16 / 9; /* Forza aspetto widescreen */
+      background:#000; border-radius:20px; overflow:hidden;
+      box-shadow: 0 0 0 1px var(--panel-border), 0 50px 100px #000;
+    }
+    
+    .room-bg{
+      width:100%; height:100%; object-fit:cover;
+      /* Filtro per scurire leggermente e integrare meglio gli elementi */
+      filter: brightness(0.7) contrast(1.1);
+      transform: scale(1.02); /* Evita bordi bianchi */
     }
 
-    /* Dimensioni libri per zona */
-    .zone-read .r-book { width:26px; height:85px; } /* Letti: Scaffale alto */
-    .zone-toread .r-book { width:26px; height:85px; } /* Da Leggere: Scaffale basso */
-    .zone-reading .r-book { width:100px; height:140px; box-shadow: 0 20px 50px rgba(0,0,0,.9); transform: rotateX(10deg); } /* Tavolo */
-    .zone-wish .r-book { width:30px; height:45px; } /* Wishlist: piccoli */
+    /* ZONE DELIMITATE - Ora usiamo Flexbox precisi */
+    .zone{
+      position:absolute; 
+      /* Debug visuale: passa col mouse sulla stanza per vedere le griglie */
+      border:1px dashed rgba(255,255,255,0.0);
+      transition: border-color .3s;
+    }
+    .room-container:hover .zone{ border-color:rgba(255,255,255,0.1); }
 
-    /* MODAL FOCUS */
+    /* 1. SCAFFALE ALTO (Libri Letti) - Posizionamento Dorsi */
+    .zone-shelf-high {
+      top: 18%; left: 52%; width: 28%; height: 11%; /* Coordinate ipotetiche stanza standard */
+      display:flex; align-items:flex-end; justify-content:flex-start; gap:1px;
+      perspective: 600px;
+    }
+
+    /* 2. SCAFFALE BASSO (Da Leggere) */
+    .zone-shelf-low {
+      top: 34%; left: 52%; width: 28%; height: 11%;
+      display:flex; align-items:flex-end; justify-content:flex-start; gap:1px;
+    }
+
+    /* 3. TAVOLO (In Lettura) - Prospettiva 3D */
+    .zone-table {
+      bottom: 15%; left: 20%; width: 40%; height: 25%;
+      display:flex; align-items:center; justify-content:center; gap:20px;
+      perspective: 1000px; /* Magia 3D */
+      z-index: 10;
+    }
+
+    /* 4. WISHLIST (Angolo/Pavimento/Altro scaffale) */
+    .zone-wish {
+      bottom: 5%; right: 5%; width: 15%; height: 15%;
+      display:grid; grid-template-columns:repeat(3, 1fr); gap:5px;
+      opacity: 0.8; transform: rotate(-5deg);
+    }
+
+    /* --- OGGETTI LIBRO --- */
+    
+    /* STILE A: DORSO (Per scaffali) */
+    .spine-book {
+      width: 16px; /* Spessore libro */
+      height: 90%; /* Altezza relativa allo scaffale */
+      background: linear-gradient(to right, #444, #222 20%, #444 40%, #222);
+      border-radius: 2px;
+      cursor:pointer;
+      position:relative;
+      transition: transform .2s, height .2s;
+      box-shadow: 1px 0 2px rgba(0,0,0,0.5);
+    }
+    .spine-book:hover { transform: translateY(-5px) scale(1.1); z-index:100; background:#555; }
+    /* Etichetta titolo che appare solo in hover */
+    .spine-book::after {
+      content: attr(title);
+      position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+      background:black; color:white; padding:4px 8px; font-size:10px; 
+      white-space:nowrap; border-radius:4px; pointer-events:none; opacity:0;
+    }
+    .spine-book:hover::after{ opacity:1; }
+
+    /* STILE B: COPERTINA 3D (Per tavolo) */
+    .table-book {
+      width: 100px; aspect-ratio: 2/3;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(50deg) rotateZ(-10deg) translateZ(0); /* Appoggiato sul tavolo */
+      box-shadow: -10px 20px 20px rgba(0,0,0,0.6); /* Ombra realistica distante */
+      transition: transform .3s;
+      cursor: pointer;
+      border-radius: 4px 10px 10px 4px; /* Simula curvatura pagine */
+      background: #fff;
+    }
+    .table-book img {
+      width:100%; height:100%; object-fit:cover; border-radius:2px;
+    }
+    .table-book:hover {
+      transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); /* Si alza in piedi */
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      z-index: 100;
+    }
+
+    /* STILE C: MINIATURA (Wishlist) */
+    .wish-book { width:100%; aspect-ratio:2/3; background:#333; opacity:0.6; border:1px dashed #fff; cursor:pointer; }
+    .wish-book:hover { opacity:1; transform:scale(1.1); }
+
+
+    /* --- MODAL FOCUS --- */
     .overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:20000;
-      display:none; align-items:center; justify-content:center; padding:20px;
-      backdrop-filter:blur(5px);
+      position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999;
+      display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px);
     }
     .overlay.on{ display:flex; }
-    .focus-card{
-      width:100%; max-width:500px; background:#161b24; border:1px solid var(--line);
-      border-radius:20px; padding:24px; position:relative; box-shadow:0 50px 100px #000;
-    }
-    .fc-grid{ display:grid; grid-template-columns:120px 1fr; gap:20px; }
-    .fc-cover{ width:100%; aspect-ratio:2/3; object-fit:cover; border-radius:10px; background:#000; }
-    .fc-meta h2{ margin:0 0 6px; font-size:20px; line-height:1.2; }
-    .fc-meta p{ color:var(--muted); margin:0 0 16px; font-size:14px; }
     
-    .fc-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; padding-top:20px; border-top:1px solid var(--line); }
-    .chip-status{ display:inline-block; font-size:12px; padding:4px 10px; border-radius:99px; border:1px solid currentColor; margin-bottom:12px; }
-
-    .toast{
-      position:fixed; bottom:20px; right:20px; background:#fff; color:#000;
-      padding:12px 20px; border-radius:10px; font-weight:600; z-index:30000;
-      transform:translateY(100px); transition:transform .3s;
+    .focus-panel{
+      width:90%; max-width:500px; background:#1a1d24; border:1px solid var(--panel-border);
+      border-radius:20px; padding:30px; box-shadow:0 50px 100px #000;
+      display:flex; flex-direction:column; gap:20px;
+    }
+    
+    .fp-head{ display:flex; gap:20px; }
+    .fp-cover{ width:120px; height:180px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+    .fp-info h2{ margin:0 0 5px; font-size:20px; line-height:1.2; }
+    .fp-info p{ color:var(--muted); margin:0; font-size:14px; }
+    
+    .fp-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    
+    /* DROPDOWN RICERCA FIX */
+    .search-wrap{ position:relative; }
+    .dropdown{
+      position:absolute; top:110%; left:0; right:0; background:#222; 
+      border:1px solid var(--panel-border); border-radius:10px; z-index:500;
+      max-height:300px; overflow-y:auto; display:none; box-shadow:0 20px 50px rgba(0,0,0,1);
+    }
+    .dd-item{ padding:10px; display:flex; gap:10px; cursor:pointer; border-bottom:1px solid #333; }
+    .dd-item:hover{ background:#333; }
+    
+    /* Toast notifica */
+    .toast{ 
+        position:fixed; bottom:20px; right:20px; background:var(--accent); color:#000; 
+        padding:10px 20px; border-radius:8px; font-weight:bold; transform:translateY(100px); transition:0.3s;
     }
     .toast.on{ transform:translateY(0); }
 
-    .hidden{ display:none!important; }
-    .is-room .room-only{ display:inline-flex; }
-    .is-room .list-only{ display:none; }
-    body:not(.is-room) .room-only{ display:none; }
   </style>
 </head>
 <body>
@@ -202,362 +220,317 @@
 <div class="wrap">
   <header>
     <div class="title">
-      <h1>La Mia Libreria</h1>
-      <p>v1.2 • Fix Grafici & Wishlist</p>
+      <h1>My Library</h1>
+      <span style="font-size:12px; color:var(--muted);">Versione Immersiva 1.3</span>
     </div>
-    <div style="display:flex; gap:10px;">
-      <div class="view-toggle">
-        <button id="btnList" class="on">Lista</button>
-        <button id="btnRoom">Stanza</button>
-      </div>
-      <button class="btn room-only primary" id="btnQuickAdd">＋ Aggiungi</button>
-      <button class="btn list-only" id="btnExport">💾 Backup</button>
-      <button class="btn list-only danger" id="btnWipe">🗑 Reset</button>
+    
+    <div class="nav-pills">
+      <button class="nav-btn active" onclick="switchView('list')">Lista Dati</button>
+      <button class="nav-btn" onclick="switchView('room')">Stanza 3D</button>
     </div>
+    
+    <button class="btn" onclick="exportData()">Backup JSON</button>
   </header>
 
-  <div class="panel pad formpanel list-only" id="formPanel">
-    <div class="grid-form">
-      <div class="lookup-wrap">
-        <label>Cerca Libro (OpenLibrary)</label>
-        <input id="inpSearch" placeholder="Es. Siddharta, Hesse..." autocomplete="off">
-        <div class="dropdown" id="dropdown">
-          <div id="ddList"></div>
-        </div>
+  <div id="view-list" class="view-section active">
+    
+    <div class="form-panel">
+      <div class="search-wrap">
+        <label style="font-size:11px; color:var(--muted); text-transform:uppercase;">Cerca Libro (OpenLibrary)</label>
+        <input type="text" id="inpSearch" placeholder="Es. 1984, Orwell..." autocomplete="off">
+        <div class="dropdown" id="ddResults"></div>
       </div>
       
       <div>
-        <label>Stato</label>
+        <label style="font-size:11px; color:var(--muted); text-transform:uppercase;">Stato</label>
         <select id="inpStatus">
-          <option value="to_read">📚 Da leggere (Posseduto)</option>
+          <option value="to_read">📚 Da Leggere (Scaffale Basso)</option>
           <option value="reading">📖 In Lettura (Tavolo)</option>
           <option value="read">✅ Letto (Scaffale Alto)</option>
-          <option value="wishlist">💸 Wishlist (Da comprare)</option>
+          <option value="wishlist">💸 Wishlist (Angolo)</option>
         </select>
       </div>
+      
+      <button class="btn primary" onclick="saveBook()" style="height:44px;">Salva Libro</button>
+    </div>
 
-      <div>
-        <label>&nbsp;</label>
-        <button class="btn primary" style="width:100%" id="btnSave">Salva</button>
+    <div class="list-grid" id="listContainer"></div>
+  </div>
+
+  <div id="view-room" class="view-section">
+    <div class="room-container">
+      <img src="./assets/room.jpg" class="room-bg" onerror="this.style.display='none'; document.querySelector('.room-container').style.background='#222'">
+      
+      <div class="zone zone-shelf-high" id="shelfHigh" title="Libri Letti"></div>
+      
+      <div class="zone zone-shelf-low" id="shelfLow" title="Da Leggere"></div>
+      
+      <div class="zone zone-table" id="tableZone" title="In Lettura"></div>
+      
+      <div class="zone zone-wish" id="wishZone" title="Wishlist"></div>
+      
+      <div style="position:absolute; top:20px; left:20px; color:rgba(255,255,255,0.5); font-size:12px; pointer-events:none;">
+        Passa il mouse per evidenziare le zone
       </div>
-    </div>
-    <div style="margin-top:10px; display:flex; gap:10px;">
-        <input id="inpComment" placeholder="Note personali..." style="flex:1">
-        <select id="inpRating" style="width:80px">
-            <option value="">Voto</option>
-            <option value="5">5 ★</option>
-            <option value="4">4 ★</option>
-            <option value="3">3 ★</option>
-            <option value="2">2 ★</option>
-            <option value="1">1 ★</option>
-        </select>
-        <button class="btn ghost" id="btnClear">Pulisci</button>
-    </div>
-  </div>
-
-  <div class="panel listpanel list-only" style="padding:0; overflow:hidden;">
-     <div style="padding:15px; border-bottom:1px solid var(--line); background:rgba(0,0,0,0.2);">
-        <input id="filterInput" placeholder="Filtra i tuoi libri..." style="background:transparent; border:none; color:fff; width:100%; outline:none;">
-     </div>
-     <div class="list-grid" id="listView" style="padding:15px;"></div>
-  </div>
-
-  <div class="panel pad room-only hidden" id="roomPanel">
-    <div style="margin-bottom:10px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between;">
-        <span>Tavolo: In lettura • Scaffali: Letti/Da Leggere • Angolo: Wishlist</span>
-        <span id="roomCount">0 libri</span>
-    </div>
-    <div class="scene-wrap">
-        <img src="./assets/room.jpg" class="scene-bg" id="roomBg" alt="Stanza" onerror="this.style.opacity='0.3'">
-        
-        <div class="zone zone-read" id="shelfRead" title="Letti"></div>
-        <div class="zone zone-toread" id="shelfToRead" title="Da Leggere"></div>
-        <div class="zone zone-reading" id="tableReading" title="In Lettura"></div>
-        <div class="zone zone-wish" id="areaWish" title="Wishlist"></div>
     </div>
   </div>
 
 </div>
 
-<div class="overlay" id="focusOverlay">
-  <div class="focus-card">
-    <button class="btn small" style="position:absolute; top:15px; right:15px;" id="btnCloseFocus">✕</button>
-    <div class="fc-grid">
-      <img src="" class="fc-cover" id="fcCover">
-      <div class="fc-meta">
-        <span class="chip-status" id="fcStatus">Letto</span>
-        <h2 id="fcTitle">Titolo</h2>
-        <p id="fcAuthor">Autore</p>
-        <div style="font-size:13px; color:var(--muted); line-height:1.4;" id="fcComment"></div>
-        <div style="margin-top:10px; font-weight:bold; color:var(--accent);" id="fcRating"></div>
+<div class="overlay" id="focusOverlay" onclick="if(event.target===this) closeFocus()">
+  <div class="focus-panel">
+    <div class="fp-head">
+      <img src="" id="fpCover" class="fp-cover">
+      <div class="fp-info">
+        <h2 id="fpTitle">Titolo</h2>
+        <p id="fpAuthor">Autore</p>
+        <div style="margin-top:10px;">
+             <span id="fpStatusBadge" style="padding:4px 8px; border-radius:4px; font-size:11px; border:1px solid #555;">Stato</span>
+        </div>
+        <p id="fpComment" style="margin-top:15px; font-style:italic; opacity:0.7;">...</p>
       </div>
     </div>
-    
-    <div class="fc-actions">
-        <button class="btn" id="btnCycleStatus">Cambia Stato</button>
-        <button class="btn danger" id="btnDelete">Elimina</button>
-        <div style="flex:1"></div>
-        <button class="btn" onclick="openService('amazon')">🛒 Amazon</button>
-        <button class="btn" onclick="openService('audible')">🎧 Audible</button>
+    <div class="fp-actions">
+      <button class="btn" onclick="cycleStatus()">Sposta Libro</button>
+      <button class="btn" style="border-color:#fb7185; color:#fb7185;" onclick="deleteCurrent()">Elimina</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="searchAmazon()">Amazon</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Messaggio</div>
+<div class="toast" id="toast">Salvato!</div>
 
 <script>
-// --- CONFIGURAZIONE ---
-const LS_KEY = "libreria_v1_2"; // Cambio chiave per pulizia
+// --- DATI E STATO ---
+const LS_KEY = "library_v1_3";
 let books = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-let editingId = null;
-let currentFocusId = null;
+let tempBook = null; 
+let currentId = null;
 
-const $ = (id) => document.getElementById(id);
-const views = { list: $('listView').parentElement, room: $('roomPanel'), form: $('formPanel') };
-const btns = { list: $('btnList'), room: $('btnRoom') };
+// --- GESTIONE VISTE ---
+function switchView(viewName) {
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  
+  document.getElementById('view-'+viewName).classList.add('active');
+  // Trova il bottone corretto (semplificato)
+  if(viewName === 'list') document.querySelector('.nav-btn:first-child').classList.add('active');
+  else document.querySelector('.nav-btn:last-child').classList.add('active');
 
-// --- NAVIGAZIONE ---
-function setView(mode){
-    document.body.classList.toggle('is-room', mode === 'room');
+  document.body.classList.toggle('is-room', viewName === 'room');
+  
+  if(viewName === 'list') renderList();
+  if(viewName === 'room') renderRoom();
+}
+
+// --- LOGICA RICERCA (OpenLibrary) ---
+const inpSearch = document.getElementById('inpSearch');
+const ddResults = document.getElementById('ddResults');
+let timer;
+
+inpSearch.addEventListener('input', (e) => {
+  clearTimeout(timer);
+  const q = e.target.value.trim();
+  if(q.length < 3) { ddResults.style.display='none'; return; }
+  
+  timer = setTimeout(async () => {
+    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=5`);
+    const data = await res.json();
     
-    // Gestione visibilità classi helper
-    document.querySelectorAll('.list-only').forEach(el => el.classList.toggle('hidden', mode === 'room'));
-    document.querySelectorAll('.room-only').forEach(el => el.classList.toggle('hidden', mode !== 'room'));
-
-    btns.list.classList.toggle('on', mode === 'list');
-    btns.room.classList.toggle('on', mode === 'room');
-    
-    if(mode === 'list') renderList();
-    if(mode === 'room') renderRoom();
-}
-
-$('btnList').onclick = () => setView('list');
-$('btnRoom').onclick = () => setView('room');
-$('btnQuickAdd').onclick = () => { setView('list'); $('inpSearch').focus(); };
-
-// --- DATI ---
-function saveBook(book){
-    if(book.id){
-        const idx = books.findIndex(b => b.id === book.id);
-        if(idx >= 0) books[idx] = { ...books[idx], ...book };
-    } else {
-        book.id = crypto.randomUUID();
-        book.addedAt = new Date().toISOString();
-        books.unshift(book);
-    }
-    localStorage.setItem(LS_KEY, JSON.stringify(books));
-    showToast("Libro salvato!");
-    renderList();
-    resetForm();
-}
-
-function deleteBook(id){
-    if(!confirm("Sicuro di voler eliminare questo libro?")) return;
-    books = books.filter(b => b.id !== id);
-    localStorage.setItem(LS_KEY, JSON.stringify(books));
-    closeFocus();
-    if(document.body.classList.contains('is-room')) renderRoom(); else renderList();
-    showToast("Libro eliminato.");
-}
-
-$('btnWipe').onclick = () => {
-    if(confirm("ATTENZIONE: Cancellerai TUTTI i libri. Confermi?")){
-        books = [];
-        localStorage.setItem(LS_KEY, "[]");
-        renderList();
-        showToast("Libreria svuotata.");
-    }
-}
-
-// --- OPEN LIBRARY LOOKUP ---
-let debounceTimer;
-$('inpSearch').addEventListener('input', (e) => {
-    const q = e.target.value.trim();
-    if(q.length < 3) { $('dropdown').classList.remove('on'); return; }
-    
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => doSearch(q), 400);
+    ddResults.innerHTML = data.docs.map(d => {
+      const img = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '';
+      return `
+        <div class="dd-item" onclick="selectBook('${d.title.replace(/'/g,"\\'")}', '${(d.author_name?.[0]||"").replace(/'/g,"\\'")}', '${img}')">
+          <img src="${img}" style="width:30px; height:40px; background:#333; object-fit:cover;">
+          <div>
+            <div style="font-weight:bold; font-size:13px; color:#fff;">${d.title}</div>
+            <div style="font-size:11px; color:#999;">${d.author_name?.[0]||'?'}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    ddResults.style.display = 'block';
+  }, 400);
 });
 
-async function doSearch(query){
-    try {
-        const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=6`);
-        const data = await res.json();
-        
-        const html = data.docs.map(d => {
-            const cover = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '';
-            return `
-            <div class="dd-item" onclick="selectBook('${d.title.replace(/'/g, "\\'")}', '${(d.author_name?.[0]||"").replace(/'/g, "\\'")}', '${cover}')">
-                ${cover ? `<img src="${cover}" class="dd-img">` : '<div class="dd-img"></div>'}
-                <div class="dd-info">
-                    <div class="dd-title">${d.title}</div>
-                    <div class="dd-sub">${d.author_name?.[0] || 'Autore sconosciuto'}</div>
-                </div>
-            </div>`;
-        }).join('');
-        
-        $('ddList').innerHTML = html;
-        $('dropdown').classList.add('on');
-    } catch(e) { console.error(e); }
+function selectBook(title, author, cover) {
+  inpSearch.value = title;
+  tempBook = { title, author, cover };
+  ddResults.style.display = 'none';
 }
 
-window.selectBook = (title, author, cover) => {
-    $('inpSearch').value = title;
-    $('dropdown').classList.remove('on');
-    window.tempBook = { title, author, cover };
-};
-
-// --- FORM HANDLING ---
-$('btnSave').onclick = () => {
-    const title = $('inpSearch').value;
-    if(!title) return alert("Inserisci almeno un titolo");
-    
-    const newBook = {
-        id: editingId,
-        title: title,
-        author: window.tempBook?.author || "Sconosciuto",
-        cover: window.tempBook?.cover || "",
-        status: $('inpStatus').value,
-        comment: $('inpComment').value,
-        rating: $('inpRating').value,
-        ...window.tempBook
-    };
-    saveBook(newBook);
-};
-
-$('btnClear').onclick = resetForm;
-function resetForm(){
-    $('inpSearch').value = "";
-    $('inpComment').value = "";
-    $('inpRating').value = "";
-    $('dropdown').classList.remove('on');
-    editingId = null;
-    window.tempBook = null;
+// --- CRUD ---
+function saveBook() {
+  const title = inpSearch.value;
+  if(!title) return alert("Serve un titolo!");
+  
+  const newBook = {
+    id: crypto.randomUUID(),
+    title: title,
+    author: tempBook?.author || "Sconosciuto",
+    cover: tempBook?.cover || "",
+    status: document.getElementById('inpStatus').value,
+    added: Date.now(),
+    ...tempBook
+  };
+  
+  books.push(newBook);
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+  
+  renderList();
+  showToast("Libro Aggiunto!");
+  inpSearch.value = "";
+  tempBook = null;
 }
 
-// --- RENDER LIST ---
-function renderList(){
-    const filter = $('filterInput').value.toLowerCase();
-    const filtered = books.filter(b => b.title.toLowerCase().includes(filter) || b.author.toLowerCase().includes(filter));
-    
-    $('listView').innerHTML = filtered.map(b => `
-        <div class="card" onclick="openFocus('${b.id}')">
-            <img src="${b.cover || ''}" class="c-img" onerror="this.style.backgroundColor='#333'">
-            <div class="c-main">
-                <div class="c-title">${b.title}</div>
-                <div class="c-auth">${b.author}</div>
-            </div>
-            <div class="badge ${b.status}">${statusLabel(b.status)}</div>
+function deleteCurrent() {
+  if(!currentId) return;
+  if(!confirm("Sicuro?")) return;
+  books = books.filter(b => b.id !== currentId);
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+  closeFocus();
+  // Ricarica la vista corrente
+  if(document.body.classList.contains('is-room')) renderRoom(); else renderList();
+}
+
+// --- RENDER LISTA ---
+function renderList() {
+  const container = document.getElementById('listContainer');
+  container.innerHTML = books.map(b => `
+    <div class="book-card" onclick="openFocus('${b.id}')">
+      <img src="${b.cover}" class="bc-img" onerror="this.style.opacity=0.3">
+      <div>
+        <div style="font-weight:bold; margin-bottom:4px;">${b.title}</div>
+        <div style="font-size:12px; color:var(--muted);">${b.author}</div>
+        <div style="margin-top:8px; font-size:10px; padding:2px 6px; border:1px solid #444; display:inline-block; border-radius:4px;">
+          ${mapStatus(b.status)}
         </div>
-    `).join('');
-    
-    if(filtered.length === 0) $('listView').innerHTML = `<div style="padding:10px; color:var(--muted); text-align:center">Nessun libro trovato.</div>`;
+      </div>
+    </div>
+  `).join('');
 }
 
-$('filterInput').addEventListener('input', renderList);
+// --- RENDER STANZA (IL CUORE DEL FIX) ---
+function renderRoom() {
+  // Pulisci le zone
+  ['shelfHigh', 'shelfLow', 'tableZone', 'wishZone'].forEach(id => document.getElementById(id).innerHTML = '');
 
-function statusLabel(s){
-    const map = { reading: "In Lettura", read: "Letto", to_read: "Da Leggere", wishlist: "Wishlist" };
-    return map[s] || s;
+  // Ordina libri (per esempio alfabetico o per data)
+  const sorted = [...books].sort((a,b) => b.added - a.added);
+
+  sorted.forEach(b => {
+    let el;
+    
+    // CASO 1: SCAFFALI (DORSI VERTICALI)
+    if (b.status === 'read' || b.status === 'to_read') {
+      el = document.createElement('div');
+      el.className = 'spine-book';
+      el.title = b.title + " - " + b.author;
+      
+      // Simula colore dorso casuale se non c'è logica specifica, o basato su titolo
+      const hue = (b.title.length * 40) % 360;
+      el.style.background = `linear-gradient(to right, hsl(${hue}, 20%, 30%), hsl(${hue}, 20%, 40%) 30%, hsl(${hue}, 20%, 20%))`;
+      
+      // Altezza variabile random per realismo
+      const h = 85 + (b.title.length % 15); 
+      el.style.height = h + "%";
+      
+      el.onclick = () => openFocus(b.id);
+      
+      // Destinazione
+      const dest = b.status === 'read' ? 'shelfHigh' : 'shelfLow';
+      document.getElementById(dest).appendChild(el);
+    }
+    
+    // CASO 2: TAVOLO (COPERTINE 3D)
+    else if (b.status === 'reading') {
+      el = document.createElement('div');
+      el.className = 'table-book';
+      el.onclick = () => openFocus(b.id);
+      
+      if(b.cover) {
+        el.innerHTML = `<img src="${b.cover}">`;
+      } else {
+        el.innerHTML = `<div style="padding:10px; font-size:10px; color:#333; text-align:center; height:100%; display:flex; align-items:center; justify-content:center; background:#eee;">${b.title}</div>`;
+      }
+      
+      document.getElementById('tableZone').appendChild(el);
+    }
+    
+    // CASO 3: WISHLIST (MINIATURE)
+    else if (b.status === 'wishlist') {
+      el = document.createElement('div');
+      el.className = 'wish-book';
+      if(b.cover) el.style.backgroundImage = `url(${b.cover})`;
+      el.style.backgroundSize = 'cover';
+      el.onclick = () => openFocus(b.id);
+      document.getElementById('wishZone').appendChild(el);
+    }
+  });
 }
 
-// --- RENDER ROOM ---
-function renderRoom(){
-    ['shelfRead', 'shelfToRead', 'tableReading', 'areaWish'].forEach(id => $(id).innerHTML = '');
-    
-    // Ordina per data (più recenti primi)
-    const sorted = [...books].sort((a,b) => (b.addedAt||"").localeCompare(a.addedAt||""));
-
-    const reading = sorted.filter(b => b.status === 'reading').slice(0, 5);
-    const read = sorted.filter(b => b.status === 'read').slice(0, 20);
-    const toRead = sorted.filter(b => b.status === 'to_read').slice(0, 20);
-    const wishlist = sorted.filter(b => b.status === 'wishlist').slice(0, 10);
-    
-    const createBookEl = (b) => {
-        const div = document.createElement('div');
-        div.className = 'r-book';
-        div.onclick = () => openFocus(b.id);
-        div.title = b.title;
-        if(b.cover) {
-            div.innerHTML = `<img src="${b.cover}">`;
-        } else {
-            div.innerHTML = `<div class="spine"><span>${b.title.substring(0,15)}</span></div>`;
-        }
-        return div;
-    };
-
-    reading.forEach(b => $('tableReading').appendChild(createBookEl(b)));
-    read.forEach(b => $('shelfRead').appendChild(createBookEl(b)));
-    toRead.forEach(b => $('shelfToRead').appendChild(createBookEl(b)));
-    wishlist.forEach(b => $('areaWish').appendChild(createBookEl(b)));
-    
-    $('roomCount').textContent = `${books.length} Libri totali`;
+// --- FOCUS MODAL ---
+function openFocus(id) {
+  currentId = id;
+  const b = books.find(x => x.id === id);
+  if(!b) return;
+  
+  document.getElementById('fpTitle').innerText = b.title;
+  document.getElementById('fpAuthor').innerText = b.author;
+  document.getElementById('fpCover').src = b.cover || '';
+  document.getElementById('fpStatusBadge').innerText = mapStatus(b.status);
+  document.getElementById('focusOverlay').classList.add('on');
 }
 
-// --- FOCUS & ACTIONS ---
-window.openFocus = (id) => {
-    const b = books.find(x => x.id === id);
-    if(!b) return;
-    currentFocusId = id;
-    
-    $('fcTitle').innerText = b.title;
-    $('fcAuthor').innerText = b.author;
-    $('fcCover').src = b.cover || '';
-    $('fcStatus').innerText = statusLabel(b.status);
-    $('fcStatus').className = `chip-status ${b.status}`;
-    
-    // Colore dinamico badge
-    const colors = { reading:'var(--warn)', read:'var(--ok)', to_read:'var(--info)', wishlist:'var(--wish)' };
-    $('fcStatus').style.color = colors[b.status];
-    $('fcStatus').style.borderColor = colors[b.status];
-    
-    $('fcComment').innerText = b.comment || "Nessuna nota.";
-    $('fcRating').innerText = b.rating ? "★".repeat(b.rating) : "";
-    
-    $('focusOverlay').classList.add('on');
-};
-
-$('btnCloseFocus').onclick = closeFocus;
-function closeFocus(){ $('focusOverlay').classList.remove('on'); currentFocusId = null; }
-
-$('btnCycleStatus').onclick = () => {
-    if(!currentFocusId) return;
-    const b = books.find(x => x.id === currentFocusId);
-    // Ciclo: Wishlist -> Da Leggere -> In Lettura -> Letto
-    if(b.status === 'wishlist') b.status = 'to_read';
-    else if(b.status === 'to_read') b.status = 'reading';
-    else if(b.status === 'reading') b.status = 'read';
-    else b.status = 'wishlist'; 
-    
-    saveBook(b); 
-    openFocus(b.id); 
-};
-
-$('btnDelete').onclick = () => { if(currentFocusId) deleteBook(currentFocusId); };
-
-window.openService = (type) => {
-    if(!currentFocusId) return;
-    const b = books.find(x => x.id === currentFocusId);
-    const q = encodeURIComponent(b.title + " " + b.author);
-    if(type === 'amazon') window.open(`https://www.amazon.it/s?k=${q}&i=stripbooks`, '_blank');
-    if(type === 'audible') window.open(`https://www.audible.it/search?keywords=${q}`, '_blank');
-};
-
-// UTILS
-function showToast(msg){
-    const t = $('toast'); t.innerText = msg; t.classList.add('on');
-    setTimeout(()=>t.classList.remove('on'), 2000);
+function closeFocus() {
+  document.getElementById('focusOverlay').classList.remove('on');
+  currentId = null;
 }
 
-$('btnExport').onclick = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
-    const a = document.createElement('a');
-    a.href = dataStr; a.download = "libreria_backup.json";
-    a.click();
-};
+function cycleStatus() {
+  const b = books.find(x => x.id === currentId);
+  const states = ['wishlist', 'to_read', 'reading', 'read'];
+  const idx = states.indexOf(b.status);
+  b.status = states[(idx + 1) % states.length];
+  saveData();
+  openFocus(b.id); // Refresh UI
+  if(document.body.classList.contains('is-room')) renderRoom();
+}
 
-// INIT
-setView('list'); // Default vista lista
+function searchAmazon() {
+  const b = books.find(x => x.id === currentId);
+  window.open(`https://www.amazon.it/s?k=${encodeURIComponent(b.title + " " + b.author)}`, '_blank');
+}
+
+// --- UTILS ---
+function mapStatus(s) {
+  const map = { 'read': 'Letto', 'to_read': 'Da Leggere', 'reading': 'In Lettura', 'wishlist': 'Wishlist' };
+  return map[s] || s;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2000);
+}
+
+function saveData() {
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+}
+
+function exportData() {
+  const data = JSON.stringify(books, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'library.json';
+  a.click();
+}
+
+// Init
+switchView('list');
+
 </script>
 </body>
 </html>
