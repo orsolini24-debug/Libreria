@@ -3,505 +3,555 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria Definitiva</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Libre+Baskerville:ital@0;1&display=swap" rel="stylesheet">
+<title>Libreria Finale - Funzionale</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+
 <style>
     :root {
-        --accent: #FFD700;
-        --dark: #0a0a0a;
-        --glass: rgba(15, 15, 20, 0.95);
-        --border: 1px solid rgba(255,255,255,0.15);
+        --c-accent: #fbbf24;
+        --c-dark: #0f172a;
+        --c-panel: rgba(15, 23, 42, 0.98);
+        --c-border: rgba(255,255,255,0.15);
+        --shadow-elevation: 0 20px 50px rgba(0,0,0,0.8);
     }
+
+    * { box-sizing: border-box; outline: none; }
     
-    body { margin: 0; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: white; }
-    
-    /* --- LIVELLO 1: BACKGROUND E STANZA --- */
-    .viewport {
+    body { 
+        margin: 0; height: 100vh; overflow: hidden; 
+        background: #000; color: #fff; font-family: 'Inter', sans-serif;
+    }
+
+    /* --- LIVELLO 1: SCENA --- */
+    #viewport {
         position: relative; width: 100vw; height: 100vh;
-        perspective: 1500px; /* Profondità scena */
-        overflow: hidden;
+        perspective: 1500px; overflow: hidden;
     }
-    
-    .room-bg {
+
+    #room-bg {
         position: absolute; inset: 0; width: 100%; height: 100%;
-        object-fit: cover; z-index: 0;
-        filter: brightness(0.5); /* Scuriamo per far risaltare i libri */
-        transform: scale(1.02);
+        object-fit: cover; z-index: 0; filter: brightness(0.5);
+        transform: scale(1.05); pointer-events: none;
     }
 
-    /* --- LIVELLO 2: ZONE DI POSIZIONAMENTO --- */
-    /* Queste zone sono invisibili ma servono a piazzare i libri */
-    
-    /* Scaffale Alto (Letti) */
-    .zone-shelf-high {
-        position: absolute; top: 13%; left: 47%; width: 28%; height: 14%;
-        display: flex; align-items: flex-end; gap: 2px;
-        z-index: 10;
-        /* border: 1px solid red; /* Decommenta per vedere la zona */
-    }
-    
-    /* Scaffale Basso (Da Leggere) */
-    .zone-shelf-low {
-        position: absolute; top: 31%; left: 47%; width: 28%; height: 14%;
-        display: flex; align-items: flex-end; gap: 2px;
-        z-index: 10;
+    /* Layer contenitore per gli oggetti 3D */
+    #scene-layer {
+        position: absolute; inset: 0; z-index: 10;
+        transform-style: preserve-3d;
     }
 
-    /* Tavolo (In Lettura) */
-    .zone-table {
-        position: absolute; bottom: 15%; left: 20%; width: 40%; height: 30%;
-        display: flex; align-items: center; justify-content: center;
-        perspective: 800px; /* Prospettiva locale per il libro sul tavolo */
-        z-index: 20;
+    /* ZONE DI ANCORAGGIO (Invisibili ma posizionano i libri) */
+    .anchor-zone { position: absolute; /* border: 1px dashed red; */ }
+    
+    /* Scaffali (Verticali) */
+    #shelf-high { top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    #shelf-low { top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    
+    /* Tavolo (Prospettiva) */
+    #table-surface { 
+        bottom: 15%; left: 20%; width: 40%; height: 30%; 
+        display: flex; align-items: center; justify-content: center; 
+        perspective: 800px; z-index: 20;
     }
     
-    /* Wishlist (Angolo basso dx) */
-    .zone-wishlist {
-        position: absolute; bottom: 5%; right: 5%; width: 15%; height: 15%;
-        z-index: 20;
-    }
+    /* Wishlist */
+    #wishlist-corner { bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
 
-    /* --- LIVELLO 3: OGGETTI LIBRO --- */
-    
-    /* 1. LIBRO DORSO (Scaffale) */
+    /* --- OGGETTI LIBRO --- */
+
+    /* 1. DORSO (Scaffale) */
     .spine {
-        position: relative; width: 28px; height: 90%;
-        border-radius: 2px; cursor: pointer;
-        transition: 0.2s;
+        position: relative; width: 30px; 
+        background: linear-gradient(90deg, #222, #444 40%, #222);
+        border-radius: 2px; cursor: pointer; transition: transform 0.2s;
         box-shadow: 2px 0 5px rgba(0,0,0,0.8);
-        background: linear-gradient(90deg, #333, #555 30%, #222);
     }
-    .spine:hover { transform: scale(1.1) translateY(-5px); z-index: 100; background: #666; }
-    
-    /* Testo verticale sul dorso */
+    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; background: #555; }
     .spine span {
         writing-mode: vertical-rl; text-orientation: mixed;
         position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        font-family: 'Libre Baskerville', serif; font-size: 9px; color: rgba(255,255,255,0.7);
-        overflow: hidden; white-space: nowrap; padding: 4px 0;
+        font-family: 'Playfair Display', serif; font-size: 10px; color: rgba(255,255,255,0.8);
+        white-space: nowrap; overflow: hidden; padding: 5px 0;
     }
+    /* Varianti colore dorso */
+    .bg-red { background: linear-gradient(90deg, #450a0a, #7f1d1d 40%, #450a0a); }
+    .bg-blue { background: linear-gradient(90deg, #172554, #1e40af 40%, #172554); }
+    .bg-green { background: linear-gradient(90deg, #052e16, #15803d 40%, #052e16); }
+    .bg-black { background: linear-gradient(90deg, #0a0a0a, #262626 40%, #0a0a0a); }
 
-    /* 2. LIBRO 3D (Tavolo) - Questo dà l'effetto realistico */
-    .book-3d-wrapper {
-        width: 140px; height: 200px;
-        position: relative;
-        transform-style: preserve-3d;
-        transform: rotateX(45deg) rotateZ(-15deg); /* Angolazione tavolo */
-        transition: transform 0.3s;
-        cursor: pointer;
+    /* 2. LIBRO 3D (Tavolo) */
+    .book-3d {
+        width: 150px; height: 220px; position: relative;
+        transform-style: preserve-3d; cursor: pointer;
+        transform: rotateX(40deg) rotateZ(-10deg);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    
-    .book-3d-wrapper:hover {
-        transform: rotateX(10deg) rotateZ(0deg) translateZ(40px) scale(1.1); /* Si alza al passaggio */
+    .book-3d:hover {
+        transform: rotateX(10deg) rotateZ(0deg) translateZ(50px) scale(1.1);
         z-index: 1000;
     }
-
-    /* Facce del libro 3D */
-    .face-front {
-        position: absolute; inset: 0;
-        background-color: #333; background-size: cover; background-position: center;
-        transform: translateZ(12px); /* Spessore */
-        border-radius: 2px 4px 4px 2px;
-        box-shadow: inset 2px 0 5px rgba(255,255,255,0.1);
+    .b-face { position: absolute; backface-visibility: hidden; }
+    
+    /* Copertina (Faccia Frontale) */
+    .b-front {
+        width: 100%; height: 100%; background: #333;
+        background-size: cover; background-position: center;
+        transform: translateZ(15px); border-radius: 2px 5px 5px 2px;
+        box-shadow: inset 2px 0 10px rgba(0,0,0,0.5);
     }
-    .face-side { /* Pagine laterali */
-        position: absolute; top: 2px; bottom: 2px; right: 0; width: 24px;
-        background: linear-gradient(to right, #eee, #ccc 20%, #eee 40%, #ddd);
+    /* Pagine (Lato destro) */
+    .b-side {
+        right: 0; width: 30px; height: 100%;
+        background: linear-gradient(to right, #e2e8f0, #cbd5e1 20%, #e2e8f0 40%);
         transform: rotateY(90deg) translateZ(-1px); transform-origin: right;
     }
-    .face-bottom { /* Pagine sotto */
-        position: absolute; bottom: 0; left: 2px; right: 2px; height: 24px;
-        background: #ddd;
+    /* Pagine (Lato sotto) */
+    .b-bottom {
+        bottom: 0; width: 100%; height: 30px;
+        background: #cbd5e1;
         transform: rotateX(-90deg) translateZ(0); transform-origin: bottom;
     }
-    .book-shadow { /* Ombra sganciata per realismo */
-        position: absolute; width: 100%; height: 100%; top: 20px; left: 10px;
-        background: rgba(0,0,0,0.6); filter: blur(10px);
-        transform: translateZ(-20px);
+    /* Ombra (separata) */
+    .b-shadow {
+        position: absolute; width: 100%; height: 100%; background: black;
+        filter: blur(20px); opacity: 0.6;
+        transform: translateZ(-30px) translateX(20px) translateY(20px);
+        pointer-events: none;
     }
 
-    /* 3. WISHLIST ITEM */
-    .wish-item {
-        width: 80px; height: 110px; position: absolute;
-        background: white; padding: 5px; color: black; font-size: 9px; text-align: center;
+    /* 3. WISHLIST */
+    .wish-card {
+        width: 90px; height: 120px; position: absolute;
+        background: #fff; color: #000; padding: 5px;
+        font-size: 9px; text-align: center;
         box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         cursor: pointer; transition: 0.2s;
     }
-    .wish-item:hover { transform: scale(1.2) !important; z-index: 100; }
-    .wish-item img { width: 100%; height: 70px; object-fit: cover; background: #eee; margin-bottom: 2px; }
+    .wish-card img { width: 100%; height: 70px; object-fit: cover; background: #eee; }
+    .wish-card:hover { transform: scale(1.2) !important; z-index: 999; }
 
-    /* --- UI OVERLAYS --- */
-    .top-bar {
-        position: absolute; top: 0; left: 0; width: 100%; padding: 20px;
+    /* --- UI LAYER --- */
+    .ui-top {
+        position: absolute; top: 0; left: 0; right: 0; height: 70px;
         display: flex; justify-content: space-between; align-items: center;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+        padding: 0 30px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
         z-index: 1000; pointer-events: none;
     }
-    .top-bar * { pointer-events: auto; }
+    .ui-top * { pointer-events: auto; }
 
     .btn {
-        background: rgba(255,255,255,0.1); border: var(--border); color: white;
-        padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;
-        backdrop-filter: blur(10px); transition: 0.2s;
+        padding: 10px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.5); color: #fff; cursor: pointer;
+        font-weight: 600; font-size: 13px; backdrop-filter: blur(5px);
+        transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
     }
-    .btn:hover { background: white; color: black; }
-    .btn-primary { background: var(--accent); color: black; border: none; }
-    .btn-danger { background: #dc2626; color: white; border: none; }
+    .btn:hover { background: #fff; color: #000; }
+    .btn-primary { background: var(--c-accent); color: #000; border: none; }
+    .btn-primary:hover { background: #d97706; }
+    .btn-danger { border-color: #ef4444; color: #ef4444; }
+    .btn-danger:hover { background: #ef4444; color: #fff; }
 
     /* PANNELLO LATERALE */
-    .panel {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 400px;
-        background: var(--glass); border-left: var(--border);
-        transform: translateX(100%); transition: 0.3s;
-        padding: 30px; z-index: 2000; overflow-y: auto;
+    #side-panel {
+        position: fixed; top: 0; right: 0; bottom: 0; width: 450px;
+        background: var(--c-panel); border-left: 1px solid var(--c-border);
+        transform: translateX(100%); transition: transform 0.3s ease-out;
+        z-index: 2000; padding: 30px; display: flex; flex-direction: column; gap: 20px;
+        overflow-y: auto;
     }
-    .panel.open { transform: translateX(0); }
+    #side-panel.open { transform: translateX(0); }
 
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-size: 11px; color: var(--accent); margin-bottom: 5px; font-weight: bold; letter-spacing: 0.5px; }
+    .inp-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 11px; text-transform: uppercase; color: var(--c-accent); font-weight: 700; }
     input, select, textarea {
-        width: 100%; background: rgba(255,255,255,0.1); border: 1px solid #444;
-        color: white; padding: 12px; border-radius: 4px; font-family: inherit;
+        background: rgba(0,0,0,0.3); border: 1px solid #334155; padding: 12px;
+        color: #fff; border-radius: 6px; width: 100%; font-family: inherit;
     }
-    input:focus { border-color: var(--accent); outline: none; }
+    input:focus { border-color: var(--c-accent); }
 
-    /* Search Results */
-    .search-res {
-        background: #111; border: 1px solid #333; max-height: 250px; overflow-y: auto;
-        display: none; border-radius: 4px; margin-top: 5px;
+    /* DROPDOWN RICERCA */
+    #search-results {
+        background: #0f172a; border: 1px solid #334155; border-radius: 6px;
+        max-height: 0; overflow: hidden; transition: 0.3s;
     }
-    .search-res.active { display: block; }
-    .res-item { display: flex; gap: 10px; padding: 10px; border-bottom: 1px solid #222; cursor: pointer; }
-    .res-item:hover { background: #222; }
-    .res-img { width: 35px; height: 50px; object-fit: cover; background: #333; }
+    #search-results.active { max-height: 250px; overflow-y: auto; border-color: var(--c-accent); }
+    .res-item { display: flex; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #1e293b; }
+    .res-item:hover { background: #1e293b; }
 
     /* MODALE DETTAGLIO */
-    .modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000;
+    #modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000;
         display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
     }
-    .modal-overlay.active { display: flex; }
-    .modal {
-        background: #1a1a1a; width: 500px; max-width: 90%; border-radius: 8px;
-        border: var(--border); overflow: hidden; display: flex;
+    #modal-overlay.active { display: flex; }
+    .modal-box {
+        background: #1e293b; width: 600px; max-width: 95%; border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1); overflow: hidden; display: flex;
         box-shadow: 0 50px 100px rgba(0,0,0,1);
     }
-    .m-cover { width: 160px; object-fit: cover; background: #000; }
-    .m-body { padding: 25px; flex: 1; display: flex; flex-direction: column; }
-    
-    .stars { color: #555; font-size: 20px; margin: 10px 0; cursor: pointer; }
-    .stars span.active { color: var(--accent); }
+    .m-img-col { width: 200px; background: #000; display: flex; align-items: center; justify-content: center; }
+    .m-img-col img { width: 100%; height: 100%; object-fit: cover; }
+    .m-info-col { flex: 1; padding: 30px; display: flex; flex-direction: column; gap: 15px; }
 
-    .ext-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
-    .link-btn {
-        background: #333; color: #fff; text-decoration: none; font-size: 12px;
-        padding: 8px; border-radius: 4px; text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+    /* COLLEGAMENTI ESTERNI */
+    .ext-actions {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);
     }
-    .link-btn:hover { background: #555; }
-    .link-amazon:hover { background: #ff9900; color: black; }
+    .link-btn {
+        background: #334155; color: #fff; text-decoration: none; padding: 10px;
+        border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+        transition: 0.2s;
+    }
+    .link-btn:hover { background: #fff; color: #000; }
+    .link-amazon:hover { background: #ff9900; color: #000; }
+    .link-audible:hover { background: #facc15; color: #000; }
+
+    /* Stelle */
+    .stars { display: flex; gap: 5px; font-size: 20px; color: #475569; cursor: pointer; }
+    .stars i.active { color: var(--c-accent); }
 
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <h2 style="margin:0">Libreria <span style="color:var(--accent)">6.0</span></h2>
-    <div style="display:flex; gap:10px;">
-        <button class="btn danger" onclick="resetDB()">⚠ RESET TOTALE</button>
-        <button class="btn primary" onclick="openPanel()">+ GESTISCI LIBRI</button>
+<div class="ui-top">
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--c-accent)">7.0</span></h2>
+    <div style="display:flex; gap:10px">
+        <button class="btn danger" onclick="app.resetData()">RESET DATI</button>
+        <button class="btn" onclick="app.exportData()">Backup JSON</button>
+        <button class="btn primary" onclick="ui.openPanel()">+ Aggiungi</button>
     </div>
 </div>
 
-<div class="viewport">
-    <img src="./assets/room.jpg" class="room-bg" onerror="this.style.display='none'; document.body.style.background='#111'">
-    
-    <div class="zone-shelf-high" id="zone-read"></div>
-    <div class="zone-shelf-low" id="zone-toread"></div>
-    <div class="zone-table" id="zone-reading"></div>
-    <div class="zone-wishlist" id="zone-wishlist"></div>
+<div id="viewport">
+    <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'">
+    <div id="scene-layer">
+        <div class="anchor-zone" id="shelf-high"></div>
+        <div class="anchor-zone" id="shelf-low"></div>
+        <div class="anchor-zone" id="table-surface"></div>
+        <div class="anchor-zone" id="wishlist-corner"></div>
+    </div>
 </div>
 
-<div class="panel" id="panel">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>Aggiungi / Modifica</h3>
-        <button class="btn" onclick="closePanel()" style="padding:5px 10px;">✕</button>
+<div id="side-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+        <h2 style="margin:0">Gestisci Libro</h2>
+        <button class="btn" onclick="ui.closePanel()" style="padding:5px 10px">✕</button>
     </div>
 
-    <div class="form-group" style="margin-top:20px;">
-        <label>Cerca Google Books (Italiano)</label>
-        <input id="inpSearch" placeholder="Es. Calvino, Eco..." autocomplete="off">
-        <div class="search-res" id="resBox"></div>
+    <div class="inp-group">
+        <label>Cerca su Google Books</label>
+        <input id="searchInp" placeholder="Es. Italo Calvino, Dante..." autocomplete="off">
+        <div id="search-results"></div>
     </div>
 
-    <hr style="border-color:#333; margin:20px 0;">
+    <hr style="border-color:rgba(255,255,255,0.1); width:100%">
 
-    <div class="form-group">
+    <div class="inp-group">
         <label>Titolo *</label>
         <input id="inpTitle">
     </div>
-
-    <div style="display:flex; gap:10px;">
-        <div class="form-group" style="flex:1">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+        <div class="inp-group">
             <label>Autore</label>
             <input id="inpAuthor">
         </div>
-        <div class="form-group" style="width:80px">
-            <label>Pag.</label>
-            <input id="inpPages" type="number" value="200">
+        <div class="inp-group">
+            <label>Pagine</label>
+            <input type="number" id="inpPages" value="200">
         </div>
     </div>
-
-    <div class="form-group">
+    <div class="inp-group">
         <label>Stato</label>
         <select id="inpStatus">
-            <option value="reading">In Lettura (Sul Tavolo)</option>
+            <option value="reading">In Lettura (Tavolo)</option>
             <option value="read">Letto (Scaffale Alto)</option>
             <option value="toread">Da Leggere (Scaffale Basso)</option>
             <option value="wishlist">Wishlist (Angolo)</option>
         </select>
     </div>
-
-    <div class="form-group">
+    <div class="inp-group">
         <label>Colore Dorso</label>
         <select id="inpColor">
-            <option value="#7f1d1d">Rosso Scuro</option>
-            <option value="#1e3a8a">Blu Notte</option>
-            <option value="#14532d">Verde Bosco</option>
-            <option value="#171717">Nero</option>
-            <option value="#57534e">Grigio</option>
+            <option value="bg-red">Rosso</option>
+            <option value="bg-blue">Blu</option>
+            <option value="bg-green">Verde</option>
+            <option value="bg-black">Nero</option>
         </select>
     </div>
-
-    <div class="form-group">
+    <div class="inp-group">
         <label>Note</label>
         <textarea id="inpNote" rows="3"></textarea>
     </div>
 
-    <button class="btn primary" style="width:100%; padding:15px;" onclick="saveBook()">SALVA</button>
+    <button class="btn primary" onclick="app.saveBook()" style="justify-content:center; padding:15px">SALVA</button>
 </div>
 
-<div class="modal-overlay" id="modal">
-    <div class="modal">
-        <img id="m-cover" class="m-cover" src="">
-        <div class="m-body">
-            <div style="display:flex; justify-content:space-between;">
-                <h2 id="m-title" style="margin:0; color:var(--accent); font-family:'Playfair Display'">Titolo</h2>
-                <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">✕</button>
+<div id="modal-overlay">
+    <div class="modal-box">
+        <div class="m-img-col">
+            <img id="m-cover" src="">
+        </div>
+        <div class="m-info-col">
+            <div>
+                <h2 id="m-title" style="margin:0; font-family:'Playfair Display'; color:var(--c-accent)">Titolo</h2>
+                <div id="m-author" style="color:#94a3b8; font-size:14px; margin-top:5px">Autore</div>
             </div>
-            <p id="m-author" style="color:#aaa; margin-top:5px;">Autore</p>
-            
+
             <div class="stars" id="m-stars">
-                <span onclick="rate(1)">★</span><span onclick="rate(2)">★</span><span onclick="rate(3)">★</span><span onclick="rate(4)">★</span><span onclick="rate(5)">★</span>
+                <i class="fas fa-star" data-v="1"></i>
+                <i class="fas fa-star" data-v="2"></i>
+                <i class="fas fa-star" data-v="3"></i>
+                <i class="fas fa-star" data-v="4"></i>
+                <i class="fas fa-star" data-v="5"></i>
             </div>
 
-            <p id="m-note" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:4px; font-style:italic; font-size:13px; flex:1;">...</p>
+            <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic; font-size:13px; color:#cbd5e1; flex:1">
+                Nessuna nota.
+            </p>
 
-            <div class="ext-links">
-                <a href="#" id="lnk-amazon" target="_blank" class="link-btn link-amazon"><i class="fab fa-amazon"></i> Amazon</a>
-                <a href="#" id="lnk-kindle" target="_blank" class="link-btn"><i class="fas fa-tablet-alt"></i> Kindle</a>
-                <a href="#" id="lnk-audible" target="_blank" class="link-btn"><i class="fas fa-headphones"></i> Audible</a>
-                <button onclick="deleteBook()" class="link-btn" style="background:#7f1d1d; border:none; cursor:pointer;">Elimina</button>
+            <div class="ext-actions">
+                <a href="#" target="_blank" id="lnk-amazon" class="link-btn link-amazon"><i class="fab fa-amazon"></i> Amazon</a>
+                <a href="#" target="_blank" id="lnk-kindle" class="link-btn"><i class="fas fa-tablet-alt"></i> Kindle</a>
+                <a href="#" target="_blank" id="lnk-audible" class="link-btn link-audible"><i class="fas fa-headphones"></i> Audible</a>
+                <button onclick="app.deleteBook()" class="link-btn" style="background:#7f1d1d; border:none; color:white; cursor:pointer"><i class="fas fa-trash"></i> Elimina</button>
             </div>
+            <button onclick="ui.closeModal()" style="background:none; border:none; color:#64748b; margin-top:10px; cursor:pointer; font-size:12px">Chiudi</button>
         </div>
     </div>
 </div>
 
 <script>
-// --- DATI ---
-const DB_KEY = "lib_6_fix";
-let books = [];
-let tempCover = "";
-let focusId = null;
+/**
+ * LIBRERIA APP - CORE LOGIC
+ */
+const DB_KEY = "libreria_v7_final";
 
-// Caricamento
-const saved = localStorage.getItem(DB_KEY);
-if(saved) {
-    try { books = JSON.parse(saved); } catch(e) { books=[]; }
-}
+class LibraryApp {
+    constructor() {
+        this.books = [];
+        this.tempCover = "";
+        this.activeBookId = null;
+        this.load();
+    }
 
-// --- GOOGLE BOOKS SEARCH FIX ---
-const inpSearch = document.getElementById('inpSearch');
-const resBox = document.getElementById('resBox');
-let timer;
-
-inpSearch.addEventListener('input', (e) => {
-    clearTimeout(timer);
-    const q = e.target.value.trim();
-    if(q.length < 3) { resBox.classList.remove('active'); return; }
-
-    timer = setTimeout(async () => {
+    load() {
+        const data = localStorage.getItem(DB_KEY);
         try {
-            // Chiamata API standard pubblica
-            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`);
-            const data = await res.json();
-            
-            if(data.items) {
-                resBox.innerHTML = data.items.map(i => {
-                    const info = i.volumeInfo;
-                    const img = info.imageLinks?.smallThumbnail || '';
-                    // Creiamo un oggetto sicuro da passare
-                    const safeData = encodeURIComponent(JSON.stringify({
-                        title: info.title || "",
-                        author: info.authors?.[0] || "",
-                        pages: info.pageCount || 200,
-                        cover: info.imageLinks?.thumbnail || ""
-                    }));
-                    
-                    return `
-                    <div class="res-item" onclick="fillForm('${safeData}')">
-                        <img src="${img}" class="res-img">
-                        <div>
-                            <div style="font-weight:bold; font-size:13px; color:white;">${info.title}</div>
-                            <div style="font-size:11px; color:#999;">${info.authors?.[0]||'?'}</div>
-                        </div>
-                    </div>`;
-                }).join('');
-                resBox.classList.add('active');
-            }
-        } catch(e) { console.error("Errore Ricerca", e); }
-    }, 500);
-});
+            this.books = data ? JSON.parse(data) : [];
+        } catch(e) { this.books = []; }
+        this.render();
+    }
 
-function fillForm(safeData) {
-    const data = JSON.parse(decodeURIComponent(safeData));
-    document.getElementById('inpTitle').value = data.title;
-    document.getElementById('inpAuthor').value = data.author;
-    document.getElementById('inpPages').value = data.pages;
-    tempCover = data.cover;
-    resBox.classList.remove('active');
-    document.getElementById('inpSearch').value = "";
-}
+    save() {
+        localStorage.setItem(DB_KEY, JSON.stringify(this.books));
+        this.render();
+    }
 
-// --- SALVATAGGIO ---
-function saveBook() {
-    const t = document.getElementById('inpTitle').value;
-    if(!t) return alert("Inserisci almeno il titolo");
+    addBook(book) {
+        this.books.push(book);
+        this.save();
+    }
 
-    const newBook = {
-        id: Date.now().toString(),
-        title: t,
-        author: document.getElementById('inpAuthor').value,
-        pages: document.getElementById('inpPages').value,
-        status: document.getElementById('inpStatus').value,
-        color: document.getElementById('inpColor').value,
-        note: document.getElementById('inpNote').value,
-        cover: tempCover,
-        rating: 0
-    };
+    deleteBook() {
+        if(!confirm("Eliminare definitivamente?")) return;
+        this.books = this.books.filter(b => b.id !== this.activeBookId);
+        this.save();
+        ui.closeModal();
+    }
 
-    books.push(newBook);
-    localStorage.setItem(DB_KEY, JSON.stringify(books));
-    
-    // Reset
-    document.getElementById('inpTitle').value = "";
-    document.getElementById('inpNote').value = "";
-    tempCover = "";
-    closePanel();
-    render();
-}
-
-// --- RENDER SCENA ---
-function render() {
-    // Svuota zone
-    ['zone-read', 'zone-toread', 'zone-reading', 'zone-wishlist'].forEach(id => document.getElementById(id).innerHTML = '');
-
-    books.forEach(b => {
-        const el = document.createElement('div');
-        el.onclick = () => openModal(b.id);
-
-        // 1. DORSI VERTICALI (SCAFFALI)
-        if(b.status === 'read' || b.status === 'toread') {
-            el.className = 'spine';
-            el.style.background = `linear-gradient(90deg, ${b.color}, #333 30%, ${b.color})`;
-            // Spessore e altezza dinamici
-            el.style.width = Math.min(Math.max(b.pages/10, 20), 45) + 'px';
-            el.style.height = (80 + (b.title.length % 15)) + '%';
-            
-            el.innerHTML = `<span>${b.title}</span>`;
-            
-            if(b.status === 'read') document.getElementById('zone-read').appendChild(el);
-            else document.getElementById('zone-toread').appendChild(el);
+    updateRating(val) {
+        const b = this.books.find(x => x.id === this.activeBookId);
+        if(b) {
+            b.rating = val;
+            this.save(); // Salva e renderizza
+            ui.openModal(b.id); // Riapri modale aggiornato
         }
+    }
+
+    saveBook() {
+        const title = document.getElementById('inpTitle').value;
+        if(!title) return alert("Inserisci un titolo");
+
+        const newBook = {
+            id: Date.now().toString(),
+            title: title,
+            author: document.getElementById('inpAuthor').value,
+            pages: document.getElementById('inpPages').value,
+            status: document.getElementById('inpStatus').value,
+            color: document.getElementById('inpColor').value,
+            note: document.getElementById('inpNote').value,
+            cover: this.tempCover,
+            rating: 0
+        };
+
+        this.addBook(newBook);
+        ui.closePanel();
         
-        // 2. LIBRO 3D (TAVOLO)
-        else if(b.status === 'reading') {
-            el.className = 'book-3d-wrapper';
-            const cvr = b.cover || 'https://via.placeholder.com/150x200/333/fff?text=' + encodeURI(b.title);
-            
-            el.innerHTML = `
-                <div class="book-shadow"></div>
-                <div class="face-front" style="background-image:url('${cvr}')"></div>
-                <div class="face-side"></div>
-                <div class="face-bottom"></div>
-            `;
-            document.getElementById('zone-reading').appendChild(el);
+        // Reset form
+        document.getElementById('inpTitle').value = "";
+        document.getElementById('inpNote').value = "";
+        this.tempCover = "";
+    }
+
+    resetData() {
+        if(confirm("ATTENZIONE: Questo cancellerà TUTTI i libri per riparare errori. Continuare?")) {
+            localStorage.removeItem(DB_KEY);
+            location.reload();
         }
-
-        // 3. WISHLIST
-        else if(b.status === 'wishlist') {
-            el.className = 'wish-item';
-            el.style.transform = `rotate(${(Math.random()*20)-10}deg)`;
-            el.style.marginTop = "-80px"; // Effetto pila
-            el.innerHTML = `<img src="${b.cover || 'https://via.placeholder.com/80'}"><div>${b.title}</div>`;
-            document.getElementById('zone-wishlist').appendChild(el);
-        }
-    });
-}
-
-// --- MODAL & LINK ---
-function openModal(id) {
-    focusId = id;
-    const b = books.find(x => x.id === id);
-    document.getElementById('m-title').innerText = b.title;
-    document.getElementById('m-author').innerText = b.author;
-    document.getElementById('m-note').innerText = b.note || "Nessuna nota.";
-    document.getElementById('m-cover').src = b.cover || "https://via.placeholder.com/150x200";
-    
-    // Setup Rating
-    const stars = document.getElementById('m-stars').children;
-    for(let i=0; i<5; i++) {
-        stars[i].className = i < b.rating ? 'active' : '';
     }
 
-    // Setup Links
-    const q = encodeURIComponent(`${b.title} ${b.author}`);
-    document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
-    document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
-    document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
-
-    document.getElementById('modal').classList.add('active');
-}
-
-function rate(n) {
-    const b = books.find(x => x.id === focusId);
-    if(b) {
-        b.rating = n;
-        localStorage.setItem(DB_KEY, JSON.stringify(books));
-        openModal(focusId); // Refresh UI
+    exportData() {
+        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.books));
+        const a = document.createElement('a');
+        a.href = data; a.download = 'backup_libreria.json';
+        a.click();
     }
-}
 
-function deleteBook() {
-    if(!confirm("Sicuro?")) return;
-    books = books.filter(b => b.id !== focusId);
-    localStorage.setItem(DB_KEY, JSON.stringify(books));
-    closeModal();
-    render();
-}
+    // MOTORE DI RENDERING SCENA
+    render() {
+        // Pulisci zone
+        ['shelf-high', 'shelf-low', 'table-surface', 'wishlist-corner'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+        });
 
-function closeModal() { document.getElementById('modal').classList.remove('active'); }
-function openPanel() { document.getElementById('panel').classList.add('open'); }
-function closePanel() { document.getElementById('panel').classList.remove('open'); }
-function resetDB() { 
-    if(confirm("Cancellare tutto per risolvere errori?")) {
-        localStorage.removeItem(DB_KEY); 
-        location.reload(); 
+        this.books.forEach(b => {
+            const el = document.createElement('div');
+            el.onclick = () => ui.openModal(b.id);
+
+            // 1. SCAFFALI (Dorsi)
+            if(b.status === 'read' || b.status === 'toread') {
+                el.className = `spine ${b.color}`;
+                // Spessore dinamico
+                let thickness = Math.min(Math.max(b.pages/10, 20), 45);
+                el.style.width = thickness + 'px';
+                el.style.height = (80 + (b.title.length % 15)) + '%';
+                el.innerHTML = `<span>${b.title}</span>`;
+                
+                if(b.status === 'read') document.getElementById('shelf-high').appendChild(el);
+                else document.getElementById('shelf-low').appendChild(el);
+            }
+            // 2. TAVOLO (Libro 3D con Copertina)
+            else if(b.status === 'reading') {
+                el.className = 'book-3d';
+                const cvr = b.cover || 'https://via.placeholder.com/150x220/333/fff?text=' + encodeURI(b.title);
+                
+                el.innerHTML = `
+                    <div class="b-shadow"></div>
+                    <div class="b-face b-front" style="background-image:url('${cvr}')"></div>
+                    <div class="b-face b-side"></div>
+                    <div class="b-face b-bottom"></div>
+                `;
+                document.getElementById('table-surface').appendChild(el);
+            }
+            // 3. WISHLIST
+            else if(b.status === 'wishlist') {
+                el.className = 'wish-card';
+                el.style.transform = `rotate(${(Math.random()*20)-10}deg)`;
+                el.style.marginTop = "-80px";
+                el.innerHTML = `<img src="${b.cover || 'https://via.placeholder.com/80'}"><div>${b.title}</div>`;
+                document.getElementById('wishlist-corner').appendChild(el);
+            }
+        });
     }
 }
 
-// Avvio
-render();
+/**
+ * GESTIONE UI (Modali, Ricerca, Eventi)
+ */
+class UI {
+    constructor() {
+        this.searchTimer = null;
+        this.setupSearch();
+        this.setupStars();
+    }
+
+    setupSearch() {
+        const inp = document.getElementById('searchInp');
+        const box = document.getElementById('search-results');
+
+        inp.addEventListener('input', (e) => {
+            clearTimeout(this.searchTimer);
+            const q = e.target.value.trim();
+            if(q.length < 3) { box.classList.remove('active'); return; }
+
+            this.searchTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`);
+                    const data = await res.json();
+                    if(data.items) {
+                        box.innerHTML = data.items.map(i => {
+                            const info = i.volumeInfo;
+                            const safe = encodeURIComponent(JSON.stringify({
+                                t: info.title, a: info.authors?.[0]||'', p: info.pageCount||200, c: info.imageLinks?.thumbnail||''
+                            }));
+                            return `<div class="res-item" onclick="ui.fillForm('${safe}')">
+                                <img src="${info.imageLinks?.smallThumbnail||''}" style="width:30px">
+                                <div><b>${info.title}</b><br><small>${info.authors?.[0]||'?'}</small></div>
+                            </div>`;
+                        }).join('');
+                        box.classList.add('active');
+                    }
+                } catch(e) { console.error(e); }
+            }, 500);
+        });
+    }
+
+    fillForm(jsonStr) {
+        const data = JSON.parse(decodeURIComponent(jsonStr));
+        document.getElementById('inpTitle').value = data.t;
+        document.getElementById('inpAuthor').value = data.a;
+        document.getElementById('inpPages').value = data.p;
+        app.tempCover = data.c;
+        document.getElementById('search-results').classList.remove('active');
+        document.getElementById('searchInp').value = "";
+    }
+
+    openPanel() { document.getElementById('side-panel').classList.add('open'); }
+    closePanel() { document.getElementById('side-panel').classList.remove('open'); }
+
+    openModal(id) {
+        app.activeBookId = id;
+        const b = app.books.find(x => x.id === id);
+        if(!b) return;
+
+        // Popola dati
+        document.getElementById('m-title').innerText = b.title;
+        document.getElementById('m-author').innerText = b.author;
+        document.getElementById('m-note').innerText = b.note || "Nessuna nota presente.";
+        document.getElementById('m-cover').src = b.cover || "https://via.placeholder.com/200x300?text=No+Cover";
+
+        // Stelle
+        const stars = document.querySelectorAll('#m-stars i');
+        stars.forEach(s => {
+            const v = parseInt(s.dataset.v);
+            s.className = v <= b.rating ? 'fas fa-star' : 'far fa-star';
+            s.style.color = v <= b.rating ? '#fbbf24' : '#475569';
+        });
+
+        // GENERAZIONE LINK ESTERNI (ECCO I COLLEGAMENTI RICHIESTI)
+        const q = encodeURIComponent(`${b.title} ${b.author}`);
+        document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
+        document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
+        document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
+
+        document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+
+    setupStars() {
+        document.querySelectorAll('#m-stars i').forEach(s => {
+            s.onclick = () => app.updateRating(parseInt(s.dataset.v));
+        });
+    }
+}
+
+// Inizializzazione
+const app = new LibraryApp();
+const ui = new UI(app);
+
 </script>
 </body>
 </html>
