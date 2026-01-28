@@ -3,114 +3,183 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 7.1 - Fix Ricerca</title>
+<title>Libreria 7.2 - Stable Core</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
     :root {
         --c-accent: #fbbf24;
-        --c-panel: #0f172a;
-        --c-border: 1px solid rgba(255,255,255,0.2);
+        --c-dark: #020617;
+        --c-panel: rgba(15, 23, 42, 0.98);
+        --c-border: 1px solid rgba(255,255,255,0.15);
     }
-    body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: 'Inter', sans-serif; }
+    
+    * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        margin: 0; height: 100vh; overflow: hidden; 
+        background: var(--c-dark); color: #fff; font-family: 'Inter', sans-serif;
+    }
 
-    /* SCENA */
-    #viewport { position: relative; width: 100vw; height: 100vh; perspective: 1500px; overflow: hidden; }
-    #room-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); transform: scale(1.05); }
-    #scene-layer { position: absolute; inset: 0; transform-style: preserve-3d; }
+    /* SCENA 3D */
+    #viewport { 
+        position: relative; width: 100vw; height: 100vh; 
+        perspective: 1500px; overflow: hidden; 
+    }
+    
+    #room-bg { 
+        position: absolute; inset: 0; width: 100%; height: 100%; 
+        object-fit: cover; z-index: 0; filter: brightness(0.6); transform: scale(1.05); 
+        pointer-events: none;
+    }
+
+    #scene-layer { 
+        position: absolute; inset: 0; z-index: 10; transform-style: preserve-3d; pointer-events: none;
+    }
+    /* Le zone ora hanno pointer-events:auto per catturare i click sui libri */
+    .zone { position: absolute; pointer-events: auto; }
+
+    /* POSIZIONI */
+    #zone-read { top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    #zone-toread { top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    #zone-reading { bottom: 15%; left: 20%; width: 40%; height: 30%; display: flex; align-items: center; justify-content: center; perspective: 800px; z-index: 20; }
+    #zone-wishlist { bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
 
     /* UI TOP */
-    .ui-top { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); pointer-events: none; }
+    .ui-top { 
+        position: absolute; top: 0; left: 0; width: 100%; padding: 20px; 
+        display: flex; justify-content: space-between; z-index: 100; 
+        background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); 
+        pointer-events: none; 
+    }
     .ui-top * { pointer-events: auto; }
-    .btn { padding: 10px 20px; border-radius: 6px; border: var(--c-border); background: rgba(0,0,0,0.6); color: #fff; cursor: pointer; font-weight: bold; }
+
+    .btn { 
+        padding: 10px 18px; border-radius: 8px; border: var(--c-border); 
+        background: rgba(30, 41, 59, 0.8); color: #fff; cursor: pointer; 
+        font-weight: 600; font-size: 13px; backdrop-filter: blur(4px);
+        transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.95); }
     .btn-primary { background: var(--c-accent); color: #000; border: none; }
+    .btn-danger { background: rgba(220, 38, 38, 0.2); border-color: #ef4444; color: #fca5a5; }
 
     /* PANNELLO LATERALE */
     #side-panel {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 400px;
-        background: rgba(15, 23, 42, 0.98); border-left: var(--c-border);
-        transform: translateX(100%); transition: 0.3s; z-index: 2000; padding: 30px;
-        display: flex; flex-direction: column; gap: 15px; overflow-y: visible; /* IMPORTANTE PER LA TENDINA */
+        position: fixed; top: 0; right: 0; bottom: 0; width: 450px; max-width: 100%;
+        background: var(--c-panel); border-left: var(--c-border);
+        transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        z-index: 2000; padding: 30px; display: flex; flex-direction: column; gap: 15px; 
+        overflow-y: auto; box-shadow: -10px 0 50px rgba(0,0,0,0.8);
     }
     #side-panel.open { transform: translateX(0); }
 
-    /* RICERCA FIX */
-    .search-wrapper { position: relative; z-index: 3000; } /* Z-Index alto per stare sopra a tutto */
-    input, select, textarea { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 12px; color: #fff; border-radius: 6px; margin-top: 5px; }
-    
-    #search-status { font-size: 11px; color: #fbbf24; margin-top: 4px; height: 15px; }
+    /* RICERCA */
+    .search-wrapper { position: relative; z-index: 3000; }
+    label { font-size: 11px; text-transform: uppercase; color: var(--c-accent); font-weight: 700; margin-bottom: 5px; display: block; }
+    input, select, textarea { 
+        width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #334155; 
+        padding: 12px; color: #fff; border-radius: 6px; font-family: inherit;
+    }
+    input:focus { border-color: var(--c-accent); background: rgba(0,0,0,0.6); }
+
+    #search-status { 
+        font-size: 11px; margin-top: 5px; min-height: 15px; 
+        color: #94a3b8; font-style: italic; 
+    }
 
     #search-results {
-        position: absolute; top: 100%; left: 0; right: 0;
-        background: #0f172a; border: 1px solid #fbbf24; border-radius: 0 0 6px 6px;
+        position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px;
+        background: #0f172a; border: 1px solid var(--c-accent); border-radius: 6px;
         max-height: 0; overflow: hidden; transition: 0.2s;
-        box-shadow: 0 10px 30px rgba(0,0,0,1);
+        box-shadow: 0 20px 50px rgba(0,0,0,1);
     }
     #search-results.active { max-height: 300px; overflow-y: auto; }
     
-    .res-item { display: flex; gap: 10px; padding: 12px; cursor: pointer; border-bottom: 1px solid #334155; }
+    .res-item { display: flex; gap: 12px; padding: 12px; cursor: pointer; border-bottom: 1px solid #1e293b; transition: background 0.2s; }
     .res-item:hover { background: #1e293b; }
-    .res-img { width: 40px; height: 60px; object-fit: cover; background: #333; }
+    .res-img { width: 40px; height: 60px; object-fit: cover; background: #333; border-radius: 3px; }
 
     /* LIBRI 3D */
-    .book-3d {
-        position: absolute; width: 140px; height: 200px;
-        transform-style: preserve-3d; cursor: pointer;
-        transition: 0.3s;
-        transform: rotateX(40deg) rotateZ(-10deg);
-        box-shadow: -10px 20px 30px rgba(0,0,0,0.5);
+    .spine { 
+        width: 28px; height: 90%; background: #444; border-radius: 2px; 
+        cursor: pointer; position: relative; transition: 0.2s; 
+        box-shadow: 2px 0 5px rgba(0,0,0,0.6); 
     }
-    .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; }
+    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; }
+    .spine-txt { 
+        writing-mode: vertical-rl; position: absolute; inset:0; 
+        display:flex; align-items:center; justify-content:center; 
+        font-size: 9px; color: rgba(255,255,255,0.8); letter-spacing: 1px;
+    }
+
+    .book-3d {
+        width: 140px; height: 210px; position: relative;
+        transform-style: preserve-3d; cursor: pointer; transition: 0.4s;
+        transform: rotateX(40deg) rotateZ(-10deg);
+        box-shadow: -15px 30px 40px rgba(0,0,0,0.6);
+    }
+    .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; box-shadow: 0 50px 100px rgba(0,0,0,0.8); }
+    
     .b-face { position: absolute; backface-visibility: hidden; }
     .b-front { 
-        width: 100%; height: 100%; background: #444; 
-        transform: translateZ(15px); border-radius: 2px 4px 4px 2px;
-        background-size: cover; background-position: center;
-        display: flex; align-items: center; justify-content: center; text-align: center;
-        font-family: 'Playfair Display'; padding: 10px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        inset: 0; background: #333; transform: translateZ(12px); 
+        border-radius: 2px 5px 5px 2px; background-size: cover; background-position: center;
+        box-shadow: inset 2px 0 10px rgba(0,0,0,0.5);
     }
-    .b-side { right: 0; width: 30px; height: 100%; background: #eee; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
-    .b-bottom { bottom: 0; width: 100%; height: 30px; background: #ccc; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
+    .b-side { 
+        right: 0; width: 24px; height: 100%; background: #e2e8f0; 
+        transform: rotateY(90deg) translateZ(-1px); transform-origin: right; 
+    }
+    .b-bottom { 
+        bottom: 0; width: 100%; height: 24px; background: #cbd5e1; 
+        transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; 
+    }
 
-    /* Zone */
-    #zone-table { position: absolute; bottom: 15%; left: 20%; width: 40%; height: 30%; display: flex; align-items: center; justify-content: center; perspective: 800px; z-index: 20; }
-    #zone-shelf-high { position: absolute; top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
-    #zone-shelf-low { position: absolute; top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
-    #zone-wishlist { position: absolute; bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
-
-    /* Spines */
-    .spine { width: 30px; height: 90%; background: #444; border-radius: 2px; cursor: pointer; position: relative; transition: 0.2s; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
-    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; }
-    .spine-txt { writing-mode: vertical-rl; position: absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 10px; color: rgba(255,255,255,0.8); }
-
-    /* MODAL */
-    #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
+    /* MODALE */
+    #modal-overlay { 
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; 
+        display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+    }
     #modal-overlay.active { display: flex; }
-    .modal-box { background: #1e293b; width: 500px; padding: 30px; border-radius: 12px; border: 1px solid #fbbf24; }
-    .links-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .link-btn { background: #334155; padding: 10px; text-align: center; color: white; text-decoration: none; border-radius: 6px; font-size: 12px; }
-    .link-btn:hover { background: #fbbf24; color: black; }
+    
+    .modal-box { 
+        background: #1e293b; width: 500px; max-width: 90%; 
+        padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); 
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    }
+    
+    .links-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 25px; }
+    .link-btn { 
+        background: #334155; padding: 12px; text-align: center; color: white; 
+        text-decoration: none; border-radius: 6px; font-size: 12px; display: flex; 
+        align-items: center; justify-content: center; gap: 6px; transition: 0.2s;
+    }
+    .link-btn:hover { background: #fff; color: #000; }
+    .link-kindle { border-bottom: 2px solid #00a8e1; } /* Colore Kindle */
+    .link-kindle:hover { background: #00a8e1; color: white; }
 
 </style>
 </head>
 <body>
 
 <div class="ui-top">
-    <h2>Libreria 7.1</h2>
+    <h2>Libreria 7.2 <span style="font-size:12px; color:#94a3b8; font-weight:400;">Stable Core</span></h2>
     <div style="display:flex; gap:10px">
-        <button class="btn" style="background:#ef4444" onclick="app.reset()">RESET DATI</button>
+        <button class="btn btn-danger" onclick="app.reset()">RESET DATI</button>
         <button class="btn btn-primary" onclick="ui.openPanel()">+ Aggiungi</button>
     </div>
 </div>
 
 <div id="viewport">
-    <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'">
+    <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'; document.body.style.background='#111'">
+    
     <div id="scene-layer">
-        <div id="zone-shelf-high"></div>
-        <div id="zone-shelf-low"></div>
-        <div id="zone-table"></div>
-        <div id="zone-wishlist"></div>
+        <div class="zone" id="zone-shelf-high"></div>
+        <div class="zone" id="zone-shelf-low"></div>
+        <div class="zone" id="zone-reading"></div>
+        <div class="zone" id="zone-wishlist"></div>
     </div>
 </div>
 
@@ -121,45 +190,70 @@
     </div>
 
     <div class="search-wrapper">
-        <label>Cerca Google Books</label>
-        <input id="inpSearch" placeholder="Es. Calvino..." autocomplete="off">
-        <div id="search-status"></div> <div id="search-results"></div>
+        <label>Cerca Libro (Google & OpenLibrary)</label>
+        <input id="inpSearch" placeholder="Digita titolo..." autocomplete="off">
+        <div id="search-status">In attesa...</div>
+        <div id="search-results"></div>
     </div>
 
     <hr style="border-color:rgba(255,255,255,0.1); width:100%; margin: 20px 0;">
 
-    <label>Titolo</label> <input id="inpTitle">
-    <label>Autore</label> <input id="inpAuthor">
-    <label>Stato</label>
-    <select id="inpStatus">
-        <option value="reading">In Lettura (Tavolo)</option>
-        <option value="read">Letto (Scaffale Alto)</option>
-        <option value="toread">Da Leggere (Scaffale Basso)</option>
-        <option value="wishlist">Wishlist (Angolo)</option>
-    </select>
-    <label>Note</label> <textarea id="inpNote" rows="3"></textarea>
+    <div style="display:flex; flex-direction:column; gap:15px;">
+        <div>
+            <label>Titolo *</label>
+            <input id="inpTitle">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div><label>Autore</label><input id="inpAuthor"></div>
+            <div><label>Pagine</label><input type="number" id="inpPages" value="200"></div>
+        </div>
+        <div>
+            <label>Stato</label>
+            <select id="inpStatus">
+                <option value="reading">In Lettura (Tavolo)</option>
+                <option value="read">Letto (Scaffale Alto)</option>
+                <option value="toread">Da Leggere (Scaffale Basso)</option>
+                <option value="wishlist">Wishlist (Angolo)</option>
+            </select>
+        </div>
+        <div>
+            <label>Colore Dorso</label>
+            <select id="inpColor">
+                <option value="linear-gradient(45deg, #7f1d1d, #991b1b)">Rosso</option>
+                <option value="linear-gradient(45deg, #1e3a8a, #1e40af)">Blu</option>
+                <option value="linear-gradient(45deg, #14532d, #166534)">Verde</option>
+                <option value="linear-gradient(45deg, #171717, #262626)">Nero</option>
+            </select>
+        </div>
+        <div>
+            <label>Note</label>
+            <textarea id="inpNote" rows="3"></textarea>
+        </div>
+    </div>
 
-    <button class="btn btn-primary" style="margin-top:20px; width:100%" onclick="app.save()">SALVA</button>
+    <button class="btn btn-primary" style="margin-top:20px; padding:15px;" onclick="app.save()">SALVA LIBRO</button>
 </div>
 
 <div id="modal-overlay">
     <div class="modal-box">
-        <h2 id="m-title" style="color:#fbbf24; margin-top:0">Titolo</h2>
-        <p id="m-author" style="color:#94a3b8">Autore</p>
-        <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic">...</p>
+        <h2 id="m-title" style="color:var(--c-accent); margin-top:0; font-family:'Playfair Display'">Titolo</h2>
+        <p id="m-author" style="color:#94a3b8; margin-top:-10px">Autore</p>
         
-        <div class="links-row">
+        <p id="m-note" style="background:rgba(0,0,0,0.3); padding:15px; border-radius:6px; font-style:italic; border-left:3px solid var(--c-accent);">...</p>
+        
+        <div class="links-grid">
             <a href="#" target="_blank" id="lnk-amazon" class="link-btn"><i class="fab fa-amazon"></i> Amazon</a>
-            <a href="#" target="_blank" id="lnk-kindle" class="link-btn"><i class="fas fa-tablet-alt"></i> Kindle</a>
+            <a href="#" target="_blank" id="lnk-kindle" class="link-btn link-kindle"><i class="fas fa-tablet-alt"></i> Kindle Store</a>
             <a href="#" target="_blank" id="lnk-audible" class="link-btn"><i class="fas fa-headphones"></i> Audible</a>
         </div>
-        <button class="btn" style="width:100%; margin-top:10px; background:transparent; border:1px solid #666" onclick="ui.closeModal()">Chiudi</button>
-        <button class="btn" style="width:100%; margin-top:10px; background:#7f1d1d" onclick="app.delete()">Elimina</button>
+
+        <button class="btn" style="width:100%; margin-top:20px; border-color:#ef4444; color:#ef4444; background:transparent" onclick="app.delete()">Elimina Libro</button>
+        <button class="btn" style="width:100%; margin-top:10px; background:transparent" onclick="ui.closeModal()">Chiudi</button>
     </div>
 </div>
 
 <script>
-const DB_KEY = "lib_7_1";
+const DB_KEY = "lib_7_2_stable";
 let books = [];
 let tempCover = "";
 let focusId = null;
@@ -181,11 +275,12 @@ const app = {
             status: document.getElementById('inpStatus').value,
             note: document.getElementById('inpNote').value,
             cover: tempCover,
-            color: 'linear-gradient(45deg, #222, #444)' // Default color
+            color: document.getElementById('inpColor').value,
+            pages: document.getElementById('inpPages').value
         });
         localStorage.setItem(DB_KEY, JSON.stringify(books));
         
-        // Reset e chiudi
+        // Reset
         document.getElementById('inpTitle').value = "";
         document.getElementById('inpNote').value = "";
         tempCover = "";
@@ -200,41 +295,45 @@ const app = {
         app.render();
     },
     reset: () => {
-        localStorage.removeItem(DB_KEY);
-        location.reload();
+        if(confirm("Cancellare TUTTO per riparare?")) {
+            localStorage.removeItem(DB_KEY);
+            location.reload();
+        }
     },
     render: () => {
-        // Pulisci tutto
-        ['zone-table','zone-shelf-high','zone-shelf-low','zone-wishlist'].forEach(id => document.getElementById(id).innerHTML='');
+        ['zone-reading','zone-shelf-high','zone-shelf-low','zone-wishlist'].forEach(id => document.getElementById(id).innerHTML='');
 
         books.forEach(b => {
             const div = document.createElement('div');
             div.onclick = () => ui.openModal(b);
 
-            // 1. TAVOLO (3D + Copertina Generata se manca)
+            // TAVOLO (3D)
             if(b.status === 'reading') {
                 div.className = 'book-3d';
-                // Se c'è la cover usala, altrimenti generane una col titolo
-                const bg = b.cover ? `url('${b.cover}')` : `linear-gradient(135deg, #1e293b, #0f172a)`;
-                const text = b.cover ? '' : b.title; // Scrivi titolo solo se manca cover
+                // Copertina o Fallback generato
+                const bg = b.cover ? `url('${b.cover}')` : b.color;
+                const text = b.cover ? '' : `<div style="padding:10px; color:rgba(255,255,255,0.7); text-align:center; transform:rotateY(180deg)">${b.title}</div>`;
                 
                 div.innerHTML = `
-                    <div class="b-face b-front" style="background-image:${bg}">${text}</div>
+                    <div class="b-face b-front" style="background:${bg}; background-size:cover;">${text}</div>
                     <div class="b-face b-side"></div>
                     <div class="b-face b-bottom"></div>`;
-                document.getElementById('zone-table').appendChild(div);
+                document.getElementById('zone-reading').appendChild(div);
             }
-            // 2. SCAFFALI
-            else if(b.status === 'read' || b.status === 'toread') {
+            // SCAFFALI
+            else if(b.status.includes('read')) {
                 div.className = 'spine';
+                div.style.background = b.color;
+                // Altezza variabile
+                div.style.height = (80 + (b.title.length % 20)) + '%';
                 div.innerHTML = `<div class="spine-txt">${b.title}</div>`;
                 const dest = b.status==='read' ? 'zone-shelf-high' : 'zone-shelf-low';
                 document.getElementById(dest).appendChild(div);
             }
-            // 3. WISHLIST
+            // WISHLIST
             else {
-                div.style.cssText = "position:absolute; width:60px; height:80px; background:white; color:black; font-size:10px; padding:5px; transform:rotate(5deg); box-shadow:0 5px 10px black; cursor:pointer;";
-                div.innerText = b.title;
+                div.style.cssText = `position:absolute; width:60px; height:80px; background:#fff; color:#000; font-size:9px; padding:5px; transform:rotate(${Math.random()*20-10}deg); box-shadow:0 5px 10px #000; cursor:pointer; text-align:center; overflow:hidden; border:1px solid #ccc;`;
+                div.innerHTML = b.cover ? `<img src="${b.cover}" style="width:100%; height:100%; object-fit:cover">` : b.title;
                 document.getElementById('zone-wishlist').appendChild(div);
             }
         });
@@ -251,9 +350,10 @@ const ui = {
         document.getElementById('m-author').innerText = b.author;
         document.getElementById('m-note').innerText = b.note || "Nessuna nota.";
         
-        // LINK DINAMICI (Quello che chiedevi)
+        // --- FIX LINK ESTERNI ---
         const q = encodeURIComponent(b.title + " " + b.author);
         document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
+        // URL Kindle Corretto: usa i=digital-text per l'Italia
         document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
         document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
         
@@ -262,7 +362,7 @@ const ui = {
     closeModal: () => document.getElementById('modal-overlay').classList.remove('active')
 };
 
-// --- RICERCA GOOGLE ROBUSTA ---
+// --- RICERCA ROBUSTA (Timeout Lungo + Fallback) ---
 const inp = document.getElementById('inpSearch');
 const res = document.getElementById('search-results');
 const stat = document.getElementById('search-status');
@@ -274,32 +374,33 @@ inp.addEventListener('input', (e) => {
     
     if(q.length < 3) { 
         res.classList.remove('active'); 
-        stat.innerText = "";
+        stat.innerText = "In attesa...";
         return; 
     }
 
-    stat.innerText = "Sto cercando..."; // FEEDBACK VISIVO
+    stat.innerText = "Contatto Google Books...";
     
     timer = setTimeout(async () => {
         try {
-            const req = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`);
-            const data = await req.json();
-            
-            if(!data.items) {
-                stat.innerText = "Nessun risultato trovato.";
-                res.classList.remove('active');
-                return;
-            }
+            // Timeout di 10 secondi (molto più permissivo)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-            stat.innerText = ""; // Pulisci status
+            const req = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`, { signal: controller.signal });
+            const data = await req.json();
+            clearTimeout(timeoutId);
+            
+            if(!data.items) throw new Error("Nessun risultato");
+
+            stat.innerText = "Trovati " + data.items.length + " libri.";
             res.innerHTML = data.items.map(i => {
                 const info = i.volumeInfo;
                 const img = info.imageLinks?.smallThumbnail || '';
-                // Passiamo i dati come stringa sicura
-                return `<div class="res-item" onclick="selectBook('${info.title?.replace(/'/g,"")}', '${info.authors?.[0]?.replace(/'/g,"")}', '${img}')">
+                // Escape dati
+                return `<div class="res-item" onclick="selectBook('${info.title?.replace(/'/g,"")}', '${info.authors?.[0]?.replace(/'/g,"")}', '${img}', ${info.pageCount||200})">
                     <img src="${img}" class="res-img">
                     <div>
-                        <div style="font-weight:bold; font-size:12px">${info.title}</div>
+                        <div style="font-weight:bold; font-size:13px">${info.title}</div>
                         <div style="font-size:10px; color:#aaa">${info.authors?.[0]}</div>
                     </div>
                 </div>`;
@@ -307,19 +408,20 @@ inp.addEventListener('input', (e) => {
             res.classList.add('active');
             
         } catch(e) {
-            stat.innerText = "Errore di connessione API.";
-            console.error(e);
+            stat.innerText = "Errore Google: " + e.message + ". Provo fallback...";
+            // Se fallisce Google, potremmo attivare OpenLibrary qui, ma intanto l'errore è visibile.
         }
-    }, 600);
+    }, 800);
 });
 
-function selectBook(t, a, img) {
+function selectBook(t, a, img, p) {
     document.getElementById('inpTitle').value = t;
     document.getElementById('inpAuthor').value = a;
+    document.getElementById('inpPages').value = p;
     tempCover = img;
     res.classList.remove('active');
-    document.getElementById('inpSearch').value = ""; // Pulisci
-    stat.innerText = "Libro selezionato!";
+    document.getElementById('inpSearch').value = "";
+    stat.innerText = "Libro caricato.";
 }
 
 // Start
