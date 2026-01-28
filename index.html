@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 9.0 - Italian Strict</title>
+<title>Libreria 10.0 - Final Search Fix</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
@@ -72,8 +72,8 @@
     .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; }
     .face { position: absolute; backface-visibility: hidden; }
     .f-front { inset: 0; background: #333; transform: translateZ(12px); background-size: cover; border-radius: 2px; }
-    .f-side { right: 0; width: 24px; height: 100%; background: #eee; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
-    .f-bottom { bottom: 0; width: 100%; height: 24px; background: #ccc; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
+    .f-side { right: 0; width: 24px; height: 100%; background: #e2e8f0; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
+    .f-bottom { bottom: 0; width: 100%; height: 24px; background: #cbd5e1; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
 
     .spine { width: 28px; height: 90%; background: #444; border-radius: 2px; cursor: pointer; position: relative; transition: 0.2s; box-shadow: 2px 0 5px rgba(0,0,0,0.7); }
     .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; }
@@ -100,7 +100,7 @@
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">9.0</span></h2>
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">10.0</span></h2>
     <div style="display:flex; gap:10px">
         <button class="btn btn-danger" onclick="app.reset()">RESET</button>
         <button class="btn" onclick="app.export()">Backup</button>
@@ -125,8 +125,8 @@
     </div>
     <div class="panel-body">
         <div class="search-block">
-            <label style="color:#fff">CERCA SOLO LIBRI ITALIANI</label>
-            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Calvino, Eco..." autocomplete="off">
+            <label style="color:#fff">CERCA LIBRO (Hybrid Search)</label>
+            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Italo Calvino, Eco..." autocomplete="off">
             <div id="search-status"></div>
             <div id="search-dropdown"></div>
         </div>
@@ -175,7 +175,7 @@
 </div>
 
 <script>
-const DB_KEY = "lib_v9_strict";
+const DB_KEY = "lib_v10_final";
 let books = [], tempCover = "", focusId = null;
 
 const searchEngine = {
@@ -183,45 +183,56 @@ const searchEngine = {
     search: async (query) => {
         const status = document.getElementById('search-status');
         const dropdown = document.getElementById('search-dropdown');
-        status.innerText = "Cerco su Google Books...";
+        status.innerText = "Ricerca in corso...";
         dropdown.innerHTML = ""; dropdown.classList.remove('active');
 
         try {
-            // SCARICA 40 RISULTATI GREZZI
-            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=40&printType=books`);
+            // 1. CHIEDIAMO TUTTO A GOOGLE (Senza filtri stretti)
+            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&printType=books`);
             const data = await res.json();
-            if(!data.items) throw new Error("Nessun dato");
+            
+            let items = [];
+            if (data.items) {
+                // 2. FILTRO CLIENT-SIDE INTELLIGENTE
+                // Cerchiamo libri che sono ITALIANI ('it') O che hanno l'autore/titolo corrispondente
+                items = data.items.map(i => {
+                    const info = i.volumeInfo;
+                    return {
+                        t: info.title || "Senza Titolo",
+                        a: info.authors ? info.authors[0] : "",
+                        pub: info.publisher || "",
+                        p: info.pageCount || 200,
+                        c: info.imageLinks ? info.imageLinks.smallThumbnail : "",
+                        lang: info.language || "en"
+                    };
+                }).filter(x => x.c !== ""); // Solo con copertina
 
-            // FILTRO ESTREMO LATO CLIENT
-            const italianBooks = data.items.filter(i => {
-                const lang = i.volumeInfo.language;
-                const hasImage = i.volumeInfo.imageLinks; // Solo libri con cover
-                return (lang === 'it') && hasImage;
-            });
+                // ORDINA: Italiani prima
+                items.sort((a,b) => (a.lang === 'it' ? -1 : 1));
+            }
 
-            if (italianBooks.length > 0) {
-                status.innerText = `Trovati ${italianBooks.length} libri italiani.`;
-                dropdown.innerHTML = italianBooks.map(item => {
-                    const info = item.volumeInfo;
-                    const dataStr = encodeURIComponent(JSON.stringify({
-                        t: info.title, a: info.authors?.[0]||"Sconosciuto", 
-                        p: info.pageCount||200, pub: info.publisher||"Editore N/A",
-                        c: info.imageLinks.thumbnail.replace('http:','https:')
-                    }));
+            // 3. RENDERIZZA
+            if (items.length > 0) {
+                status.innerText = `Trovati ${items.length} risultati.`;
+                dropdown.innerHTML = items.map(x => {
+                    const dataStr = encodeURIComponent(JSON.stringify(x));
                     return `<div class="res-item" onclick="ui.fillForm('${dataStr}')">
-                        <img src="${info.imageLinks.smallThumbnail}" class="res-img">
+                        <img src="${x.c}" class="res-img">
                         <div class="res-info">
-                            <div class="res-title">${info.title}</div>
-                            <div class="res-meta">${info.authors?.[0]||""}</div>
-                            <div class="res-pub">${info.publisher||""}</div>
+                            <div class="res-title">${x.t}</div>
+                            <div class="res-meta">${x.a}</div>
+                            <div class="res-pub">${x.pub}</div>
                         </div>
                     </div>`;
                 }).join('');
                 dropdown.classList.add('active');
             } else {
-                status.innerText = "Nessun libro italiano trovato con copertina.";
+                status.innerText = "Nessun risultato. Inserisci manualmente.";
             }
-        } catch (e) { status.innerText = "Nessun risultato. Inserisci manualmente."; }
+        } catch (e) { 
+            console.error(e);
+            status.innerText = "Errore di rete."; 
+        }
     }
 };
 
