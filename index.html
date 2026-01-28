@@ -5,50 +5,238 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Libreria personale</title>
   <style>
-    :root { --bg:#0b0d10; --card:#12161c; --text:#e9eef5; --muted:#9aa6b2; --border:#223041; --accent:#7aa2f7; --danger:#ff6b6b; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
-    header { padding:24px 16px 8px; max-width:1100px; margin:0 auto; }
-    h1 { margin:0 0 6px; font-size:20px; font-weight:650; }
-    .sub { color:var(--muted); font-size:13px; }
-    main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:14px; }
-    .panel { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
-    label { display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
-    input, select, button { font:inherit; }
-    input, select {
-      background:#0f1319; color:var(--text); border:1px solid var(--border);
-      border-radius:10px; padding:10px 10px; min-width:180px;
+    :root{
+      --bg:#07090c; --card:#10141b; --text:#e9eef5; --muted:#9aa6b2; --border:#223041;
+      --accent:#7aa2f7; --danger:#ff6b6b;
+      --wood1:#2b1c12; --wood2:#3a2618; --wood3:#4b321f;
+      --ember:#ffb04d; --fire1:#ff6b2d; --fire2:#ffd06a;
     }
-    input::placeholder { color:#66727e; }
-    button {
-      background:var(--accent); color:#0b0d10; border:none; border-radius:10px;
-      padding:10px 12px; cursor:pointer; font-weight:650;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:22px 16px 10px;max-width:1100px;margin:0 auto}
+    h1{margin:0 0 6px;font-size:20px;font-weight:650}
+    .sub{color:var(--muted);font-size:13px}
+    main{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:14px}
+
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input,select,button{font:inherit}
+    input,select{
+      background:#0c1016;color:var(--text);border:1px solid var(--border);border-radius:10px;
+      padding:10px 10px;min-width:180px
     }
-    button.secondary { background:transparent; color:var(--text); border:1px solid var(--border); }
-    button.danger { background:transparent; color:var(--danger); border:1px solid rgba(255,107,107,.35); }
-    .grid3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; }
-    @media (max-width: 920px) { .grid3 { grid-template-columns: 1fr; } }
-    h2 { margin:0 0 10px; font-size:15px; font-weight:650; color:#d8e1ee; }
-    .toolbar { display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; margin-top:10px; }
-    .list { display:flex; flex-direction:column; gap:10px; }
-    .item {
-      border:1px solid var(--border); border-radius:12px; padding:10px; background:#0f1319;
-      display:flex; gap:10px; justify-content:space-between; align-items:flex-start;
+    input::placeholder{color:#66727e}
+    button{
+      background:var(--accent);color:#0b0d10;border:none;border-radius:10px;padding:10px 12px;
+      cursor:pointer;font-weight:650
     }
-    .meta { display:flex; flex-direction:column; gap:3px; }
-    .title { font-weight:700; }
-    .small { color:var(--muted); font-size:12px; }
-    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
-    .chip { font-size:11px; color:#cfe1ff; border:1px solid rgba(122,162,247,.35); padding:2px 8px; border-radius:999px; }
-    .actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .actions button { padding:7px 10px; font-size:12px; }
-    .counts { color:var(--muted); font-size:12px; }
-    textarea {
-      background:#0f1319; color:var(--text); border:1px solid var(--border);
-      border-radius:10px; padding:10px; width:100%; min-height:110px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:12px;
+    button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+    button.danger{background:transparent;color:var(--danger);border:1px solid rgba(255,107,107,.35)}
+    h2{margin:0 0 10px;font-size:15px;font-weight:650;color:#d8e1ee}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:10px}
+    .counts{color:var(--muted);font-size:12px}
+
+    /* Toggle viste */
+    .viewbar{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .seg{display:flex;gap:8px;align-items:center}
+    .seg button{padding:8px 10px;font-size:12px;border-radius:999px}
+    .seg button.active{background:var(--accent);color:#0b0d10;border:none}
+    .seg button.inactive{background:transparent;color:var(--text);border:1px solid var(--border)}
+
+    /* LISTA */
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width: 920px){.grid3{grid-template-columns:1fr}}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid var(--border);border-radius:12px;padding:10px;background:#0c1016;
+      display:flex;gap:10px;justify-content:space-between;align-items:flex-start
     }
+    .meta{display:flex;flex-direction:column;gap:3px}
+    .title{font-weight:700}
+    .small{color:var(--muted);font-size:12px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .chip{font-size:11px;color:#cfe1ff;border:1px solid rgba(122,162,247,.35);padding:2px 8px;border-radius:999px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .actions button{padding:7px 10px;font-size:12px}
+
+    /* SCENA */
+    .sceneWrap{padding:0}
+    .scene{
+      border-radius:14px; overflow:hidden; border:1px solid var(--border);
+      background:
+        radial-gradient(1200px 600px at 70% 15%, rgba(122,162,247,.12), transparent 60%),
+        radial-gradient(900px 500px at 15% 0%, rgba(255,208,106,.08), transparent 55%),
+        linear-gradient(180deg, #07090c 0%, #05070a 100%);
+      min-height:520px;
+      position:relative;
+      padding:18px;
+      display:grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 920px){ .scene{grid-template-columns:1fr; min-height:820px;} }
+
+    .sceneCard{
+      border:1px solid rgba(34,48,65,.8);
+      background:rgba(16,20,27,.55);
+      backdrop-filter: blur(6px);
+      border-radius:14px;
+      padding:14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .sceneTitle{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .sceneTitle span{font-weight:650}
+    .badge{font-size:11px;color:#cfe1ff;border:1px solid rgba(122,162,247,.35);padding:2px 8px;border-radius:999px}
+
+    /* Legno e scaffali */
+    .shelf{
+      background:linear-gradient(180deg,var(--wood2),var(--wood1));
+      border:1px solid rgba(0,0,0,.35);
+      border-radius:12px;
+      padding:12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 25px rgba(0,0,0,.35);
+    }
+    .shelfBar{
+      height:10px;border-radius:8px;
+      background:linear-gradient(90deg,var(--wood3),var(--wood2));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+      margin:10px 0 12px;
+    }
+
+    /* Libri “spina” (verticali) */
+    .spines{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .spine{
+      width:34px;
+      height:140px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,.35);
+      box-shadow: 0 8px 18px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .spine::before{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(90deg, rgba(255,255,255,.12), transparent 35%, rgba(0,0,0,.22));
+      pointer-events:none;
+    }
+    .spineTxt{
+      position:absolute; left:6px; right:6px; bottom:10px;
+      font-size:10px; color:#0b0d10; font-weight:750;
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      text-shadow: 0 1px 0 rgba(255,255,255,.12);
+      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+      max-height:118px;
+    }
+    .spineSmall{
+      position:absolute; left:6px; right:6px; top:8px;
+      font-size:9px; color:rgba(11,13,16,.85);
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      opacity:.9;
+      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+      max-height:80px;
+    }
+
+    /* Libri orizzontali (stack) */
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .hbook{
+      height:34px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.35);
+      box-shadow: 0 8px 18px rgba(0,0,0,.35);
+      display:flex;align-items:center;gap:10px;
+      padding:0 12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .hbook::before{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), transparent 40%, rgba(0,0,0,.20));
+      pointer-events:none;
+    }
+    .hbookTitle{font-weight:750;font-size:12px;color:#0b0d10;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hbookAuthor{font-size:11px;color:rgba(11,13,16,.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* Area “fuoco + tavolo” */
+    .fireplace{
+      position:relative;
+      border-radius:12px;
+      border:1px solid rgba(34,48,65,.8);
+      background:
+        radial-gradient(260px 120px at 55% 70%, rgba(255,176,77,.18), transparent 65%),
+        radial-gradient(200px 100px at 55% 70%, rgba(255,107,45,.15), transparent 60%),
+        linear-gradient(180deg, rgba(12,16,22,.65), rgba(10,12,16,.65));
+      padding:14px;
+      overflow:hidden;
+    }
+    .fireRow{display:grid;grid-template-columns: 1fr; gap:12px}
+    .fire{
+      height:120px;border-radius:12px;
+      background:
+        radial-gradient(50px 70px at 45% 80%, rgba(255,208,106,.95), transparent 70%),
+        radial-gradient(60px 90px at 55% 85%, rgba(255,107,45,.92), transparent 72%),
+        radial-gradient(70px 110px at 60% 90%, rgba(255,176,77,.6), transparent 75%),
+        linear-gradient(180deg, rgba(255,107,45,.10), transparent 60%);
+      filter: blur(.2px);
+      box-shadow: 0 0 30px rgba(255,107,45,.25);
+      position:relative;
+    }
+    .logs{
+      margin-top:-18px;
+      height:30px;border-radius:999px;
+      background:linear-gradient(90deg, #2b1c12, #1f140d);
+      opacity:.9;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .table{
+      height:120px;border-radius:14px;
+      background:linear-gradient(180deg,var(--wood3),var(--wood1));
+      border:1px solid rgba(0,0,0,.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 20px 35px rgba(0,0,0,.35);
+      position:relative;
+      padding:14px;
+      display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;
+    }
+    .openBook{
+      width:150px; height:78px; border-radius:12px;
+      background:linear-gradient(180deg,#e7dcc7,#d9ccb4);
+      border:1px solid rgba(0,0,0,.18);
+      box-shadow: 0 10px 22px rgba(0,0,0,.32);
+      position:relative;
+      overflow:hidden;
+    }
+    .openBook::before{
+      content:""; position:absolute; top:0; bottom:0; left:50%;
+      width:2px; background:rgba(0,0,0,.12);
+    }
+    .bookmark{
+      position:absolute; top:-2px; left:62%;
+      width:10px; height:54px;
+      background:linear-gradient(180deg,#7aa2f7,#4d79ff);
+      border-radius:0 0 6px 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    }
+    .readingPiles{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+    .miniSpine{
+      width:30px; height:58px; border-radius:8px;
+      border:1px solid rgba(0,0,0,.35);
+      box-shadow: 0 8px 16px rgba(0,0,0,.30);
+      position:relative; overflow:hidden;
+    }
+    .miniSpine::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.12),transparent 35%,rgba(0,0,0,.22))}
+    .miniTxt{
+      position:absolute; left:5px; right:5px; bottom:6px;
+      font-size:9px; color:#0b0d10; font-weight:750;
+      writing-mode: vertical-rl; transform: rotate(180deg);
+      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+      max-height:46px;
+    }
+
+    /* Utility */
+    .hidden{display:none !important}
   </style>
 </head>
 <body>
@@ -59,8 +247,19 @@
 
   <main>
     <section class="panel">
-      <h2>Aggiungi / modifica libro</h2>
-      <div class="row">
+      <div class="viewbar">
+        <div>
+          <h2 style="margin:0 0 6px;">Aggiungi / modifica libro</h2>
+          <div class="counts" id="counts"></div>
+        </div>
+
+        <div class="seg" aria-label="Selettore vista">
+          <button id="btnList" class="active" type="button">Lista</button>
+          <button id="btnScene" class="inactive" type="button">Scena</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
         <div>
           <label for="title">Titolo *</label>
           <input id="title" placeholder="es. Demian" />
@@ -81,11 +280,8 @@
           <label for="rating">Valutazione (0–5)</label>
           <select id="rating">
             <option value="">—</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
           </select>
         </div>
         <div>
@@ -93,10 +289,10 @@
           <input id="tags" placeholder="es. filosofia, romanzo, classici" />
         </div>
         <div>
-          <button id="saveBtn">Salva</button>
+          <button id="saveBtn" type="button">Salva</button>
         </div>
         <div>
-          <button id="cancelEditBtn" class="secondary" style="display:none;">Annulla modifica</button>
+          <button id="cancelEditBtn" class="secondary hidden" type="button">Annulla modifica</button>
         </div>
       </div>
 
@@ -120,32 +316,32 @@
         </div>
 
         <div class="row" style="align-items:center;">
-          <div class="counts" id="counts"></div>
-          <button id="exportBtn" class="secondary">Esporta JSON</button>
-          <button id="importBtn" class="secondary">Importa JSON</button>
-          <button id="wipeBtn" class="danger">Svuota tutto</button>
+          <button id="exportBtn" class="secondary" type="button">Esporta JSON</button>
+          <button id="importBtn" class="secondary" type="button">Importa JSON</button>
+          <button id="wipeBtn" class="danger" type="button">Svuota tutto</button>
         </div>
       </div>
 
-      <div id="importArea" style="display:none; margin-top:10px;">
+      <div id="importArea" class="hidden" style="margin-top:10px;">
         <div class="small">Incolla qui il JSON esportato e premi “Conferma import”.</div>
-        <textarea id="importText"></textarea>
+        <textarea id="importText" style="background:#0c1016;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;width:100%;min-height:110px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12px;"></textarea>
         <div class="row" style="margin-top:8px;">
-          <button id="confirmImportBtn">Conferma import</button>
-          <button id="cancelImportBtn" class="secondary">Annulla</button>
+          <button id="confirmImportBtn" type="button">Conferma import</button>
+          <button id="cancelImportBtn" class="secondary" type="button">Annulla</button>
         </div>
       </div>
 
-      <div id="exportArea" style="display:none; margin-top:10px;">
+      <div id="exportArea" class="hidden" style="margin-top:10px;">
         <div class="small">Copia e salva questo JSON (backup).</div>
-        <textarea id="exportText" readonly></textarea>
+        <textarea id="exportText" readonly style="background:#0c1016;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;width:100%;min-height:110px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12px;"></textarea>
         <div class="row" style="margin-top:8px;">
-          <button id="closeExportBtn" class="secondary">Chiudi</button>
+          <button id="closeExportBtn" class="secondary" type="button">Chiudi</button>
         </div>
       </div>
     </section>
 
-    <section class="grid3">
+    <!-- VISTA LISTA -->
+    <section id="viewList" class="grid3">
       <section class="panel">
         <h2>Da leggere</h2>
         <div class="list" id="list-to-read"></div>
@@ -161,6 +357,53 @@
         <div class="list" id="list-read"></div>
       </section>
     </section>
+
+    <!-- VISTA SCENA -->
+    <section id="viewScene" class="panel sceneWrap hidden">
+      <div class="scene">
+        <div class="sceneCard">
+          <div class="sceneTitle">
+            <span>Letti</span>
+            <span class="badge">Scaffale</span>
+          </div>
+          <div class="shelf">
+            <div class="shelfBar"></div>
+            <div id="spines-read" class="spines"></div>
+          </div>
+        </div>
+
+        <div class="sceneCard">
+          <div class="sceneTitle">
+            <span>In lettura</span>
+            <span class="badge">Tavolo + fuoco</span>
+          </div>
+
+          <div class="fireplace">
+            <div class="fireRow">
+              <div class="fire"></div>
+              <div class="logs"></div>
+              <div class="table">
+                <div class="openBook" title="Libro aperto">
+                  <div class="bookmark" title="Segnalibro"></div>
+                </div>
+                <div id="reading-mini" class="readingPiles"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sceneCard" style="grid-column:1 / -1;">
+          <div class="sceneTitle">
+            <span>Da leggere</span>
+            <span class="badge">Scaffale orizzontale</span>
+          </div>
+          <div class="shelf">
+            <div class="shelfBar"></div>
+            <div id="stack-to-read" class="stack"></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -172,48 +415,48 @@
       books: [],
       editingId: null,
       search: "",
-      sort: "updated_desc"
+      sort: "updated_desc",
+      view: "list" // list | scene
     };
 
-    function nowIso() { return new Date().toISOString(); }
+    function nowIso(){ return new Date().toISOString(); }
+    function uid(){ return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16); }
+    function normalize(s){ return (s || "").toString().trim().toLowerCase(); }
 
-    function uid() {
-      return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
-    }
-
-    function normalize(s) {
-      return (s || "").toString().trim().toLowerCase();
-    }
-
-    function load() {
-      try {
+    function load(){
+      try{
         const raw = localStorage.getItem(STORAGE_KEY);
         state.books = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(state.books)) state.books = [];
-      } catch {
-        state.books = [];
-      }
+        if(!Array.isArray(state.books)) state.books = [];
+      }catch{ state.books = []; }
+
+      // vista salvata
+      const v = localStorage.getItem(STORAGE_KEY + "_view");
+      if(v === "scene" || v === "list") state.view = v;
     }
 
-    function save() {
+    function save(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.books));
     }
 
-    function upsertBook(book) {
+    function saveView(){
+      localStorage.setItem(STORAGE_KEY + "_view", state.view);
+    }
+
+    function upsertBook(book){
       const idx = state.books.findIndex(b => b.id === book.id);
-      if (idx >= 0) state.books[idx] = book;
-      else state.books.push(book);
+      if(idx >= 0) state.books[idx] = book; else state.books.push(book);
       save();
       render();
     }
 
-    function removeBook(id) {
+    function removeBook(id){
       state.books = state.books.filter(b => b.id !== id);
       save();
       render();
     }
 
-    function setEditing(book) {
+    function setEditing(book){
       state.editingId = book.id;
       el("title").value = book.title || "";
       el("author").value = book.author || "";
@@ -221,10 +464,10 @@
       el("rating").value = book.rating ?? "";
       el("tags").value = (book.tags || []).join(", ");
       el("saveBtn").textContent = "Aggiorna";
-      el("cancelEditBtn").style.display = "inline-block";
+      el("cancelEditBtn").classList.remove("hidden");
     }
 
-    function clearForm() {
+    function clearForm(){
       state.editingId = null;
       el("title").value = "";
       el("author").value = "";
@@ -232,19 +475,16 @@
       el("rating").value = "";
       el("tags").value = "";
       el("saveBtn").textContent = "Salva";
-      el("cancelEditBtn").style.display = "none";
+      el("cancelEditBtn").classList.add("hidden");
     }
 
-    function getFilteredSorted() {
+    function getFilteredSorted(){
       const q = normalize(state.search);
       let items = [...state.books];
 
-      if (q) {
+      if(q){
         items = items.filter(b => {
-          const hay = [
-            b.title, b.author,
-            (b.tags || []).join(" ")
-          ].map(normalize).join(" ");
+          const hay = [b.title, b.author, (b.tags || []).join(" ")].map(normalize).join(" ");
           return hay.includes(q);
         });
       }
@@ -253,19 +493,34 @@
       const cmpStr = (a,b) => (a||"").localeCompare(b||"", "it", { sensitivity:"base" });
 
       items.sort((a,b) => {
-        if (sort === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
-        if (sort === "updated_asc")  return (a.updatedAt || "").localeCompare(b.updatedAt || "");
-        if (sort === "title_asc")    return cmpStr(a.title, b.title);
-        if (sort === "title_desc")   return cmpStr(b.title, a.title);
-        if (sort === "author_asc")   return cmpStr(a.author, b.author);
-        if (sort === "author_desc")  return cmpStr(b.author, a.author);
+        if(sort === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+        if(sort === "updated_asc")  return (a.updatedAt || "").localeCompare(b.updatedAt || "");
+        if(sort === "title_asc")    return cmpStr(a.title, b.title);
+        if(sort === "title_desc")   return cmpStr(b.title, a.title);
+        if(sort === "author_asc")   return cmpStr(a.author, b.author);
+        if(sort === "author_desc")  return cmpStr(b.author, a.author);
         return 0;
       });
 
       return items;
     }
 
-    function bookCard(book) {
+    function parseTags(raw){
+      return (raw || "").split(",").map(s => s.trim()).filter(Boolean);
+    }
+
+    // Colori deterministici dai contenuti (niente random che cambia a ogni render)
+    function hashColor(str){
+      const s = (str || "x").toString();
+      let h = 0;
+      for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+      const hue = h % 360;
+      // tonalità “scura” leggibile sulla scena
+      return `linear-gradient(180deg, hsl(${hue} 55% 55%), hsl(${(hue+25)%360} 55% 40%))`;
+    }
+
+    /* --------- RENDER LISTA --------- */
+    function bookCard(book){
       const tags = (book.tags || []).filter(Boolean);
       const rating = book.rating ? `★ ${book.rating}/5` : "";
 
@@ -299,8 +554,8 @@
 
       left.appendChild(t);
       left.appendChild(a);
-      if (u.textContent) left.appendChild(u);
-      if (tags.length) left.appendChild(chips);
+      if(u.textContent) left.appendChild(u);
+      if(tags.length) left.appendChild(chips);
 
       const actions = document.createElement("div");
       actions.className = "actions";
@@ -314,7 +569,7 @@
       cycleBtn.className = "secondary";
       cycleBtn.textContent = "Cambia stato";
       cycleBtn.onclick = () => {
-        const order = ["to-read", "reading", "read"];
+        const order = ["to-read","reading","read"];
         const i = order.indexOf(book.status);
         const next = order[(i + 1) % order.length];
         upsertBook({ ...book, status: next, updatedAt: nowIso() });
@@ -325,7 +580,7 @@
       delBtn.textContent = "Elimina";
       delBtn.onclick = () => {
         const ok = confirm(`Eliminare "${book.title}"?`);
-        if (ok) removeBook(book.id);
+        if(ok) removeBook(book.id);
       };
 
       actions.appendChild(editBtn);
@@ -337,7 +592,7 @@
       return wrap;
     }
 
-    function render() {
+    function renderList(items){
       const lists = {
         "to-read": el("list-to-read"),
         "reading": el("list-reading"),
@@ -345,22 +600,13 @@
       };
       Object.values(lists).forEach(node => node.innerHTML = "");
 
-      const items = getFilteredSorted();
-
-      const counts = { "to-read":0, "reading":0, "read":0 };
-      items.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
-
-      el("counts").textContent =
-        `Totale: ${items.length} • Da leggere: ${counts["to-read"]} • In lettura: ${counts["reading"]} • Letti: ${counts["read"]}`;
-
       items.forEach(book => {
         const target = lists[book.status] || lists["to-read"];
         target.appendChild(bookCard(book));
       });
 
-      // placeholder quando vuoto
-      for (const [k,node] of Object.entries(lists)) {
-        if (!node.children.length) {
+      for(const node of Object.values(lists)){
+        if(!node.children.length){
           const p = document.createElement("div");
           p.className = "small";
           p.textContent = "Nessun libro qui (per ora).";
@@ -369,11 +615,132 @@
       }
     }
 
-    function parseTags(raw) {
-      return (raw || "")
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
+    /* --------- RENDER SCENA --------- */
+    function renderScene(items){
+      const read = items.filter(b => b.status === "read");
+      const reading = items.filter(b => b.status === "reading");
+      const toread = items.filter(b => b.status === "to-read");
+
+      // spine lette
+      const sp = el("spines-read");
+      sp.innerHTML = "";
+      if(!read.length){
+        const p = document.createElement("div");
+        p.className = "small";
+        p.textContent = "Scaffale vuoto (per ora).";
+        sp.appendChild(p);
+      } else {
+        read.slice(0, 48).forEach(b => {
+          const d = document.createElement("div");
+          d.className = "spine";
+          d.style.background = hashColor((b.title || "") + "|" + (b.author || ""));
+          d.title = `${b.title || ""}${b.author ? " — " + b.author : ""}`;
+
+          const a = document.createElement("div");
+          a.className = "spineSmall";
+          a.textContent = (b.author || "").slice(0, 18);
+
+          const t = document.createElement("div");
+          t.className = "spineTxt";
+          t.textContent = (b.title || "").slice(0, 26);
+
+          if(b.author) d.appendChild(a);
+          d.appendChild(t);
+          sp.appendChild(d);
+        });
+      }
+
+      // mini pile in lettura sul tavolo
+      const rp = el("reading-mini");
+      rp.innerHTML = "";
+      if(!reading.length){
+        const p = document.createElement("div");
+        p.className = "small";
+        p.textContent = "Nessun libro in lettura.";
+        rp.appendChild(p);
+      } else {
+        reading.slice(0, 12).forEach(b => {
+          const d = document.createElement("div");
+          d.className = "miniSpine";
+          d.style.background = hashColor((b.title || "") + "|reading|" + (b.author || ""));
+          d.title = `${b.title || ""}${b.author ? " — " + b.author : ""}`;
+
+          const t = document.createElement("div");
+          t.className = "miniTxt";
+          t.textContent = (b.title || "").slice(0, 18);
+
+          d.appendChild(t);
+          rp.appendChild(d);
+        });
+      }
+
+      // stack da leggere
+      const st = el("stack-to-read");
+      st.innerHTML = "";
+      if(!toread.length){
+        const p = document.createElement("div");
+        p.className = "small";
+        p.textContent = "Nessun libro da leggere.";
+        st.appendChild(p);
+      } else {
+        toread.slice(0, 20).forEach(b => {
+          const d = document.createElement("div");
+          d.className = "hbook";
+          d.style.background = hashColor((b.title || "") + "|toread|" + (b.author || ""));
+          d.title = `${b.title || ""}${b.author ? " — " + b.author : ""}`;
+
+          const info = document.createElement("div");
+          info.style.display = "flex";
+          info.style.flexDirection = "column";
+          info.style.minWidth = "0";
+
+          const t = document.createElement("div");
+          t.className = "hbookTitle";
+          t.textContent = b.title || "(senza titolo)";
+
+          const a = document.createElement("div");
+          a.className = "hbookAuthor";
+          a.textContent = b.author || "—";
+
+          info.appendChild(t);
+          info.appendChild(a);
+          d.appendChild(info);
+          st.appendChild(d);
+        });
+      }
+    }
+
+    function setView(v){
+      state.view = v;
+      saveView();
+
+      const isList = v === "list";
+      el("viewList").classList.toggle("hidden", !isList);
+      el("viewScene").classList.toggle("hidden", isList);
+
+      const bl = el("btnList");
+      const bs = el("btnScene");
+      if(isList){
+        bl.classList.add("active"); bl.classList.remove("inactive");
+        bs.classList.add("inactive"); bs.classList.remove("active");
+      }else{
+        bs.classList.add("active"); bs.classList.remove("inactive");
+        bl.classList.add("inactive"); bl.classList.remove("active");
+      }
+    }
+
+    function render(){
+      const items = getFilteredSorted();
+
+      const counts = { "to-read":0, "reading":0, "read":0 };
+      items.forEach(b => { if(counts[b.status] !== undefined) counts[b.status]++; });
+
+      el("counts").textContent =
+        `Totale: ${items.length} • Da leggere: ${counts["to-read"]} • In lettura: ${counts["reading"]} • Letti: ${counts["read"]}`;
+
+      renderList(items);
+      renderScene(items);
+      setView(state.view);
     }
 
     // Eventi UI
@@ -381,10 +748,7 @@
       const title = el("title").value.trim();
       const status = el("status").value;
 
-      if (!title) {
-        alert("Titolo obbligatorio.");
-        return;
-      }
+      if(!title){ alert("Titolo obbligatorio."); return; }
 
       const author = el("author").value.trim();
       const ratingRaw = el("rating").value;
@@ -392,95 +756,73 @@
       const tags = parseTags(el("tags").value);
 
       const ts = nowIso();
-      if (state.editingId) {
+      if(state.editingId){
         const existing = state.books.find(b => b.id === state.editingId);
-        if (!existing) { clearForm(); return; }
-        upsertBook({
-          ...existing,
-          title, author, status, rating, tags,
-          updatedAt: ts
-        });
+        if(!existing){ clearForm(); return; }
+        upsertBook({ ...existing, title, author, status, rating, tags, updatedAt: ts });
       } else {
-        upsertBook({
-          id: uid(),
-          title, author, status, rating, tags,
-          createdAt: ts,
-          updatedAt: ts
-        });
+        upsertBook({ id: uid(), title, author, status, rating, tags, createdAt: ts, updatedAt: ts });
       }
-
       clearForm();
     });
 
     el("cancelEditBtn").addEventListener("click", clearForm);
 
-    el("search").addEventListener("input", (e) => {
-      state.search = e.target.value;
-      render();
-    });
+    el("search").addEventListener("input", (e) => { state.search = e.target.value; render(); });
+    el("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
 
-    el("sort").addEventListener("change", (e) => {
-      state.sort = e.target.value;
-      render();
-    });
-
-    // Export/Import/Wipe
     el("exportBtn").addEventListener("click", () => {
       el("exportText").value = JSON.stringify(state.books, null, 2);
-      el("exportArea").style.display = "block";
-      el("importArea").style.display = "none";
+      el("exportArea").classList.remove("hidden");
+      el("importArea").classList.add("hidden");
     });
-
-    el("closeExportBtn").addEventListener("click", () => {
-      el("exportArea").style.display = "none";
-    });
+    el("closeExportBtn").addEventListener("click", () => el("exportArea").classList.add("hidden"));
 
     el("importBtn").addEventListener("click", () => {
       el("importText").value = "";
-      el("importArea").style.display = "block";
-      el("exportArea").style.display = "none";
+      el("importArea").classList.remove("hidden");
+      el("exportArea").classList.add("hidden");
     });
-
-    el("cancelImportBtn").addEventListener("click", () => {
-      el("importArea").style.display = "none";
-    });
+    el("cancelImportBtn").addEventListener("click", () => el("importArea").classList.add("hidden"));
 
     el("confirmImportBtn").addEventListener("click", () => {
-      try {
+      try{
         const parsed = JSON.parse(el("importText").value);
-        if (!Array.isArray(parsed)) throw new Error("JSON non è una lista");
-        // Sanificazione minima
-        state.books = parsed
-          .filter(x => x && typeof x === "object")
-          .map(x => ({
-            id: x.id || uid(),
-            title: (x.title || "").toString(),
-            author: (x.author || "").toString(),
-            status: ["to-read","reading","read"].includes(x.status) ? x.status : "to-read",
-            rating: (x.rating === null || x.rating === undefined || x.rating === "") ? null : Number(x.rating),
-            tags: Array.isArray(x.tags) ? x.tags.map(t => t.toString()) : [],
-            createdAt: x.createdAt || nowIso(),
-            updatedAt: x.updatedAt || nowIso()
-          }));
+        if(!Array.isArray(parsed)) throw new Error("JSON non è una lista");
+        state.books = parsed.filter(x => x && typeof x === "object").map(x => ({
+          id: x.id || uid(),
+          title: (x.title || "").toString(),
+          author: (x.author || "").toString(),
+          status: ["to-read","reading","read"].includes(x.status) ? x.status : "to-read",
+          rating: (x.rating === null || x.rating === undefined || x.rating === "") ? null : Number(x.rating),
+          tags: Array.isArray(x.tags) ? x.tags.map(t => t.toString()) : [],
+          createdAt: x.createdAt || nowIso(),
+          updatedAt: x.updatedAt || nowIso()
+        }));
         save();
-        el("importArea").style.display = "none";
+        el("importArea").classList.add("hidden");
         render();
-      } catch (err) {
+      } catch(err){
         alert("Import fallito: " + (err?.message || "errore"));
       }
     });
 
     el("wipeBtn").addEventListener("click", () => {
       const ok = confirm("Sicuro di voler eliminare TUTTI i libri salvati in questo browser?");
-      if (!ok) return;
+      if(!ok) return;
       state.books = [];
       save();
       clearForm();
       render();
     });
 
+    // Toggle viste
+    el("btnList").addEventListener("click", () => setView("list"));
+    el("btnScene").addEventListener("click", () => setView("scene"));
+
     // Init
     load();
+    setView(state.view);
     render();
   </script>
 </body>
