@@ -951,12 +951,978 @@
     stats.textContent = `Totale: ${total} · Letti: ${read} · In lettura: ${reading} · Da leggere: ${toRead}`;
     roomStats.textContent = `Stanza: ${total} libri`;
   }
+<script>
+(() => {
+  const LS_KEY = "libreria.books.v3";
 
-  // -------- Init + bind ----------
+  // DOM
+  const q = document.getElementById("q");
+  const dropdown = document.getElementById("dropdown");
+  const ddList = document.getElementById("ddList");
+  const ddTitle = document.getElementById("ddTitle");
+
+  const statusEl = document.getElementById("status");
+  const ratingEl = document.getElementById("rating");
+  const commentEl = document.getElementById("comment");
+
+  const preferItalianEl = document.getElementById("preferItalian");
+  const onlyItalianEditionsEl = document.getElementById("onlyItalianEditions");
+
+  const btnSave = document.getElementById("btnSave");
+  const btnClearForm = document.getElementById("btnClearForm");
+  const btnPickEdition = document.getElementById("btnPickEdition");
+  const stats = document.getElementById("stats");
+
+  const lookupState = document.getElementById("lookupState");
+  const btnToggleLookup = document.getElementById("btnToggleLookup");
+  const lookupHint = document.getElementById("lookupHint");
+
+  const btnExport = document.getElementById("btnExport");
+  const btnImport = document.getElementById("btnImport");
+  const btnWipe = document.getElementById("btnWipe");
+
+  const btnList = document.getElementById("btnList");
+  const btnRoom = document.getElementById("btnRoom");
+  const viewList = document.getElementById("viewList");
+  const viewRoom = document.getElementById("viewRoom");
+  const formPanel = document.getElementById("formPanel");
+  const btnGoAdd = document.getElementById("btnGoAdd");
+
+  const localFilter = document.getElementById("localFilter");
+  const orderBy = document.getElementById("orderBy");
+  const listEl = document.getElementById("list");
+
+  // Scene stanza
+  const roomStats = document.getElementById("roomStats");
+  const roomRead = document.getElementById("roomRead");
+  const roomReading = document.getElementById("roomReading");
+  const roomToRead = document.getElementById("roomToRead");
+
+  // Edizioni modal
+  const edModal = document.getElementById("edModal");
+  const edSub = document.getElementById("edSub");
+  const edInfo = document.getElementById("edInfo");
+  const edList = document.getElementById("edList");
+  const edHint = document.getElementById("edHint");
+  const edClose = document.getElementById("edClose");
+  const edReload = document.getElementById("edReload");
+  const edSkip = document.getElementById("edSkip");
+  const edUse = document.getElementById("edUse");
+
+  // Focus overlay
+  const focusLayer = document.getElementById("focusLayer");
+  const focusCard = document.getElementById("focusCard");
+  const focusClose = document.getElementById("focusClose");
+  const focusCover = document.getElementById("focusCover");
+  const focusTitle = document.getElementById("focusTitle");
+  const focusAuthor = document.getElementById("focusAuthor");
+  const focusStatus = document.getElementById("focusStatus");
+  const focusRating = document.getElementById("focusRating");
+  const focusEdition = document.getElementById("focusEdition");
+  const focusUpdated = document.getElementById("focusUpdated");
+  const focusComment = document.getElementById("focusComment");
+  const focusCycle = document.getElementById("focusCycle");
+  const focusDelete = document.getElementById("focusDelete");
+  const focusOpenLibrary = document.getElementById("focusOpenLibrary");
+  const focusAudible = document.getElementById("focusAudible");
+  const focusKindle = document.getElementById("focusKindle");
+
+  // Toast
+  const toast = document.getElementById("toast");
+  const toast1 = document.getElementById("toast1");
+  const toast2 = document.getElementById("toast2");
+
+  // Stato app
+  let books = loadBooks();
+  let view = loadView();
+  let lookupOn = loadLookup();
+  let lookupAbort = null;
+  let ddItems = [];
+  let ddIndex = -1;
+
+  // Lookup selection
+  let selectedWork = null;     // {workKey, title, author, coverUrl, editionCount}
+  let editionsCache = null;
+  let selectedEdition = null;  // {editionKey, publishDate, publisher, language, coverUrl}
+
+  // editing
+  let editingId = null;
+
+  // focus open id
+  let focusId = null;
+
+  // -------- Utils ----------
+  function nowISO(){ return new Date().toISOString(); }
+  function fmtDate(iso){
+    try{ return new Date(iso).toLocaleString("it-IT"); }
+    catch{ return iso; }
+  }
+  function toastMsg(t1, t2=""){
+    toast1.textContent = t1;
+    toast2.textContent = t2;
+    toast.classList.add("on");
+    setTimeout(() => toast.classList.remove("on"), 2600);
+  }
+
+  function loadBooks(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch{ return []; }
+  }
+  function saveBooks(){ localStorage.setItem(LS_KEY, JSON.stringify(books)); }
+
+  function loadView(){ return localStorage.getItem("libreria.view") || "list"; }
+  function saveView(){ localStorage.setItem("libreria.view", view); }
+
+  function loadLookup(){
+    const v = localStorage.getItem("libreria.lookup");
+    return v === null ? true : v === "1";
+  }
+  function saveLookup(){ localStorage.setItem("libreria.lookup", lookupOn ? "1" : "0"); }
+
+  function loadPreferItalian(){
+    const v = localStorage.getItem("libreria.preferItalian");
+    return v === null ? true : v === "1";
+  }
+  function savePreferItalian(){
+    localStorage.setItem("libreria.preferItalian", preferItalianEl.checked ? "1" : "0");
+  }
+
+  function loadOnlyItalianEditions(){
+    const v = localStorage.getItem("libreria.onlyItalianEditions");
+    return v === null ? true : v === "1";
+  }
+  function saveOnlyItalianEditions(){
+    localStorage.setItem("libreria.onlyItalianEditions", onlyItalianEditionsEl.checked ? "1" : "0");
+  }
+
+  function statusLabel(s){
+    if(s==="read") return "Letto";
+    if(s==="reading") return "In lettura";
+    return "Da leggere";
+  }
+  function statusDotClass(s){
+    if(s==="read") return "read";
+    if(s==="reading") return "reading";
+    return "to_read";
+  }
+  function normalize(s){ return (s||"").toLowerCase().trim(); }
+
+  function escapeHtml(str){
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function escapeAttr(str){ return escapeHtml(str).replaceAll("\n", " "); }
+
+  function cryptoRandomId(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now();
+  }
+
+  function coverFromDoc(doc){
+    if(doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+    return "";
+  }
+  function coverFromEdition(ed){
+    const olid = (ed.key || "").split("/").pop();
+    if(ed.covers && ed.covers.length){
+      return `https://covers.openlibrary.org/b/id/${ed.covers[0]}-M.jpg`;
+    }
+    if(olid && olid.startsWith("OL")){
+      return `https://covers.openlibrary.org/b/olid/${olid}-M.jpg`;
+    }
+    return "";
+  }
+
+  function guessAuthorFromFreeText(text){
+    const s = text.trim();
+    const m = s.match(/(.+?)(?:\s[-,–]\s)(.+)$/);
+    if(m) return m[2].trim();
+    return "";
+  }
+
+  // -------- View toggle ----------
+  function applyView(){
+    if(view === "room"){
+      btnRoom.classList.add("on"); btnList.classList.remove("on");
+      viewRoom.style.display = "block";
+      document.body.classList.add("is-room");
+      // in stanza: nascondi lista + mostra bottone "Aggiungi"
+      formPanel.classList.add("list-only"); // rimane list-only
+      // la lista panel è list-only già via class
+      // il wrapper viewList rimane ma nascosto via CSS .list-only su body.is-room
+      renderRoom();
+    } else {
+      btnList.classList.add("on"); btnRoom.classList.remove("on");
+      viewRoom.style.display = "none";
+      document.body.classList.remove("is-room");
+      renderList();
+    }
+    saveView();
+    updateStats();
+  }
+
+  // -------- Stats ----------
+  function updateStats(){
+    const total = books.length;
+    const read = books.filter(b => b.status === "read").length;
+    const reading = books.filter(b => b.status === "reading").length;
+    const toRead = books.filter(b => b.status === "to_read").length;
+
+    if(stats) stats.textContent = `Totale: ${total} · Letti: ${read} · In lettura: ${reading} · Da leggere: ${toRead}`;
+    if(roomStats) roomStats.textContent = `Stanza: ${total} libri`;
+  }
+
+  // -------- Lookup UI ----------
+  function setLookupUI(){
+    if(lookupOn){
+      lookupState.textContent = "Lookup ON";
+      btnToggleLookup.textContent = "Disattiva lookup";
+      lookupHint.style.display = "";
+      q.placeholder = "es. Demian, Hesse, Orwell, Calvino…";
+    }else{
+      lookupState.textContent = "Lookup OFF";
+      btnToggleLookup.textContent = "Attiva lookup";
+      lookupHint.style.display = "none";
+      q.placeholder = "Titolo (e opz. ' - Autore')…";
+    }
+  }
+
+  function closeDropdown(){
+    dropdown.classList.remove("on");
+    ddItems = [];
+    ddIndex = -1;
+    ddList.innerHTML = "";
+  }
+
+  function openDropdown(){
+    if(ddItems.length === 0) return;
+    dropdown.classList.add("on");
+  }
+
+  function renderDropdown(items){
+    ddItems = items || [];
+    ddIndex = -1;
+    ddList.innerHTML = ddItems.map((it, idx) => {
+      const cover = it.coverUrl ? `<img class="cover" src="${escapeAttr(it.coverUrl)}" alt="">` : `<div class="cover"></div>`;
+      return `
+        <div class="dd-item" data-idx="${idx}">
+          ${cover}
+          <div class="dd-main">
+            <div class="dd-title">${escapeHtml(it.title || "—")}</div>
+            <div class="dd-sub">${escapeHtml(it.author || "—")}</div>
+          </div>
+          <div class="badge">${it.editionCount ? `${it.editionCount} ed.` : "work"}</div>
+        </div>
+      `;
+    }).join("");
+    openDropdown();
+  }
+
+  function highlightDropdown(){
+    const nodes = ddList.querySelectorAll(".dd-item");
+    nodes.forEach(n => n.style.background = "");
+    if(ddIndex >= 0 && nodes[ddIndex]){
+      nodes[ddIndex].style.background = "rgba(255,255,255,.06)";
+      nodes[ddIndex].scrollIntoView({block:"nearest"});
+    }
+  }
+
+  function pickDropdownIndex(idx){
+    const it = ddItems[idx];
+    if(!it) return;
+    selectedWork = it;
+    selectedEdition = null;
+    editionsCache = null;
+
+    q.value = `${it.title}${it.author ? " - " + it.author : ""}`;
+    btnPickEdition.style.display = (it.editionCount && it.editionCount > 0) ? "" : "none";
+    closeDropdown();
+    toastMsg("Selezionato", it.title);
+  }
+
+  // -------- Open Library API ----------
+  async function olSearch(query){
+    // https://openlibrary.org/dev/docs/api/search
+    const url = new URL("https://openlibrary.org/search.json");
+    url.searchParams.set("q", query);
+    url.searchParams.set("limit", "10");
+
+    if(lookupAbort) lookupAbort.abort();
+    lookupAbort = new AbortController();
+
+    const r = await fetch(url.toString(), {signal: lookupAbort.signal});
+    if(!r.ok) throw new Error("Open Library search failed");
+    const data = await r.json();
+
+    const preferIt = !!preferItalianEl.checked;
+    const docs = Array.isArray(data.docs) ? data.docs : [];
+
+    // mappa e ranking semplice: se preferIt, spingi quelli con lingua ita
+    const mapped = docs.slice(0, 25).map(d => {
+      const lang = Array.isArray(d.language) ? d.language : [];
+      const hasIt = lang.includes("ita");
+      return {
+        workKey: d.key || "",
+        title: d.title || "",
+        author: (d.author_name && d.author_name[0]) ? d.author_name[0] : "",
+        coverUrl: coverFromDoc(d),
+        editionCount: d.edition_count || 0,
+        _hasIt: hasIt
+      };
+    });
+
+    mapped.sort((a,b) => {
+      if(preferIt && a._hasIt !== b._hasIt) return a._hasIt ? -1 : 1;
+      return (b.editionCount || 0) - (a.editionCount || 0);
+    });
+
+    return mapped.slice(0, 10);
+  }
+
+  async function olEditionsForWork(workKey){
+    // endpoint: https://openlibrary.org/works/OLxxxxW/editions.json
+    const url = `https://openlibrary.org${workKey}/editions.json?limit=50`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error("Open Library editions failed");
+    const data = await r.json();
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+
+    const onlyIt = !!onlyItalianEditionsEl.checked;
+
+    const mapped = entries.map(e => {
+      const lang = Array.isArray(e.languages) ? e.languages.map(x => (x.key||"").split("/").pop()) : [];
+      // in OL, language key spesso "/languages/ita"
+      const hasIt = lang.includes("ita");
+      const publishDate = e.publish_date || "";
+      const publisher = Array.isArray(e.publishers) ? e.publishers[0] : (e.publisher || "");
+      return {
+        editionKey: e.key || "",
+        title: e.title || selectedWork?.title || "",
+        publishDate,
+        publisher,
+        language: hasIt ? "it" : (lang[0] || ""),
+        coverUrl: coverFromEdition(e),
+        _hasIt: hasIt
+      };
+    });
+
+    // se onlyIt, prima prova a tenere solo IT se esistono
+    let list = mapped;
+    const itOnes = mapped.filter(x => x._hasIt);
+    if(onlyIt && itOnes.length) list = itOnes;
+
+    // ordina: più recenti first se publishDate parseabile, altrimenti lascia
+    list.sort((a,b) => {
+      const da = Date.parse(a.publishDate) || 0;
+      const db = Date.parse(b.publishDate) || 0;
+      return db - da;
+    });
+
+    return list.slice(0, 30);
+  }
+
+  // -------- Editions modal ----------
+  function openEditionsModal(){
+    if(!selectedWork || !selectedWork.workKey) return;
+    edModal.classList.add("on");
+    edSub.textContent = `${selectedWork.title}${selectedWork.author ? " · " + selectedWork.author : ""}`;
+    edHint.textContent = "";
+    edList.innerHTML = "";
+    edInfo.textContent = "Caricamento…";
+    loadEditions(true);
+  }
+
+  function closeEditionsModal(){
+    edModal.classList.remove("on");
+  }
+
+  async function loadEditions(force=false){
+    try{
+      if(!selectedWork) return;
+      if(editionsCache && !force){
+        renderEditions(editionsCache);
+        return;
+      }
+      edInfo.textContent = "Carico edizioni da Open Library…";
+      const list = await olEditionsForWork(selectedWork.workKey);
+      editionsCache = list;
+      renderEditions(list);
+    }catch(e){
+      edInfo.textContent = "Errore";
+      edHint.textContent = "Impossibile caricare edizioni. Riprova.";
+    }
+  }
+
+  function renderEditions(list){
+    edInfo.textContent = `${list.length} edizioni`;
+    if(list.length === 0){
+      edHint.textContent = "Nessuna edizione trovata.";
+      edList.innerHTML = "";
+      return;
+    }
+    edHint.textContent = "Seleziona un’edizione e poi “Usa questa edizione”.";
+    edList.innerHTML = list.map((e, idx) => {
+      const cover = e.coverUrl ? `<img src="${escapeAttr(e.coverUrl)}" alt="">` : `<div style="width:46px;height:66px;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06)"></div>`;
+      const sub1 = [e.publisher, e.publishDate].filter(Boolean).join(" · ");
+      const sub2 = e._hasIt ? "Italiano" : (e.language ? `Lingua: ${e.language}` : "Lingua: —");
+      return `
+        <div class="edition" data-idx="${idx}">
+          ${cover}
+          <div class="e-meta">
+            <div class="e-title">${escapeHtml(e.title || selectedWork?.title || "—")}</div>
+            <div class="e-sub">${escapeHtml(sub1 || "—")}</div>
+            <div class="e-sub2">${escapeHtml(sub2)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // reset selezione grafica
+    selectedEdition = null;
+    edList.querySelectorAll(".edition").forEach((node) => node.classList.remove("on"));
+  }
+
+  function pickEditionIndex(idx){
+    if(!editionsCache || !editionsCache[idx]) return;
+    selectedEdition = editionsCache[idx];
+    edList.querySelectorAll(".edition").forEach((node) => node.classList.remove("on"));
+    const node = edList.querySelector(`.edition[data-idx="${idx}"]`);
+    if(node) node.classList.add("on");
+  }
+
+  function useSelectedEdition(){
+    if(!selectedEdition){
+      toastMsg("Seleziona un’edizione", "Oppure usa “work (senza edizione)”");
+      return;
+    }
+    toastMsg("Edizione scelta", selectedEdition.publisher || selectedEdition.publishDate || selectedEdition.editionKey);
+    closeEditionsModal();
+  }
+
+  function skipEdition(){
+    selectedEdition = null;
+    toastMsg("OK", "Uso work senza edizione");
+    closeEditionsModal();
+  }
+
+  // -------- CRUD libri ----------
+  function parseTitleAuthorFromQ(){
+    const txt = (q.value || "").trim();
+    if(!txt) return {title:"", author:""};
+    const m = txt.match(/(.+?)(?:\s[-,–]\s)(.+)$/);
+    if(m) return {title: m[1].trim(), author: m[2].trim()};
+    return {title: txt, author: guessAuthorFromFreeText(txt)};
+  }
+
+  function makeBookPayload(){
+    const {title, author} = selectedWork
+      ? {title: selectedWork.title, author: selectedWork.author}
+      : parseTitleAuthorFromQ();
+
+    const coverUrl =
+      (selectedEdition && selectedEdition.coverUrl) ? selectedEdition.coverUrl :
+      (selectedWork && selectedWork.coverUrl) ? selectedWork.coverUrl :
+      "";
+
+    return {
+      id: editingId || cryptoRandomId(),
+      title: title || "",
+      author: author || "",
+      status: statusEl.value || "to_read",
+      rating: ratingEl.value === "" ? "" : String(ratingEl.value),
+      comment: commentEl.value || "",
+      workKey: selectedWork?.workKey || "",
+      editionKey: selectedEdition?.editionKey || "",
+      editionPublisher: selectedEdition?.publisher || "",
+      editionPublishDate: selectedEdition?.publishDate || "",
+      editionLanguage: selectedEdition?._hasIt ? "it" : (selectedEdition?.language || ""),
+      coverUrl,
+      updatedAt: nowISO(),
+      createdAt: editingId ? undefined : nowISO()
+    };
+  }
+
+  function upsertBook(payload){
+    // mantiene createdAt se in modifica
+    const idx = books.findIndex(b => b.id === payload.id);
+    if(idx >= 0){
+      const prev = books[idx];
+      books[idx] = {
+        ...prev,
+        ...payload,
+        createdAt: prev.createdAt || payload.createdAt || nowISO()
+      };
+    }else{
+      books.unshift({
+        ...payload,
+        createdAt: nowISO()
+      });
+    }
+    saveBooks();
+    updateStats();
+    if(view === "room") renderRoom();
+    else renderList();
+  }
+
+  function deleteBook(id){
+    books = books.filter(b => b.id !== id);
+    saveBooks();
+    updateStats();
+    if(view === "room") renderRoom();
+    else renderList();
+  }
+
+  function clearForm(){
+    q.value = "";
+    statusEl.value = "to_read";
+    ratingEl.value = "";
+    commentEl.value = "";
+    selectedWork = null;
+    selectedEdition = null;
+    editionsCache = null;
+    editingId = null;
+    btnPickEdition.style.display = "none";
+    closeDropdown();
+    toastMsg("Form pulito");
+  }
+
+  function editBook(id){
+    const b = books.find(x => x.id === id);
+    if(!b) return;
+    editingId = b.id;
+    q.value = `${b.title}${b.author ? " - " + b.author : ""}`;
+    statusEl.value = b.status || "to_read";
+    ratingEl.value = b.rating || "";
+    commentEl.value = b.comment || "";
+    selectedWork = b.workKey ? {workKey:b.workKey, title:b.title, author:b.author, coverUrl:b.coverUrl || "", editionCount:0} : null;
+    selectedEdition = b.editionKey ? {
+      editionKey: b.editionKey,
+      publisher: b.editionPublisher || "",
+      publishDate: b.editionPublishDate || "",
+      language: b.editionLanguage || "",
+      coverUrl: b.coverUrl || "",
+      _hasIt: (b.editionLanguage === "it")
+    } : null;
+    btnPickEdition.style.display = (selectedWork && selectedWork.workKey) ? "" : "none";
+    toastMsg("Modifica", b.title);
+    // scroll verso form
+    formPanel.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  // -------- Render lista ----------
+  function getFilteredSortedBooks(){
+    const term = normalize(localFilter.value);
+    let arr = [...books];
+
+    if(term){
+      arr = arr.filter(b => {
+        const hay = normalize(`${b.title} ${b.author} ${b.comment || ""}`);
+        return hay.includes(term);
+      });
+    }
+
+    const ob = orderBy.value || "updated_desc";
+    arr.sort((a,b) => {
+      if(ob === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+      if(ob === "updated_asc") return (a.updatedAt || "").localeCompare(b.updatedAt || "");
+      if(ob === "title_asc") return (a.title || "").localeCompare(b.title || "", "it");
+      if(ob === "title_desc") return (b.title || "").localeCompare(a.title || "", "it");
+      return 0;
+    });
+
+    return arr;
+  }
+
+  function renderList(){
+    const arr = getFilteredSortedBooks();
+    listEl.innerHTML = arr.map(b => {
+      const cover = b.coverUrl
+        ? `<img src="${escapeAttr(b.coverUrl)}" alt="">`
+        : `<img src="" alt="" style="background:rgba(255,255,255,.06)"/>`;
+
+      const rating = (b.rating !== "" && b.rating !== null && b.rating !== undefined) ? `★ ${b.rating}/5` : "—";
+      return `
+        <div class="card" data-id="${escapeAttr(b.id)}" title="Clicca per modificare">
+          ${cover}
+          <div class="meta">
+            <div class="t">${escapeHtml(b.title || "—")}</div>
+            <div class="a">${escapeHtml(b.author || "—")}</div>
+            <div class="a" style="margin-top:4px;">${escapeHtml((b.comment || "").slice(0, 80))}${(b.comment||"").length>80 ? "…" : ""}</div>
+          </div>
+          <div class="chip">
+            <span class="dot ${statusDotClass(b.status)}"></span>
+            <span>${escapeHtml(statusLabel(b.status))}</span>
+            <span class="muted" style="margin-left:6px;">${escapeHtml(rating)}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    if(arr.length === 0){
+      listEl.innerHTML = `<div class="muted" style="padding:12px;">Nessun libro. Aggiungi il primo 😊</div>`;
+    }
+  }
+
+  // -------- Render stanza ----------
+  function clearRoom(){
+    roomRead.innerHTML = "";
+    roomReading.innerHTML = "";
+    roomToRead.innerHTML = "";
+  }
+
+  function layoutForIndex(i, bucket){
+    // 3 zone sovrapposte: applichiamo coordinate diverse per bucket
+    // ritorna {left, top, cls} con variazioni pseudo-random deterministic
+    const seed = (i * 9301 + bucket * 49297) % 233280;
+    const rnd = seed / 233280;
+
+    // spazio scena
+    // bucket: 0=read,1=reading,2=to_read
+    const baseTop = bucket === 0 ? 58 : (bucket === 1 ? 46 : 64);
+    const spreadTop = bucket === 0 ? 18 : (bucket === 1 ? 22 : 18);
+
+    const left = 8 + ((i * 11 + bucket * 17) % 84); // %
+    const top = baseTop + Math.floor(rnd * spreadTop); // %
+    const variant = ((i + bucket) % 3); // 0 vert, 1 horiz, 2 open
+    const cls = variant === 0 ? "vertical" : (variant === 1 ? "horizontal" : "open");
+
+    return {left, top, cls};
+  }
+
+  function roomBookNode(b, i, bucket){
+    const {left, top, cls} = layoutForIndex(i, bucket);
+    const cover = b.coverUrl
+      ? `<img src="${escapeAttr(b.coverUrl)}" alt="">`
+      : `<div class="fallback">${escapeHtml((b.title || "Libro").slice(0, 26))}</div>`;
+
+    return `
+      <div class="room-book ${cls}" data-id="${escapeAttr(b.id)}"
+           style="left:${left}%; top:${top}%;"
+           title="${escapeAttr(b.title || "")}">
+        ${cover}
+      </div>
+    `;
+  }
+
+  function renderRoom(){
+    clearRoom();
+
+    // distribuisci per stato
+    const readArr = books.filter(b => b.status === "read");
+    const readingArr = books.filter(b => b.status === "reading");
+    const toReadArr = books.filter(b => b.status === "to_read");
+
+    roomRead.innerHTML = readArr.map((b,i) => roomBookNode(b, i, 0)).join("");
+    roomReading.innerHTML = readingArr.map((b,i) => roomBookNode(b, i, 1)).join("");
+    roomToRead.innerHTML = toReadArr.map((b,i) => roomBookNode(b, i, 2)).join("");
+
+    // click handler delegato
+    [roomRead, roomReading, roomToRead].forEach(layer => {
+      layer.onclick = (ev) => {
+        const target = ev.target.closest(".room-book");
+        if(!target) return;
+        const id = target.getAttribute("data-id");
+        if(id) openFocusFromRoom(target, id);
+      };
+    });
+
+    updateStats();
+  }
+
+  // -------- Focus overlay (zoom) ----------
+  function closeFocus(){
+    focusLayer.style.display = "none";
+    focusCard.style.opacity = "0";
+    focusCard.style.transform = "translate(-50%, -50%) scale(.98)";
+    focusCard.setAttribute("aria-hidden", "true");
+    focusId = null;
+  }
+
+  function openFocusFromRoom(originEl, id){
+    const b = books.find(x => x.id === id);
+    if(!b) return;
+
+    focusId = id;
+
+    // riempi
+    focusTitle.textContent = b.title || "—";
+    focusAuthor.textContent = b.author || "—";
+    focusStatus.textContent = statusLabel(b.status);
+    focusRating.textContent = (b.rating !== "" && b.rating != null) ? `${b.rating}/5` : "—";
+    const ed = b.editionPublisher || b.editionPublishDate || (b.editionLanguage ? `(${b.editionLanguage})` : "");
+    focusEdition.textContent = ed || "—";
+    focusUpdated.textContent = b.updatedAt ? fmtDate(b.updatedAt) : "—";
+    focusComment.textContent = b.comment || "";
+
+    if(b.coverUrl){
+      focusCover.src = b.coverUrl;
+      focusCover.style.display = "";
+    } else {
+      focusCover.removeAttribute("src");
+      focusCover.style.display = "none";
+    }
+
+    // posiziona card al centro
+    focusLayer.style.display = "block";
+    focusCard.style.left = "50%";
+    focusCard.style.top = "50%";
+    focusCard.style.transform = "translate(-50%, -50%) scale(.98)";
+    focusCard.style.opacity = "0";
+    focusCard.setAttribute("aria-hidden", "false");
+
+    // animazione semplice
+    requestAnimationFrame(() => {
+      focusCard.style.transition = "opacity .14s ease, transform .14s ease";
+      focusCard.style.opacity = "1";
+      focusCard.style.transform = "translate(-50%, -50%) scale(1)";
+    });
+  }
+
+  function cycleFocusStatus(){
+    if(!focusId) return;
+    const b = books.find(x => x.id === focusId);
+    if(!b) return;
+    const next = b.status === "to_read" ? "reading" : (b.status === "reading" ? "read" : "to_read");
+    b.status = next;
+    b.updatedAt = nowISO();
+    saveBooks();
+    toastMsg("Stato cambiato", statusLabel(next));
+    if(view === "room") renderRoom();
+    else renderList();
+    // aggiorna focus UI
+    focusStatus.textContent = statusLabel(next);
+    updateStats();
+  }
+
+  function openExternal(type){
+    if(!focusId) return;
+    const b = books.find(x => x.id === focusId);
+    if(!b) return;
+    const title = encodeURIComponent(`${b.title || ""} ${b.author || ""}`.trim());
+    let url = "";
+    if(type === "openlibrary"){
+      // se ho workKey meglio
+      url = b.workKey ? `https://openlibrary.org${b.workKey}` : `https://openlibrary.org/search?q=${title}`;
+    } else if(type === "audible"){
+      url = `https://www.audible.it/search?keywords=${title}`;
+    } else if(type === "kindle"){
+      url = `https://www.amazon.it/s?k=${title}&i=digital-text`;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  // -------- Import/Export ----------
+  function exportJSON(){
+    const data = JSON.stringify(books, null, 2);
+    const blob = new Blob([data], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "libreria.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toastMsg("Esportato", "libreria.json");
+  }
+
+  function importJSON(){
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "application/json";
+    inp.onchange = () => {
+      const file = inp.files && inp.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const arr = JSON.parse(String(reader.result || "[]"));
+          if(!Array.isArray(arr)) throw new Error("Formato non valido");
+          // merge: se id duplicati, sovrascrivi con import
+          const map = new Map(books.map(b => [b.id, b]));
+          arr.forEach(b => {
+            if(!b || typeof b !== "object") return;
+            const id = b.id || cryptoRandomId();
+            map.set(id, {...b, id});
+          });
+          books = Array.from(map.values());
+          saveBooks();
+          toastMsg("Import completato", `${arr.length} elementi`);
+          applyView();
+        }catch(e){
+          toastMsg("Import fallito", "JSON non valido");
+        }
+      };
+      reader.readAsText(file);
+    };
+    inp.click();
+  }
+
+  function wipeAll(){
+    if(!confirm("Sicuro di voler svuotare la libreria?")) return;
+    books = [];
+    saveBooks();
+    clearForm();
+    toastMsg("Libreria svuotata");
+    applyView();
+  }
+
+  // -------- Event binding ----------
+  function bindEvents(){
+    // view
+    btnList.addEventListener("click", () => { view = "list"; applyView(); });
+    btnRoom.addEventListener("click", () => { view = "room"; applyView(); });
+
+    // in stanza: vai ad aggiungere
+    btnGoAdd.addEventListener("click", () => {
+      view = "list";
+      applyView();
+      formPanel.scrollIntoView({behavior:"smooth", block:"start"});
+      q.focus();
+    });
+
+    // lookup toggle
+    btnToggleLookup.addEventListener("click", () => {
+      lookupOn = !lookupOn;
+      saveLookup();
+      setLookupUI();
+      closeDropdown();
+      selectedWork = null;
+      selectedEdition = null;
+      editionsCache = null;
+      btnPickEdition.style.display = "none";
+      toastMsg("Lookup", lookupOn ? "Attivo" : "Disattivo");
+    });
+
+    // preferenze
+    preferItalianEl.addEventListener("change", () => { savePreferItalian(); closeDropdown(); });
+    onlyItalianEditionsEl.addEventListener("change", () => { saveOnlyItalianEditions(); editionsCache=null; });
+
+    // search input
+    q.addEventListener("input", async () => {
+      if(!lookupOn) return;
+      const term = q.value.trim();
+      if(term.length < 2){ closeDropdown(); return; }
+      try{
+        ddTitle.textContent = "Suggerimenti (Open Library)";
+        const items = await olSearch(term);
+        renderDropdown(items);
+      }catch(e){
+        closeDropdown();
+      }
+    });
+
+    // dropdown click
+    ddList.addEventListener("click", (ev) => {
+      const item = ev.target.closest(".dd-item");
+      if(!item) return;
+      const idx = Number(item.getAttribute("data-idx"));
+      if(Number.isFinite(idx)) pickDropdownIndex(idx);
+    });
+
+    // keyboard in input
+    q.addEventListener("keydown", (ev) => {
+      if(!dropdown.classList.contains("on")) {
+        if(ev.key === "Escape") closeDropdown();
+        return;
+      }
+      if(ev.key === "ArrowDown"){ ev.preventDefault(); ddIndex = Math.min(ddItems.length-1, ddIndex+1); highlightDropdown(); }
+      else if(ev.key === "ArrowUp"){ ev.preventDefault(); ddIndex = Math.max(0, ddIndex-1); highlightDropdown(); }
+      else if(ev.key === "Enter"){
+        if(ddIndex >= 0){ ev.preventDefault(); pickDropdownIndex(ddIndex); }
+      }
+      else if(ev.key === "Escape"){ ev.preventDefault(); closeDropdown(); }
+    });
+
+    // click fuori per chiudere dropdown
+    document.addEventListener("click", (ev) => {
+      const inWrap = ev.target.closest(".lookup-wrap");
+      if(!inWrap) closeDropdown();
+    });
+
+    // save
+    btnSave.addEventListener("click", () => {
+      const payload = makeBookPayload();
+      if(!payload.title){
+        toastMsg("Titolo obbligatorio", "Compila il campo ricerca/titolo");
+        return;
+      }
+      upsertBook(payload);
+      toastMsg(editingId ? "Aggiornato" : "Salvato", payload.title);
+      // resta in edit? qui puliamo
+      clearForm();
+    });
+
+    btnClearForm.addEventListener("click", clearForm);
+
+    // edizioni
+    btnPickEdition.addEventListener("click", openEditionsModal);
+    edClose.addEventListener("click", closeEditionsModal);
+    edReload.addEventListener("click", () => loadEditions(true));
+    edSkip.addEventListener("click", skipEdition);
+    edUse.addEventListener("click", useSelectedEdition);
+    edList.addEventListener("click", (ev) => {
+      const node = ev.target.closest(".edition");
+      if(!node) return;
+      const idx = Number(node.getAttribute("data-idx"));
+      if(Number.isFinite(idx)) pickEditionIndex(idx);
+    });
+
+    // filtri lista
+    localFilter.addEventListener("input", renderList);
+    orderBy.addEventListener("change", renderList);
+
+    // click card per edit
+    listEl.addEventListener("click", (ev) => {
+      const card = ev.target.closest(".card");
+      if(!card) return;
+      const id = card.getAttribute("data-id");
+      if(id) editBook(id);
+    });
+
+    // export/import/wipe
+    btnExport.addEventListener("click", exportJSON);
+    btnImport.addEventListener("click", importJSON);
+    btnWipe.addEventListener("click", wipeAll);
+
+    // focus
+    focusClose.addEventListener("click", closeFocus);
+    focusLayer.addEventListener("click", closeFocus);
+    focusCycle.addEventListener("click", cycleFocusStatus);
+    focusDelete.addEventListener("click", () => {
+      if(!focusId) return;
+      const b = books.find(x => x.id === focusId);
+      if(!b) return;
+      if(!confirm(`Eliminare "${b.title}"?`)) return;
+      deleteBook(focusId);
+      closeFocus();
+      toastMsg("Eliminato", b.title);
+    });
+
+    focusOpenLibrary.addEventListener("click", () => openExternal("openlibrary"));
+    focusAudible.addEventListener("click", () => openExternal("audible"));
+    focusKindle.addEventListener("click", () => openExternal("kindle"));
+
+    // ESC chiude focus/modali
+    document.addEventListener("keydown", (ev) => {
+      if(ev.key !== "Escape") return;
+      if(edModal.classList.contains("on")) closeEditionsModal();
+      else if(focusLayer.style.display !== "none") closeFocus();
+      else closeDropdown();
+    });
+  }
+
+  // -------- Init ----------
   function init(){
     preferItalianEl.checked = loadPreferItalian();
     onlyItalianEditionsEl.checked = loadOnlyItalianEditions();
     setLookupUI();
+    updateStats();
     bindEvents();
     applyView();
   }
