@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Libreria personale</title>
+  <style>
+    :root { --bg:#0b0d10; --card:#12161c; --text:#e9eef5; --muted:#9aa6b2; --border:#223041; --accent:#7aa2f7; --danger:#ff6b6b; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
+    header { padding:24px 16px 8px; max-width:1100px; margin:0 auto; }
+    h1 { margin:0 0 6px; font-size:20px; font-weight:650; }
+    .sub { color:var(--muted); font-size:13px; }
+    main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:14px; }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+    label { display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
+    input, select, button { font:inherit; }
+    input, select {
+      background:#0f1319; color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px 10px; min-width:180px;
+    }
+    input::placeholder { color:#66727e; }
+    button {
+      background:var(--accent); color:#0b0d10; border:none; border-radius:10px;
+      padding:10px 12px; cursor:pointer; font-weight:650;
+    }
+    button.secondary { background:transparent; color:var(--text); border:1px solid var(--border); }
+    button.danger { background:transparent; color:var(--danger); border:1px solid rgba(255,107,107,.35); }
+    .grid3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; }
+    @media (max-width: 920px) { .grid3 { grid-template-columns: 1fr; } }
+    h2 { margin:0 0 10px; font-size:15px; font-weight:650; color:#d8e1ee; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; margin-top:10px; }
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .item {
+      border:1px solid var(--border); border-radius:12px; padding:10px; background:#0f1319;
+      display:flex; gap:10px; justify-content:space-between; align-items:flex-start;
+    }
+    .meta { display:flex; flex-direction:column; gap:3px; }
+    .title { font-weight:700; }
+    .small { color:var(--muted); font-size:12px; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+    .chip { font-size:11px; color:#cfe1ff; border:1px solid rgba(122,162,247,.35); padding:2px 8px; border-radius:999px; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .actions button { padding:7px 10px; font-size:12px; }
+    .counts { color:var(--muted); font-size:12px; }
+    textarea {
+      background:#0f1319; color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px; width:100%; min-height:110px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Libreria personale</h1>
+    <div class="sub">Gestione locale (localStorage): letti, in lettura, da leggere.</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Aggiungi / modifica libro</h2>
+      <div class="row">
+        <div>
+          <label for="title">Titolo *</label>
+          <input id="title" placeholder="es. Demian" />
+        </div>
+        <div>
+          <label for="author">Autore</label>
+          <input id="author" placeholder="es. Hermann Hesse" />
+        </div>
+        <div>
+          <label for="status">Stato *</label>
+          <select id="status">
+            <option value="to-read">Da leggere</option>
+            <option value="reading">In lettura</option>
+            <option value="read">Letto</option>
+          </select>
+        </div>
+        <div>
+          <label for="rating">Valutazione (0–5)</label>
+          <select id="rating">
+            <option value="">—</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div>
+          <label for="tags">Tag (separati da virgole)</label>
+          <input id="tags" placeholder="es. filosofia, romanzo, classici" />
+        </div>
+        <div>
+          <button id="saveBtn">Salva</button>
+        </div>
+        <div>
+          <button id="cancelEditBtn" class="secondary" style="display:none;">Annulla modifica</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="row" style="align-items:center;">
+          <div>
+            <label for="search">Cerca</label>
+            <input id="search" placeholder="titolo, autore, tag..." />
+          </div>
+          <div>
+            <label for="sort">Ordina per</label>
+            <select id="sort">
+              <option value="updated_desc">Ultima modifica (↓)</option>
+              <option value="updated_asc">Ultima modifica (↑)</option>
+              <option value="title_asc">Titolo (A→Z)</option>
+              <option value="title_desc">Titolo (Z→A)</option>
+              <option value="author_asc">Autore (A→Z)</option>
+              <option value="author_desc">Autore (Z→A)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="align-items:center;">
+          <div class="counts" id="counts"></div>
+          <button id="exportBtn" class="secondary">Esporta JSON</button>
+          <button id="importBtn" class="secondary">Importa JSON</button>
+          <button id="wipeBtn" class="danger">Svuota tutto</button>
+        </div>
+      </div>
+
+      <div id="importArea" style="display:none; margin-top:10px;">
+        <div class="small">Incolla qui il JSON esportato e premi “Conferma import”.</div>
+        <textarea id="importText"></textarea>
+        <div class="row" style="margin-top:8px;">
+          <button id="confirmImportBtn">Conferma import</button>
+          <button id="cancelImportBtn" class="secondary">Annulla</button>
+        </div>
+      </div>
+
+      <div id="exportArea" style="display:none; margin-top:10px;">
+        <div class="small">Copia e salva questo JSON (backup).</div>
+        <textarea id="exportText" readonly></textarea>
+        <div class="row" style="margin-top:8px;">
+          <button id="closeExportBtn" class="secondary">Chiudi</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid3">
+      <section class="panel">
+        <h2>Da leggere</h2>
+        <div class="list" id="list-to-read"></div>
+      </section>
+
+      <section class="panel">
+        <h2>In lettura</h2>
+        <div class="list" id="list-reading"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Letti</h2>
+        <div class="list" id="list-read"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "libreria_personale_v1";
+
+    const el = (id) => document.getElementById(id);
+
+    const state = {
+      books: [],
+      editingId: null,
+      search: "",
+      sort: "updated_desc"
+    };
+
+    function nowIso() { return new Date().toISOString(); }
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+    }
+
+    function normalize(s) {
+      return (s || "").toString().trim().toLowerCase();
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        state.books = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(state.books)) state.books = [];
+      } catch {
+        state.books = [];
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.books));
+    }
+
+    function upsertBook(book) {
+      const idx = state.books.findIndex(b => b.id === book.id);
+      if (idx >= 0) state.books[idx] = book;
+      else state.books.push(book);
+      save();
+      render();
+    }
+
+    function removeBook(id) {
+      state.books = state.books.filter(b => b.id !== id);
+      save();
+      render();
+    }
+
+    function setEditing(book) {
+      state.editingId = book.id;
+      el("title").value = book.title || "";
+      el("author").value = book.author || "";
+      el("status").value = book.status || "to-read";
+      el("rating").value = book.rating ?? "";
+      el("tags").value = (book.tags || []).join(", ");
+      el("saveBtn").textContent = "Aggiorna";
+      el("cancelEditBtn").style.display = "inline-block";
+    }
+
+    function clearForm() {
+      state.editingId = null;
+      el("title").value = "";
+      el("author").value = "";
+      el("status").value = "to-read";
+      el("rating").value = "";
+      el("tags").value = "";
+      el("saveBtn").textContent = "Salva";
+      el("cancelEditBtn").style.display = "none";
+    }
+
+    function getFilteredSorted() {
+      const q = normalize(state.search);
+      let items = [...state.books];
+
+      if (q) {
+        items = items.filter(b => {
+          const hay = [
+            b.title, b.author,
+            (b.tags || []).join(" ")
+          ].map(normalize).join(" ");
+          return hay.includes(q);
+        });
+      }
+
+      const sort = state.sort;
+      const cmpStr = (a,b) => (a||"").localeCompare(b||"", "it", { sensitivity:"base" });
+
+      items.sort((a,b) => {
+        if (sort === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+        if (sort === "updated_asc")  return (a.updatedAt || "").localeCompare(b.updatedAt || "");
+        if (sort === "title_asc")    return cmpStr(a.title, b.title);
+        if (sort === "title_desc")   return cmpStr(b.title, a.title);
+        if (sort === "author_asc")   return cmpStr(a.author, b.author);
+        if (sort === "author_desc")  return cmpStr(b.author, a.author);
+        return 0;
+      });
+
+      return items;
+    }
+
+    function bookCard(book) {
+      const tags = (book.tags || []).filter(Boolean);
+      const rating = book.rating ? `★ ${book.rating}/5` : "";
+
+      const wrap = document.createElement("div");
+      wrap.className = "item";
+
+      const left = document.createElement("div");
+      left.className = "meta";
+
+      const t = document.createElement("div");
+      t.className = "title";
+      t.textContent = book.title || "(senza titolo)";
+
+      const a = document.createElement("div");
+      a.className = "small";
+      a.textContent = [book.author, rating].filter(Boolean).join(" • ") || "—";
+
+      const u = document.createElement("div");
+      u.className = "small";
+      const dt = book.updatedAt ? new Date(book.updatedAt) : null;
+      u.textContent = dt ? ("Aggiornato: " + dt.toLocaleString("it-IT")) : "";
+
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      tags.slice(0, 8).forEach(tag => {
+        const c = document.createElement("span");
+        c.className = "chip";
+        c.textContent = tag;
+        chips.appendChild(c);
+      });
+
+      left.appendChild(t);
+      left.appendChild(a);
+      if (u.textContent) left.appendChild(u);
+      if (tags.length) left.appendChild(chips);
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "secondary";
+      editBtn.textContent = "Modifica";
+      editBtn.onclick = () => setEditing(book);
+
+      const cycleBtn = document.createElement("button");
+      cycleBtn.className = "secondary";
+      cycleBtn.textContent = "Cambia stato";
+      cycleBtn.onclick = () => {
+        const order = ["to-read", "reading", "read"];
+        const i = order.indexOf(book.status);
+        const next = order[(i + 1) % order.length];
+        upsertBook({ ...book, status: next, updatedAt: nowIso() });
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "danger";
+      delBtn.textContent = "Elimina";
+      delBtn.onclick = () => {
+        const ok = confirm(`Eliminare "${book.title}"?`);
+        if (ok) removeBook(book.id);
+      };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(cycleBtn);
+      actions.appendChild(delBtn);
+
+      wrap.appendChild(left);
+      wrap.appendChild(actions);
+      return wrap;
+    }
+
+    function render() {
+      const lists = {
+        "to-read": el("list-to-read"),
+        "reading": el("list-reading"),
+        "read": el("list-read")
+      };
+      Object.values(lists).forEach(node => node.innerHTML = "");
+
+      const items = getFilteredSorted();
+
+      const counts = { "to-read":0, "reading":0, "read":0 };
+      items.forEach(b => { if (counts[b.status] !== undefined) counts[b.status]++; });
+
+      el("counts").textContent =
+        `Totale: ${items.length} • Da leggere: ${counts["to-read"]} • In lettura: ${counts["reading"]} • Letti: ${counts["read"]}`;
+
+      items.forEach(book => {
+        const target = lists[book.status] || lists["to-read"];
+        target.appendChild(bookCard(book));
+      });
+
+      // placeholder quando vuoto
+      for (const [k,node] of Object.entries(lists)) {
+        if (!node.children.length) {
+          const p = document.createElement("div");
+          p.className = "small";
+          p.textContent = "Nessun libro qui (per ora).";
+          node.appendChild(p);
+        }
+      }
+    }
+
+    function parseTags(raw) {
+      return (raw || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    // Eventi UI
+    el("saveBtn").addEventListener("click", () => {
+      const title = el("title").value.trim();
+      const status = el("status").value;
+
+      if (!title) {
+        alert("Titolo obbligatorio.");
+        return;
+      }
+
+      const author = el("author").value.trim();
+      const ratingRaw = el("rating").value;
+      const rating = ratingRaw ? Number(ratingRaw) : null;
+      const tags = parseTags(el("tags").value);
+
+      const ts = nowIso();
+      if (state.editingId) {
+        const existing = state.books.find(b => b.id === state.editingId);
+        if (!existing) { clearForm(); return; }
+        upsertBook({
+          ...existing,
+          title, author, status, rating, tags,
+          updatedAt: ts
+        });
+      } else {
+        upsertBook({
+          id: uid(),
+          title, author, status, rating, tags,
+          createdAt: ts,
+          updatedAt: ts
+        });
+      }
+
+      clearForm();
+    });
+
+    el("cancelEditBtn").addEventListener("click", clearForm);
+
+    el("search").addEventListener("input", (e) => {
+      state.search = e.target.value;
+      render();
+    });
+
+    el("sort").addEventListener("change", (e) => {
+      state.sort = e.target.value;
+      render();
+    });
+
+    // Export/Import/Wipe
+    el("exportBtn").addEventListener("click", () => {
+      el("exportText").value = JSON.stringify(state.books, null, 2);
+      el("exportArea").style.display = "block";
+      el("importArea").style.display = "none";
+    });
+
+    el("closeExportBtn").addEventListener("click", () => {
+      el("exportArea").style.display = "none";
+    });
+
+    el("importBtn").addEventListener("click", () => {
+      el("importText").value = "";
+      el("importArea").style.display = "block";
+      el("exportArea").style.display = "none";
+    });
+
+    el("cancelImportBtn").addEventListener("click", () => {
+      el("importArea").style.display = "none";
+    });
+
+    el("confirmImportBtn").addEventListener("click", () => {
+      try {
+        const parsed = JSON.parse(el("importText").value);
+        if (!Array.isArray(parsed)) throw new Error("JSON non è una lista");
+        // Sanificazione minima
+        state.books = parsed
+          .filter(x => x && typeof x === "object")
+          .map(x => ({
+            id: x.id || uid(),
+            title: (x.title || "").toString(),
+            author: (x.author || "").toString(),
+            status: ["to-read","reading","read"].includes(x.status) ? x.status : "to-read",
+            rating: (x.rating === null || x.rating === undefined || x.rating === "") ? null : Number(x.rating),
+            tags: Array.isArray(x.tags) ? x.tags.map(t => t.toString()) : [],
+            createdAt: x.createdAt || nowIso(),
+            updatedAt: x.updatedAt || nowIso()
+          }));
+        save();
+        el("importArea").style.display = "none";
+        render();
+      } catch (err) {
+        alert("Import fallito: " + (err?.message || "errore"));
+      }
+    });
+
+    el("wipeBtn").addEventListener("click", () => {
+      const ok = confirm("Sicuro di voler eliminare TUTTI i libri salvati in questo browser?");
+      if (!ok) return;
+      state.books = [];
+      save();
+      clearForm();
+      render();
+    });
+
+    // Init
+    load();
+    render();
+  </script>
+</body>
+</html>
