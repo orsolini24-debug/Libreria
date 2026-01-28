@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 8.1 - Enhanced Search</title>
+<title>Libreria 8.2 - Italian Aggressive</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
 
@@ -181,7 +181,7 @@
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">8.1</span></h2>
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">8.2</span></h2>
     <div style="display:flex; gap:10px">
         <button class="btn btn-danger" onclick="app.reset()">RESET DATI</button>
         <button class="btn" onclick="app.export()">Backup</button>
@@ -208,8 +208,8 @@
     <div class="panel-body">
         
         <div class="search-block">
-            <label style="color:#fff">CERCA LIBRO (Google + OpenLibrary)</label>
-            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Italo Calvino, Baricco..." autocomplete="off">
+            <label style="color:#fff">CERCA LIBRO (Edizioni Italiane)</label>
+            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Italo Calvino..." autocomplete="off">
             <div id="search-status"></div>
             
             <div id="search-dropdown"></div>
@@ -299,7 +299,7 @@
 
 <script>
 // --- CORE LOGIC ---
-const DB_KEY = "lib_v8_1_enhanced";
+const DB_KEY = "lib_v8_2_aggressive";
 let books = [];
 let tempCover = "";
 let focusId = null;
@@ -318,29 +318,35 @@ const searchEngine = {
         dropdown.classList.remove('active');
 
         try {
-            // PROVA 1: GOOGLE BOOKS (Senza restrizioni lingua severe, filtro client-side)
-            // A volte langRestrict è troppo aggressivo con l'API pubblica
-            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10`;
+            // PROVA 1: GOOGLE BOOKS
+            // Rimuovo restrizioni eccessive che bloccano i risultati
+            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books`;
             let res = await fetch(url);
             let data = await res.json();
             let items = data.items || [];
 
-            // Filtro manuale per lingua (opzionale, ma utile per ordinare)
+            // Filtraggio Lato Client (Se troviamo 'it', lo portiamo su)
             items.sort((a,b) => (a.volumeInfo.language === 'it' ? -1 : 1));
 
-            // Se Google fallisce o trova zero, PROVA 2: OPEN LIBRARY
+            // Se Google fallisce, PROVA 2: OPEN LIBRARY (FILTRATA)
             if (items.length === 0) {
-                status.innerText = "Google non ha trovato nulla. Provo OpenLibrary...";
-                url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8`;
+                status.innerText = "Google vuoto. Provo OpenLibrary...";
+                url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`;
                 res = await fetch(url);
                 data = await res.json();
                 
+                // FILTRO BRUTALE: Solo se language contiene 'ita' o 'it'
+                const rawDocs = data.docs || [];
+                const filteredDocs = rawDocs.filter(d => 
+                    d.language && (d.language.includes('ita') || d.language.includes('it'))
+                );
+
                 // Mappa risultati OpenLibrary in formato compatibile
-                items = data.docs.map(d => ({
+                items = filteredDocs.map(d => ({
                     volumeInfo: {
                         title: d.title,
                         authors: d.author_name || [],
-                        publisher: d.publisher ? d.publisher[0] : "OpenLibrary Data",
+                        publisher: d.publisher ? d.publisher.join(', ') : "Editore sconosciuto", // Fix per array
                         pageCount: d.number_of_pages_median || 200,
                         imageLinks: { smallThumbnail: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '' },
                         source: "OL"
@@ -355,7 +361,7 @@ const searchEngine = {
                     const info = item.volumeInfo;
                     const img = info.imageLinks?.smallThumbnail || '';
                     const title = info.title || "Senza Titolo";
-                    const author = info.authors ? info.authors[0] : "Sconosciuto";
+                    const author = info.authors ? (Array.isArray(info.authors) ? info.authors[0] : info.authors) : "Sconosciuto";
                     const publisher = info.publisher || "Editore N/A";
                     const date = info.publishedDate ? info.publishedDate.substring(0,4) : "";
                     const source = info.source === "OL" ? "OpenLib" : "Google";
