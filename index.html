@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 10.0 - Final Search Fix</title>
+<title>Libreria 11.0 - Italian Force</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
@@ -89,7 +89,7 @@
     .mc-img-box { width: 180px; background: #000; display: flex; align-items: center; justify-content: center; }
     .mc-img-box img { width: 100%; height: auto; max-height: 100%; object-fit: cover; }
     .mc-info { flex: 1; padding: 30px; display: flex; flex-direction: column; }
-    .link-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 20px; }
+    .link-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 20px; }
     .ext-link { background: #334155; color: #fff; text-decoration: none; font-size: 11px; padding: 10px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
     .ext-link:hover { background: #fff; color: #000; }
     .stars { font-size: 18px; color: #475569; cursor: pointer; margin: 10px 0; }
@@ -100,7 +100,7 @@
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">10.0</span></h2>
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">11.0</span></h2>
     <div style="display:flex; gap:10px">
         <button class="btn btn-danger" onclick="app.reset()">RESET</button>
         <button class="btn" onclick="app.export()">Backup</button>
@@ -125,8 +125,8 @@
     </div>
     <div class="panel-body">
         <div class="search-block">
-            <label style="color:#fff">CERCA LIBRO (Hybrid Search)</label>
-            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Italo Calvino, Eco..." autocomplete="off">
+            <label style="color:#fff">CERCA (TITOLO ITALIANO)</label>
+            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Barone Rampante..." autocomplete="off">
             <div id="search-status"></div>
             <div id="search-dropdown"></div>
         </div>
@@ -162,9 +162,9 @@
             </div>
             <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic; font-size:13px; color:#cbd5e1; flex:1"></p>
             <div class="link-row">
-                <a href="#" target="_blank" id="lnk-amazon" class="ext-link"><i class="fab fa-amazon"></i> Amazon</a>
-                <a href="#" target="_blank" id="lnk-kindle" class="ext-link"><i class="fas fa-tablet-alt"></i> Kindle</a>
-                <a href="#" target="_blank" id="lnk-audible" class="ext-link"><i class="fas fa-headphones"></i> Audible</a>
+                <a href="#" target="_blank" id="lnk-ibs" class="ext-link">IBS.it</a>
+                <a href="#" target="_blank" id="lnk-mondadori" class="ext-link">Mondadori</a>
+                <a href="#" target="_blank" id="lnk-amazon" class="ext-link"><i class="fab fa-amazon"></i></a>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:10px;">
                 <button onclick="app.delete()" class="btn btn-danger">Elimina</button>
@@ -175,7 +175,7 @@
 </div>
 
 <script>
-const DB_KEY = "lib_v10_final";
+const DB_KEY = "lib_v11_force";
 let books = [], tempCover = "", focusId = null;
 
 const searchEngine = {
@@ -187,41 +187,31 @@ const searchEngine = {
         dropdown.innerHTML = ""; dropdown.classList.remove('active');
 
         try {
-            // 1. CHIEDIAMO TUTTO A GOOGLE (Senza filtri stretti)
-            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20&printType=books`);
+            // OPERATORE DI RICERCA AVANZATA: lang:it forzato
+            // Esempio query: "Calvino lang:it"
+            const strictQuery = `${query} lang:it`;
+            
+            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(strictQuery)}&maxResults=20&printType=books`);
             const data = await res.json();
             
-            let items = [];
-            if (data.items) {
-                // 2. FILTRO CLIENT-SIDE INTELLIGENTE
-                // Cerchiamo libri che sono ITALIANI ('it') O che hanno l'autore/titolo corrispondente
-                items = data.items.map(i => {
-                    const info = i.volumeInfo;
-                    return {
-                        t: info.title || "Senza Titolo",
-                        a: info.authors ? info.authors[0] : "",
-                        pub: info.publisher || "",
-                        p: info.pageCount || 200,
-                        c: info.imageLinks ? info.imageLinks.smallThumbnail : "",
-                        lang: info.language || "en"
-                    };
-                }).filter(x => x.c !== ""); // Solo con copertina
+            if (data.items && data.items.length > 0) {
+                status.innerText = `Trovati ${data.items.length} risultati.`;
+                dropdown.innerHTML = data.items.map(item => {
+                    const info = item.volumeInfo;
+                    const img = info.imageLinks?.smallThumbnail || '';
+                    // Data prep
+                    const dataStr = encodeURIComponent(JSON.stringify({
+                        t: info.title, a: info.authors?.[0]||"Sconosciuto", 
+                        p: info.pageCount||200, pub: info.publisher||"Editore N/A",
+                        c: img.replace('http:','https:')
+                    }));
 
-                // ORDINA: Italiani prima
-                items.sort((a,b) => (a.lang === 'it' ? -1 : 1));
-            }
-
-            // 3. RENDERIZZA
-            if (items.length > 0) {
-                status.innerText = `Trovati ${items.length} risultati.`;
-                dropdown.innerHTML = items.map(x => {
-                    const dataStr = encodeURIComponent(JSON.stringify(x));
                     return `<div class="res-item" onclick="ui.fillForm('${dataStr}')">
-                        <img src="${x.c}" class="res-img">
+                        <img src="${img}" class="res-img">
                         <div class="res-info">
-                            <div class="res-title">${x.t}</div>
-                            <div class="res-meta">${x.a}</div>
-                            <div class="res-pub">${x.pub}</div>
+                            <div class="res-title">${info.title}</div>
+                            <div class="res-meta">${info.authors?.[0]||""}</div>
+                            <div class="res-pub">${info.publisher||""}</div>
                         </div>
                     </div>`;
                 }).join('');
@@ -231,7 +221,7 @@ const searchEngine = {
             }
         } catch (e) { 
             console.error(e);
-            status.innerText = "Errore di rete."; 
+            status.innerText = "Errore di connessione."; 
         }
     }
 };
@@ -314,8 +304,8 @@ const ui = {
         
         const q = encodeURIComponent(b.title + " " + b.author);
         document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
-        document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
-        document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
+        document.getElementById('lnk-ibs').href = `https://www.ibs.it/search/?ts=as&query=${q}`;
+        document.getElementById('lnk-mondadori').href = `https://www.mondadoristore.it/search/?g=${q}`;
         document.getElementById('modal-overlay').classList.add('active');
     },
     closeModal: () => document.getElementById('modal-overlay').classList.remove('active'),
