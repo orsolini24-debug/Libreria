@@ -1,1503 +1,1461 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Libreria</title>
-
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Libreria – Stanza</title>
   <style>
     :root{
-      --bg:#07090c;
-      --text:#e9eef5;
-      --muted:#9aa6b2;
-      --border:#223041;
-      --accent:#7aa2f7;
-      --danger:#ff6b6b;
-
-      --glass: rgba(16,20,27,.68);
-      --glass2: rgba(16,20,27,.54);
-      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --bg:#070a0f;
+      --panel:rgba(16,20,28,.78);
+      --panel2:rgba(16,20,28,.60);
+      --text:#e9eef6;
+      --muted:#9aa8bd;
+      --line:rgba(255,255,255,.10);
+      --accent:#7aa2ff;
+      --ok:#6ee7b7;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --shadow:0 20px 60px rgba(0,0,0,.55);
+      --radius:18px;
+      --radius2:14px;
+      --font:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    *{ box-sizing:border-box; }
+    *{box-sizing:border-box}
     body{
       margin:0;
-      background:var(--bg);
+      font-family:var(--font);
       color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* STANZA (background) */
+    body.room-on{
+      background-image:
+        radial-gradient(1200px 600px at 30% 30%, rgba(255,180,110,.12), transparent 55%),
+        radial-gradient(900px 500px at 70% 40%, rgba(120,160,255,.10), transparent 55%),
+        url("./assets/room.jpg");
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+    }
+    /* Vignettatura leggera, NON “tappo nero” */
+    body.room-on::before{
+      content:"";
+      position:fixed; inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 40%, rgba(0,0,0,.25), rgba(0,0,0,.70)),
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55));
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      max-width:1200px;
+      margin:0 auto;
+      padding:26px 18px 80px;
     }
 
     header{
-      max-width:1200px;
-      margin:0 auto;
-      padding:18px 16px 10px;
-    }
-    h1{ margin:0 0 6px; font-size:20px; font-weight:800; }
-    .sub{ color:var(--muted); font-size:13px; }
-
-    main{
-      max-width:1200px;
-      margin:0 auto;
-      padding:14px 16px 24px;
-      display:grid;
+      display:flex;
       gap:14px;
+      align-items:flex-end;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .title h1{
+      margin:0;
+      font-size:26px;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
     }
 
-    .panel{
-      background:var(--glass);
-      border:1px solid rgba(34,48,65,.85);
-      border-radius:16px;
-      padding:14px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.35);
-      backdrop-filter: blur(8px);
-    }
-
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
-    label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
-    input, select, button, textarea{ font:inherit; }
-    input, select, textarea{
-      background:rgba(12,16,22,.85);
-      color:var(--text);
-      border:1px solid rgba(34,48,65,.95);
-      border-radius:12px;
-      padding:10px 10px;
-      outline:none;
-    }
-    input::placeholder, textarea::placeholder{ color:#66727e; }
-    textarea{ width:100%; min-height:90px; resize:vertical; }
-
-    button{
-      background:var(--accent);
-      color:#0b0d10;
-      border:none;
-      border-radius:12px;
-      padding:10px 12px;
-      cursor:pointer;
-      font-weight:800;
-    }
-    button.secondary{
-      background:transparent;
-      color:var(--text);
-      border:1px solid rgba(34,48,65,.95);
-    }
-    button.danger{
-      background:transparent;
-      color:var(--danger);
-      border:1px solid rgba(255,107,107,.35);
-    }
-    button:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; margin-top:10px; }
-    .counts{ color:var(--muted); font-size:12px; }
-    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
-    .ok{ color:#9be7b3; }
-    .warn{ color:#ffd06a; }
-
-    .viewbar{
+    .top-actions{
       display:flex;
       gap:10px;
       align-items:center;
-      justify-content:space-between;
-    }
-    .seg{ display:flex; gap:8px; align-items:center; }
-    .seg button{ padding:8px 12px; font-size:12px; border-radius:999px; }
-    .seg button.active{ background:var(--accent); color:#0b0d10; border:none; }
-    .seg button.inactive{ background:transparent; color:var(--text); border:1px solid rgba(34,48,65,.95); }
-
-    .hidden{ display:none!important; }
-
-    /* Dropdown IN FLOW (non overlay) */
-    .dropdown{
-      margin-top:8px;
-      background:rgba(10,12,16,.96);
-      border:1px solid rgba(34,48,65,.95);
-      border-radius:14px;
-      box-shadow:0 22px 60px rgba(0,0,0,.55);
-      overflow:hidden;
-    }
-    .ddHeader{
-      padding:10px 12px;
-      font-size:12px;
-      color:var(--muted);
-      border-bottom:1px solid rgba(34,48,65,.55);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .ddList{ max-height:320px; overflow:auto; }
-    .ddItem{
-      display:flex;
-      gap:10px;
-      padding:10px 12px;
-      cursor:pointer;
-      align-items:center;
-      border-bottom:1px solid rgba(34,48,65,.35);
-    }
-    .ddItem:hover{ background:rgba(122,162,247,.10); }
-    .ddCover{
-      width:34px;
-      height:48px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,.10);
-      background-size:cover;
-      background-position:center;
-      flex:0 0 auto;
-      background-color: rgba(255,255,255,.06);
-    }
-    .ddMain{ min-width:0; }
-    .ddTitle{ font-size:12px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .ddMeta{ font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .kbd{
-      font-size:11px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(34,48,65,.95);
-      color:var(--muted);
     }
 
-    /* LISTA */
-    .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-    @media (max-width:980px){ .grid3{ grid-template-columns:1fr; } }
-    h2{ margin:0 0 10px; font-size:15px; font-weight:850; color:#d8e1ee; }
-
-    .list{ display:flex; flex-direction:column; gap:10px; }
-    .item{
-      border:1px solid rgba(34,48,65,.85);
-      border-radius:14px;
-      padding:10px;
-      background:rgba(12,16,22,.85);
-      display:flex;
-      gap:10px;
-      justify-content:space-between;
-      align-items:flex-start;
-    }
-    .meta{ display:flex; flex-direction:column; gap:3px; min-width:0; }
-    .title{ font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:520px; }
-    .small{ color:var(--muted); font-size:12px; }
     .pill{
       display:inline-flex;
       gap:8px;
       align-items:center;
-      font-size:11px;
-      color:#cfe1ff;
-      border:1px solid rgba(122,162,247,.35);
-      padding:2px 8px;
+      padding:8px 12px;
       border-radius:999px;
-      width:fit-content;
-      margin-top:6px;
-    }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .actions button{ padding:7px 10px; font-size:12px; }
-
-    /* ROOM */
-    .roomPanel{ padding:0; overflow:hidden; }
-    .room{
-      position:relative;
-      width:100%;
-      height:min(72vh, 760px);
-      min-height:520px;
-      border-radius:16px;
-      overflow:hidden;
-
-      /* meno scuro, più visibile */
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.28)),
-        url("assets/room.jpg");
-      background-size:cover;
-      background-position:center;
-      box-shadow: var(--shadow);
-    }
-
-    /* leggera luce calda sul camino */
-    .room::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        radial-gradient(520px 360px at 75% 64%, rgba(255,165,80,.22), transparent 65%),
-        radial-gradient(340px 260px at 74% 64%, rgba(255,90,40,.12), transparent 62%);
-      pointer-events:none;
-      opacity:.95;
-      mix-blend-mode: screen;
-    }
-
-    /* pannelli trasparenti per non coprire l’immagine */
-    .zone{
-      position:absolute;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(10,12,16,.18);
-      box-shadow: 0 14px 42px rgba(0,0,0,.35);
-      overflow:hidden;
-      backdrop-filter: blur(1px);
-    }
-    .zoneHeader{
-      position:absolute;
-      left:12px;
-      top:10px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      z-index:3;
-      text-shadow:0 2px 10px rgba(0,0,0,.55);
-    }
-    .zoneTitle{ font-size:13px; font-weight:900; }
-    .badge{
-      font-size:11px;
-      color:#cfe1ff;
-      border:1px solid rgba(122,162,247,.35);
-      padding:2px 8px;
-      border-radius:999px;
+      border:1px solid var(--line);
       background:rgba(0,0,0,.18);
+      color:var(--text);
+      font-size:13px;
+      user-select:none;
     }
-    .zoneBody{
-      position:absolute;
-      inset:0;
-      padding:42px 12px 12px;
+
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:650;
+      transition:.15s transform, .15s opacity, .15s background;
+    }
+    .btn:hover{background:rgba(255,255,255,.06)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      background:rgba(122,162,255,.22);
+      border-color:rgba(122,162,255,.35);
+    }
+    .btn.danger{
+      color:var(--bad);
+      border-color:rgba(251,113,133,.40);
+      background:rgba(251,113,133,.06);
+    }
+    .btn.small{padding:8px 10px; border-radius:10px; font-size:13px}
+    .btn.ghost{
+      background:transparent;
+      border-color:rgba(255,255,255,.12);
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      background:var(--panel);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+    .panel.pad{padding:16px}
+
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+    .grid.form{
+      grid-template-columns: 1.6fr .8fr .8fr 1.3fr;
+      align-items:end;
+    }
+    @media (max-width: 980px){
+      .grid.form{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 560px){
+      .grid.form{grid-template-columns:1fr}
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    input, select, textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+      font-size:14px;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color:rgba(122,162,255,.55);
+      box-shadow:0 0 0 3px rgba(122,162,255,.15);
+    }
+    textarea{min-height:82px; resize:vertical}
+
+    .row{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      align-content:flex-start;
-      z-index:2;
-    }
-
-    .zone.read { left:5%; top:14%; width:44%; height:46%; }
-    .zone.reading { left:54%; top:22%; width:41%; height:40%; }
-    .zone.toread { left:10%; bottom:8%; width:80%; height:26%; }
-
-    @media (max-width:980px){
-      .room{ height:auto; min-height:820px; }
-      .zone.read{ left:6%; top:10%; width:88%; height:30%; }
-      .zone.reading{ left:6%; top:43%; width:88%; height:26%; }
-      .zone.toread{ left:6%; bottom:6%; width:88%; height:22%; }
-    }
-
-    /* libri in stanza */
-    .bookBtn{
-      appearance:none;
-      border:none;
-      background:none;
-      padding:0;
-      margin:0;
-      cursor:pointer;
-      position:relative;
-    }
-    .bookBtn:hover{ transform: translateY(-1px); }
-    .bookBtn:focus-visible{
-      outline:none;
-      box-shadow: 0 0 0 3px rgba(122,162,247,.35);
-      border-radius:12px;
-    }
-
-    .spine{
-      width:42px;
-      height:160px;
-      border-radius:10px;
-      box-shadow: 0 18px 32px rgba(0,0,0,.35);
-      border:1px solid rgba(0,0,0,.35);
-      overflow:hidden;
-      transform: perspective(800px) rotateY(-12deg);
-      background-size:cover;
-      background-position:center;
-      position:relative;
-    }
-    .spine::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(90deg, rgba(255,255,255,.18), transparent 28%, rgba(0,0,0,.25));
-      pointer-events:none;
-    }
-    .spineTxt{
-      position:absolute; left:7px; right:7px; bottom:10px;
-      font-size:10px; font-weight:900; color:rgba(15,18,22,.92);
-      writing-mode: vertical-rl; transform: rotate(180deg);
-      max-height:132px;
-      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
-      text-shadow: 0 1px 0 rgba(255,255,255,.12);
-    }
-
-    .miniSpine{
-      width:36px;
-      height:86px;
-      border-radius:10px;
-      box-shadow: 0 16px 28px rgba(0,0,0,.35);
-      border:1px solid rgba(0,0,0,.35);
-      overflow:hidden;
-      transform: perspective(700px) rotateY(-10deg);
-      background-size:cover;
-      background-position:center;
-      position:relative;
-    }
-    .miniSpine::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(90deg, rgba(255,255,255,.16), transparent 30%, rgba(0,0,0,.25));
-      pointer-events:none;
-    }
-    .miniTxt{
-      position:absolute; left:6px; right:6px; bottom:7px;
-      font-size:9px; font-weight:900; color:rgba(15,18,22,.92);
-      writing-mode: vertical-rl; transform: rotate(180deg);
-      max-height:68px;
-      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
-    }
-
-    .hbook{
-      width:min(520px, 100%);
-      height:44px;
-      border-radius:14px;
-      box-shadow: 0 18px 32px rgba(0,0,0,.35);
-      border:1px solid rgba(0,0,0,.35);
-      overflow:hidden;
-      display:flex;
       align-items:center;
-      gap:10px;
-      padding:0 12px;
-      background-size:cover;
-      background-position:center;
-      transform: perspective(900px) rotateX(6deg);
-      position:relative;
     }
-    .hbook::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:linear-gradient(180deg, rgba(255,255,255,.14), transparent 45%, rgba(0,0,0,.25));
-      pointer-events:none;
-    }
-    .hbookInfo{ display:flex; flex-direction:column; min-width:0; position:relative; z-index:1; }
-    .hbookTitle{ font-weight:900; font-size:12px; color:rgba(15,18,22,.92); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .hbookAuthor{ font-size:11px; color:rgba(15,18,22,.72); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    .tip{
-      position:absolute;
-      left:50%;
-      top:-8px;
-      transform: translate(-50%, -100%);
-      background: rgba(0,0,0,.72);
-      border:1px solid rgba(255,255,255,.10);
-      color: #e9eef5;
-      padding:6px 8px;
-      border-radius:10px;
-      font-size:12px;
-      white-space:nowrap;
-      opacity:0;
-      pointer-events:none;
-      transition: opacity .12s ease;
-      z-index:10;
-    }
-    .bookBtn:hover .tip{ opacity:1; }
+    .muted{color:var(--muted)}
+    .hint{font-size:12px; color:var(--muted); margin-top:8px}
 
-    /* MODAL */
-    .modal.hidden{ display:none!important; }
-    .modal{ position:fixed; inset:0; z-index:9999; }
-    .modalBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.60); backdrop-filter: blur(5px); }
-    .modalCard{
-      position:relative;
-      max-width:860px;
-      margin:5vh auto;
-      background:rgba(16,20,27,.94);
-      border:1px solid rgba(34,48,65,.90);
-      border-radius:18px;
-      box-shadow:0 30px 90px rgba(0,0,0,.60);
+    /* Lookup dropdown: deve stare SOPRA tutto */
+    .lookup-wrap{position:relative;}
+    .dropdown{
+      position:absolute;
+      left:0; right:0;
+      top:calc(100% + 8px);
+      z-index:9999;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      background:rgba(10,12,18,.96);
+      box-shadow:0 30px 90px rgba(0,0,0,.75);
       overflow:hidden;
+      max-height:320px;
+      display:none;
     }
-    .modalHeader{
+    .dropdown.on{display:block;}
+    .dropdown .head{
       display:flex;
       justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      padding:14px 14px 10px;
-      border-bottom:1px solid rgba(34,48,65,.55);
+      align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      font-size:12px;
     }
-    .modalTitle{ font-size:17px; font-weight:900; }
-    .modalSub{ font-size:12px; color:var(--muted); margin-top:2px; }
-    .modalClose{
-      background:transparent;
-      border:1px solid rgba(34,48,65,.95);
-      color:var(--text);
-      border-radius:12px;
-      padding:8px 10px;
+    .dd-list{max-height:280px; overflow:auto;}
+    .dd-item{
+      display:flex;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
       cursor:pointer;
+      align-items:center;
     }
-    .modalBody{ padding:12px 14px 14px; display:grid; gap:12px; }
-    .modalGrid{ display:grid; grid-template-columns: 160px 1fr; gap:14px; }
-    @media (max-width:740px){ .modalGrid{ grid-template-columns:1fr; } }
+    .dd-item:hover{background:rgba(255,255,255,.06)}
     .cover{
-      width:160px;
-      height:240px;
-      border-radius:14px;
+      width:34px; height:50px;
+      border-radius:8px;
+      background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
-      box-shadow: 0 18px 40px rgba(0,0,0,.45);
-      background-size:cover;
-      background-position:center;
+      flex:0 0 auto;
+      object-fit:cover;
+    }
+    .dd-main{display:flex; flex-direction:column; min-width:0}
+    .dd-title{font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .dd-sub{color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .badge{
+      margin-left:auto;
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--muted);
+      background:rgba(255,255,255,.04);
+      flex:0 0 auto;
+    }
+
+    /* toggle vista */
+    .view-toggle{
+      display:flex;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:999px;
       overflow:hidden;
     }
-    .kv{ display:grid; gap:10px; }
-    .kvRow{ display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:baseline; }
-    .k{ font-size:12px; color:var(--muted); }
-    .v{ font-size:13px; color:var(--text); }
-
-    .modalActions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-    .linkBtn{
+    .view-toggle button{
+      border:0;
       background:transparent;
-      color:var(--text);
-      border:1px solid rgba(34,48,65,.95);
-      border-radius:12px;
-      padding:9px 11px;
+      color:var(--muted);
+      padding:9px 12px;
       cursor:pointer;
-      font-weight:850;
+      font-weight:750;
+    }
+    .view-toggle button.on{
+      background:rgba(122,162,255,.22);
+      color:var(--text);
+    }
+
+    /* Sezioni libri */
+    .sections{
+      padding:16px;
+      display:grid;
+      gap:14px;
+    }
+    .room{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .room{grid-template-columns:1fr}
+    }
+
+    .zone{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.22);
+      border-radius:16px;
+      padding:14px;
+      min-height:210px;
+      position:relative;
+      overflow:hidden;
+    }
+    .zone::before{
+      content:"";
+      position:absolute; inset:0;
+      background:radial-gradient(700px 260px at 50% 0%, rgba(255,180,110,.10), transparent 60%);
+      opacity:.8;
+      pointer-events:none;
+    }
+    .zone h3{
+      margin:0 0 8px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      z-index:1;
+      position:relative;
+    }
+    .zone h3 span{font-size:12px; color:var(--muted); font-weight:650; border:1px solid rgba(255,255,255,.12); padding:4px 8px; border-radius:999px;}
+    .shelf{
+      position:relative;
+      z-index:1;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      padding-top:6px;
+    }
+
+    /* “libro” in stanza: mostriamo cover/spine */
+    .book{
+      width:44px;
+      height:150px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      cursor:pointer;
+      overflow:hidden;
+      position:relative;
+    }
+    .book img{width:100%; height:100%; object-fit:cover; display:block;}
+    .book.fallback{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px;
+      color:rgba(255,255,255,.80);
+      font-size:11px;
+      font-weight:800;
+      text-align:center;
+      line-height:1.1;
+    }
+
+    .book.horizontal{
+      width:170px;
+      height:46px;
+      border-radius:12px;
+    }
+    .book.horizontal img{object-fit:cover}
+
+    .empty{
+      color:var(--muted);
+      font-size:13px;
+      padding:14px 0 0;
+      position:relative;
+      z-index:1;
+    }
+
+    /* Lista view */
+    .list{
+      display:grid;
+      gap:10px;
+    }
+    .card{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.20);
+      cursor:pointer;
+    }
+    .card:hover{background:rgba(255,255,255,.04)}
+    .card img{width:48px; height:70px; border-radius:10px; border:1px solid rgba(255,255,255,.10); object-fit:cover; background:rgba(255,255,255,.06)}
+    .card .meta{min-width:0}
+    .card .meta .t{font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .card .meta .a{color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .chip{
+      margin-left:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      color:var(--muted);
+      font-size:12px;
+      flex:0 0 auto;
+    }
+    .dot{width:8px; height:8px; border-radius:50%;}
+    .dot.read{background:var(--ok)}
+    .dot.reading{background:var(--warn)}
+    .dot.to_read{background:rgba(255,255,255,.35)}
+
+    /* Modali */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.65);
+      display:none;
+      z-index:10000;
+      padding:22px;
+    }
+    .modal-backdrop.on{display:flex; align-items:center; justify-content:center;}
+    .modal{
+      width:min(980px, 100%);
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(14,18,26,.94);
+      box-shadow:0 40px 120px rgba(0,0,0,.8);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+    .modal .mhead{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      padding:16px 16px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .modal .mhead h2{margin:0; font-size:18px}
+    .modal .mhead .sub{margin:6px 0 0; color:var(--muted); font-size:13px}
+    .modal .mbody{padding:14px 16px 16px}
+    .modal .mfoot{
+      padding:12px 16px 16px;
+      border-top:1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .editions{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      max-height:420px;
+      overflow:auto;
+      padding-right:4px;
+    }
+    @media (max-width: 820px){
+      .editions{grid-template-columns:1fr}
+    }
+    .edition{
+      display:flex;
+      gap:12px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.22);
+      cursor:pointer;
+      align-items:center;
+    }
+    .edition:hover{background:rgba(255,255,255,.05)}
+    .edition.on{border-color:rgba(122,162,255,.55); box-shadow:0 0 0 3px rgba(122,162,255,.12)}
+    .edition img{
+      width:46px; height:66px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.10);
+      object-fit:cover;
+      background:rgba(255,255,255,.06);
+      flex:0 0 auto;
+    }
+    .edition .e-meta{min-width:0}
+    .edition .e-title{font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .edition .e-sub{color:var(--muted); font-size:12px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .edition .e-sub2{color:var(--muted); font-size:12px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+    .toast{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      background:rgba(14,18,26,.92);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 20px 70px rgba(0,0,0,.6);
+      border-radius:14px;
+      padding:10px 12px;
+      color:var(--text);
+      font-size:13px;
+      display:none;
+      z-index:20000;
+      max-width:min(420px, calc(100vw - 32px));
+    }
+    .toast.on{display:block}
+    .toast .t2{color:var(--muted); font-size:12px; margin-top:3px}
+
+    .smallnote{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
     }
   </style>
 </head>
-
-<body>
-  <header>
-    <h1>Libreria</h1>
-    <div class="sub">Dati locali nel browser. Ricerca unificata titolo/autore con Open Library. Stanza = immagine + libri cliccabili.</div>
-  </header>
-
-  <main>
-    <section class="panel">
-      <div class="viewbar">
-        <div>
-          <div class="counts" id="counts"></div>
-          <div class="hint" id="hint"></div>
+<body class="room-on">
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Libreria</h1>
+        <p>Gestione locale (localStorage). Lookup: Open Library. Vista “Stanza” usa <code>assets/room.jpg</code>.</p>
+      </div>
+      <div class="top-actions">
+        <div class="view-toggle" aria-label="toggle vista">
+          <button id="btnList" class="on" type="button">Lista</button>
+          <button id="btnRoom" type="button">Stanza</button>
         </div>
+        <button class="btn small" id="btnExport" type="button">Esporta JSON</button>
+        <button class="btn small" id="btnImport" type="button">Importa JSON</button>
+        <button class="btn small danger" id="btnWipe" type="button">Svuota</button>
+      </div>
+    </header>
 
-        <div class="seg">
-          <button id="btnList" class="active" type="button">Lista</button>
-          <button id="btnRoom" class="inactive" type="button">Stanza</button>
+    <div class="panel pad">
+      <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+        <div class="pill" id="stats">Totale: 0</div>
+        <div class="row">
+          <span class="pill" id="lookupState">Lookup ON</span>
+          <button class="btn small ghost" type="button" id="btnToggleLookup">Disattiva lookup</button>
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px;">
-        <div style="min-width:340px; flex:1;">
-          <label for="query">Cerca libro o autore *</label>
-          <input id="query" placeholder="es. Demian, Hesse, Orwell 1984..." autocomplete="off" />
-          <div id="suggestBox" class="dropdown hidden">
-            <div class="ddHeader">
-              <div id="ddStatus">Suggerimenti</div>
-              <div class="kbd">↑↓ invio • esc</div>
+      <div class="grid form" style="margin-top:12px;">
+        <div class="lookup-wrap">
+          <label for="q">Cerca libro o autore *</label>
+          <input id="q" autocomplete="off" placeholder="es. Demian, Hesse, Orwell, Calvino…"/>
+          <div class="dropdown" id="dropdown">
+            <div class="head">
+              <span id="ddTitle">Suggerimenti (Open Library)</span>
+              <span class="pill" style="padding:6px 10px; font-size:11px;">↑↓ invio · esc</span>
             </div>
-            <div id="ddList" class="ddList"></div>
+            <div class="dd-list" id="ddList"></div>
           </div>
+          <div class="hint" id="lookupHint">Digita almeno 2 caratteri. Seleziona un risultato per compilare titolo/autore e (opzionale) scegliere l’edizione.</div>
         </div>
 
-        <div style="min-width:240px;">
+        <div>
           <label for="status">Stato *</label>
           <select id="status">
-            <option value="to-read">Da leggere</option>
+            <option value="to_read">Da leggere</option>
             <option value="reading">In lettura</option>
             <option value="read">Letto</option>
           </select>
         </div>
 
-        <div style="min-width:240px;">
+        <div>
           <label for="rating">Valutazione (0–5)</label>
           <select id="rating">
             <option value="">—</option>
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            <option value="4">4</option><option value="5">5</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
           </select>
         </div>
 
-        <div style="min-width:260px; flex:1;">
-          <label for="comment">Commento / recensione (consigliato per “Letti”)</label>
+        <div>
+          <label for="comment">Commento / recensione (consigliato per “letti”)</label>
           <textarea id="comment" placeholder="Cosa ti ha lasciato? Punti chiave, impressioni, perché vale (o no)."></textarea>
         </div>
+      </div>
 
-        <div>
-          <button id="saveBtn" type="button">Salva</button>
+      <div class="row" style="margin-top:12px; justify-content:space-between;">
+        <div class="row">
+          <button class="btn primary" id="btnSave" type="button">Salva</button>
+          <button class="btn" id="btnPickEdition" type="button" style="display:none;">Scegli edizione</button>
+          <button class="btn" id="btnClearForm" type="button">Pulisci</button>
         </div>
-        <div>
-          <button id="cancelEditBtn" class="secondary hidden" type="button">Annulla</button>
+        <div class="row">
+          <label style="display:flex; gap:8px; align-items:center; margin:0; color:var(--muted); font-size:12px;">
+            <input type="checkbox" id="preferItalian" checked style="width:auto;"/>
+            preferisci risultati in italiano (quando possibile)
+          </label>
         </div>
       </div>
 
-      <div class="toolbar">
-        <div class="row" style="align-items:center;">
-          <div>
-            <label for="filter">Filtro locale</label>
-            <input id="filter" placeholder="filtra per titolo, autore, genere..." />
-          </div>
-          <div>
-            <label for="sort">Ordina</label>
-            <select id="sort">
-              <option value="updated_desc">Ultima modifica (↓)</option>
-              <option value="updated_asc">Ultima modifica (↑)</option>
-              <option value="title_asc">Titolo (A→Z)</option>
-              <option value="title_desc">Titolo (Z→A)</option>
-              <option value="author_asc">Autore (A→Z)</option>
-              <option value="author_desc">Autore (Z→A)</option>
-            </select>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:6px;">
-            <button id="toggleLookup" class="secondary" type="button">Lookup ON</button>
-          </div>
-        </div>
-
-        <div class="row" style="align-items:center;">
-          <button id="exportBtn" class="secondary" type="button">Esporta JSON</button>
-          <button id="importBtn" class="secondary" type="button">Importa JSON</button>
-          <button id="wipeBtn" class="danger" type="button">Svuota</button>
-        </div>
+      <div class="smallnote">
+        Nota: le copertine arrivano da Open Library (se disponibili). Se il tuo <code>room.jpg</code> non si vede, quasi sempre è un problema di path/case: deve essere esattamente <code>assets/room.jpg</code>.
       </div>
+    </div>
 
-      <div id="importArea" class="hidden" style="margin-top:10px;">
-        <div class="hint">Incolla il JSON esportato e conferma.</div>
-        <textarea id="importText" style="background:rgba(12,16,22,.85);color:var(--text);border:1px solid rgba(34,48,65,.95);border-radius:12px;padding:10px;width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12px;"></textarea>
-        <div class="row" style="margin-top:8px;">
-          <button id="confirmImportBtn" type="button">Conferma import</button>
-          <button id="cancelImportBtn" class="secondary" type="button">Annulla</button>
-        </div>
-      </div>
-
-      <div id="exportArea" class="hidden" style="margin-top:10px;">
-        <div class="hint">Copia e salva questo JSON (backup).</div>
-        <textarea id="exportText" readonly style="background:rgba(12,16,22,.85);color:var(--text);border:1px solid rgba(34,48,65,.95);border-radius:12px;padding:10px;width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:12px;"></textarea>
-        <div class="row" style="margin-top:8px;">
-          <button id="closeExportBtn" class="secondary" type="button">Chiudi</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="viewList" class="grid3">
-      <section class="panel">
-        <h2>Da leggere</h2>
-        <div class="list" id="list-to-read"></div>
-      </section>
-      <section class="panel">
-        <h2>In lettura</h2>
-        <div class="list" id="list-reading"></div>
-      </section>
-      <section class="panel">
-        <h2>Letti</h2>
-        <div class="list" id="list-read"></div>
-      </section>
-    </section>
-
-    <section id="viewRoom" class="panel roomPanel hidden">
-      <div class="room" id="room">
-        <div class="zone read">
-          <div class="zoneHeader">
-            <div class="zoneTitle">Letti</div>
-            <div class="badge">Scaffale</div>
-          </div>
-          <div class="zoneBody" id="room-read"></div>
-        </div>
-
-        <div class="zone reading">
-          <div class="zoneHeader">
-            <div class="zoneTitle">In lettura</div>
-            <div class="badge">Vicino al fuoco</div>
-          </div>
-          <div class="zoneBody" id="room-reading"></div>
-        </div>
-
-        <div class="zone toread">
-          <div class="zoneHeader">
-            <div class="zoneTitle">Da leggere</div>
-            <div class="badge">Stack</div>
-          </div>
-          <div class="zoneBody" id="room-toread"></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div id="bookModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modalBackdrop" data-close="1"></div>
-    <div class="modalCard">
-      <div class="modalHeader">
-        <div>
-          <div id="modalTitle" class="modalTitle"></div>
-          <div id="modalSub" class="modalSub"></div>
-        </div>
-        <button id="modalClose" class="modalClose" type="button" aria-label="Chiudi">✕</button>
-      </div>
-      <div class="modalBody">
-        <div class="modalGrid">
-          <div id="modalCover" class="cover"></div>
-          <div class="kv">
-            <div class="kvRow"><div class="k">Stato</div><div class="v" id="modalStatus"></div></div>
-            <div class="kvRow"><div class="k">Valutazione</div><div class="v" id="modalRating"></div></div>
-            <div class="kvRow"><div class="k">Genere</div><div class="v" id="modalGenre"></div></div>
-            <div class="kvRow"><div class="k">Aggiornato</div><div class="v" id="modalUpdated"></div></div>
-            <div class="kvRow"><div class="k">Commento</div><div class="v" id="modalComment"></div></div>
-
-            <div class="modalActions">
-              <button id="modalEdit" class="secondary" type="button">Modifica</button>
-              <button id="modalCycle" class="secondary" type="button">Cambia stato</button>
-              <button id="modalDelete" class="danger" type="button">Elimina</button>
-              <button id="modalOpenLibrary" class="linkBtn" type="button">Open Library</button>
-              <button id="modalAudible" class="linkBtn" type="button">Audible</button>
-              <button id="modalKindle" class="linkBtn" type="button">Kindle</button>
+    <div class="panel" style="margin-top:14px;">
+      <div class="sections" id="viewList">
+        <div class="row" style="justify-content:space-between;">
+          <div class="row" style="gap:12px;">
+            <div>
+              <label for="localFilter">Filtro locale</label>
+              <input id="localFilter" placeholder="filtra per titolo, autore, commento…"/>
             </div>
+            <div>
+              <label for="orderBy">Ordina</label>
+              <select id="orderBy">
+                <option value="updated_desc">Ultima modifica (↓)</option>
+                <option value="updated_asc">Ultima modifica (↑)</option>
+                <option value="title_asc">Titolo (A→Z)</option>
+                <option value="title_desc">Titolo (Z→A)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="list" id="list"></div>
+      </div>
 
-            <div class="hint">Nota: Audible/Kindle sono ricerche. Più avanti si può salvare un link specifico o PDF per libro.</div>
+      <div class="sections" id="viewRoom" style="display:none;">
+        <div class="room">
+          <div class="zone">
+            <h3>Letti <span>Scaffale</span></h3>
+            <div class="shelf" id="shelfRead"></div>
+            <div class="empty" id="emptyRead" style="display:none;">Scaffale vuoto (per ora).</div>
+          </div>
+
+          <div class="zone">
+            <h3>In lettura <span>Vicino al fuoco</span></h3>
+            <div class="shelf" id="shelfReading"></div>
+            <div class="empty" id="emptyReading" style="display:none;">Nessun libro in lettura.</div>
+          </div>
+
+          <div class="zone" style="grid-column:1/-1;">
+            <h3>Da leggere <span>Stack</span></h3>
+            <div class="shelf" id="shelfToRead"></div>
+            <div class="empty" id="emptyToRead" style="display:none;">Nessun libro da leggere.</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = "libreria_personale_v4";
-    const el = (id) => document.getElementById(id);
+  <!-- MODAL: Dettaglio libro -->
+  <div class="modal-backdrop" id="bookModal">
+    <div class="modal">
+      <div class="mhead">
+        <div>
+          <h2 id="mTitle">—</h2>
+          <div class="sub" id="mAuthor">—</div>
+        </div>
+        <button class="btn small" id="mClose" type="button">✕</button>
+      </div>
+      <div class="mbody">
+        <div class="row" style="align-items:flex-start; gap:14px;">
+          <img id="mCover" alt="" style="width:160px; height:240px; border-radius:16px; border:1px solid rgba(255,255,255,.12); object-fit:cover; background:rgba(255,255,255,.06)"/>
+          <div style="flex:1; min-width:0;">
+            <div class="row" style="gap:18px; flex-wrap:wrap;">
+              <div><div class="muted" style="font-size:12px;">Stato</div><div id="mStatus" style="font-weight:800;">—</div></div>
+              <div><div class="muted" style="font-size:12px;">Valutazione</div><div id="mRating" style="font-weight:800;">—</div></div>
+              <div><div class="muted" style="font-size:12px;">Edizione</div><div id="mEdition" style="font-weight:800;">—</div></div>
+              <div><div class="muted" style="font-size:12px;">Aggiornato</div><div id="mUpdated" style="font-weight:800;">—</div></div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Commento</div>
+              <div id="mComment" style="white-space:pre-wrap; line-height:1.35; color:rgba(255,255,255,.90)"></div>
+            </div>
 
-    const state = {
-      books: [],
-      editingId: null,
-      view: "list",
-      lookupEnabled: true,
+            <div class="row" style="margin-top:14px; justify-content:flex-start;">
+              <button class="btn" id="mEdit" type="button">Modifica</button>
+              <button class="btn" id="mCycle" type="button">Cambia stato</button>
+              <button class="btn danger" id="mDelete" type="button">Elimina</button>
+              <button class="btn" id="mOpenLibrary" type="button">Open Library</button>
+              <button class="btn" id="mAudible" type="button">Audible</button>
+              <button class="btn" id="mKindle" type="button">Kindle</button>
+            </div>
 
-      // filtro/sort locali
-      filter: "",
-      sort: "updated_desc",
+            <div class="hint">Nota: Audible/Kindle sono ricerche. In futuro puoi salvare link specifici per libro/edizione.</div>
+          </div>
+        </div>
+      </div>
+      <div class="mfoot">
+        <button class="btn small" id="mOk" type="button">Chiudi</button>
+      </div>
+    </div>
+  </div>
 
-      // dropdown / suggestions
-      suggestOpen: false,
-      suggestItems: [],
-      suggestIndex: -1,
-      suggestReqId: 0,
-      selectedSuggestion: null
+  <!-- MODAL: Edizioni -->
+  <div class="modal-backdrop" id="edModal">
+    <div class="modal">
+      <div class="mhead">
+        <div>
+          <h2>Scegli edizione</h2>
+          <div class="sub" id="edSub">—</div>
+        </div>
+        <button class="btn small" id="edClose" type="button">✕</button>
+      </div>
+      <div class="mbody">
+        <div class="row" style="justify-content:space-between; gap:10px; margin-bottom:10px;">
+          <div class="pill" id="edInfo">—</div>
+          <button class="btn small ghost" id="edReload" type="button">Ricarica edizioni</button>
+        </div>
+        <div class="editions" id="edList"></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn" id="edSkip" type="button">Usa work (senza edizione)</button>
+        <button class="btn primary" id="edUse" type="button">Usa questa edizione</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div id="toast1">—</div>
+    <div class="t2" id="toast2"></div>
+  </div>
+
+<script>
+(() => {
+  const LS_KEY = "libreria.books.v2";
+
+  // DOM
+  const q = document.getElementById("q");
+  const dropdown = document.getElementById("dropdown");
+  const ddList = document.getElementById("ddList");
+  const ddTitle = document.getElementById("ddTitle");
+  const statusEl = document.getElementById("status");
+  const ratingEl = document.getElementById("rating");
+  const commentEl = document.getElementById("comment");
+  const preferItalianEl = document.getElementById("preferItalian");
+  const btnSave = document.getElementById("btnSave");
+  const btnClearForm = document.getElementById("btnClearForm");
+  const btnPickEdition = document.getElementById("btnPickEdition");
+  const stats = document.getElementById("stats");
+  const lookupState = document.getElementById("lookupState");
+  const btnToggleLookup = document.getElementById("btnToggleLookup");
+  const lookupHint = document.getElementById("lookupHint");
+
+  const btnExport = document.getElementById("btnExport");
+  const btnImport = document.getElementById("btnImport");
+  const btnWipe = document.getElementById("btnWipe");
+
+  const btnList = document.getElementById("btnList");
+  const btnRoom = document.getElementById("btnRoom");
+  const viewList = document.getElementById("viewList");
+  const viewRoom = document.getElementById("viewRoom");
+
+  const localFilter = document.getElementById("localFilter");
+  const orderBy = document.getElementById("orderBy");
+  const listEl = document.getElementById("list");
+  const shelfRead = document.getElementById("shelfRead");
+  const shelfReading = document.getElementById("shelfReading");
+  const shelfToRead = document.getElementById("shelfToRead");
+  const emptyRead = document.getElementById("emptyRead");
+  const emptyReading = document.getElementById("emptyReading");
+  const emptyToRead = document.getElementById("emptyToRead");
+
+  // Modali
+  const bookModal = document.getElementById("bookModal");
+  const mTitle = document.getElementById("mTitle");
+  const mAuthor = document.getElementById("mAuthor");
+  const mCover = document.getElementById("mCover");
+  const mStatus = document.getElementById("mStatus");
+  const mRating = document.getElementById("mRating");
+  const mEdition = document.getElementById("mEdition");
+  const mUpdated = document.getElementById("mUpdated");
+  const mComment = document.getElementById("mComment");
+  const mClose = document.getElementById("mClose");
+  const mOk = document.getElementById("mOk");
+  const mEdit = document.getElementById("mEdit");
+  const mCycle = document.getElementById("mCycle");
+  const mDelete = document.getElementById("mDelete");
+  const mOpenLibrary = document.getElementById("mOpenLibrary");
+  const mAudible = document.getElementById("mAudible");
+  const mKindle = document.getElementById("mKindle");
+
+  const edModal = document.getElementById("edModal");
+  const edSub = document.getElementById("edSub");
+  const edInfo = document.getElementById("edInfo");
+  const edList = document.getElementById("edList");
+  const edClose = document.getElementById("edClose");
+  const edReload = document.getElementById("edReload");
+  const edSkip = document.getElementById("edSkip");
+  const edUse = document.getElementById("edUse");
+
+  const toast = document.getElementById("toast");
+  const toast1 = document.getElementById("toast1");
+  const toast2 = document.getElementById("toast2");
+
+  // Stato app
+  let books = loadBooks();
+  let view = loadView();
+  let lookupOn = loadLookup();
+  let lookupAbort = null;
+  let ddItems = [];
+  let ddIndex = -1;
+
+  // Selezione corrente da lookup
+  let selectedWork = null;     // {workKey, title, author, coverUrl, editionCount}
+  let editionsCache = null;    // array di edizioni per work
+  let selectedEdition = null;  // {editionKey, publishDate, publisher, coverUrl}
+
+  // Se stai modificando un libro esistente
+  let editingId = null;
+
+  // -------- Utils ----------
+  function nowISO(){ return new Date().toISOString(); }
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString("it-IT");
+    }catch{ return iso; }
+  }
+  function toastMsg(t1, t2=""){
+    toast1.textContent = t1;
+    toast2.textContent = t2;
+    toast.classList.add("on");
+    setTimeout(() => toast.classList.remove("on"), 2600);
+  }
+
+  function loadBooks(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      if(!Array.isArray(arr)) return [];
+      return arr;
+    }catch{ return []; }
+  }
+  function saveBooks(){
+    localStorage.setItem(LS_KEY, JSON.stringify(books));
+  }
+
+  function loadView(){
+    return localStorage.getItem("libreria.view") || "list";
+  }
+  function saveView(){
+    localStorage.setItem("libreria.view", view);
+  }
+
+  function loadLookup(){
+    const v = localStorage.getItem("libreria.lookup");
+    return v === null ? true : v === "1";
+  }
+  function saveLookup(){
+    localStorage.setItem("libreria.lookup", lookupOn ? "1" : "0");
+  }
+
+  function coverFromDoc(doc){
+    // preferisci cover_i se c’è
+    if(doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+    // fallback: nessuna
+    return "";
+  }
+  function coverFromEdition(ed){
+    // ed.key: "/books/OLxxxxM"
+    const olid = (ed.key || "").split("/").pop();
+    if(ed.covers && ed.covers.length){
+      return `https://covers.openlibrary.org/b/id/${ed.covers[0]}-M.jpg`;
+    }
+    if(olid && olid.startsWith("OL")){
+      return `https://covers.openlibrary.org/b/olid/${olid}-M.jpg`;
+    }
+    return "";
+  }
+
+  function statusLabel(s){
+    if(s==="read") return "Letto";
+    if(s==="reading") return "In lettura";
+    return "Da leggere";
+  }
+  function statusDotClass(s){
+    if(s==="read") return "read";
+    if(s==="reading") return "reading";
+    return "to_read";
+  }
+
+  function normalize(s){
+    return (s||"").toLowerCase().trim();
+  }
+
+  // -------- View toggle ----------
+  function applyView(){
+    if(view === "room"){
+      btnRoom.classList.add("on"); btnList.classList.remove("on");
+      viewRoom.style.display = "";
+      viewList.style.display = "none";
+      document.body.classList.add("room-on");
+    }else{
+      btnList.classList.add("on"); btnRoom.classList.remove("on");
+      viewList.style.display = "";
+      viewRoom.style.display = "none";
+      document.body.classList.add("room-on"); // puoi lasciarla sempre on; se vuoi in lista: rimuovi
+    }
+    saveView();
+  }
+  btnList.addEventListener("click", () => { view="list"; applyView(); render(); });
+  btnRoom.addEventListener("click", () => { view="room"; applyView(); render(); });
+
+  // -------- Lookup toggle ----------
+  function applyLookup(){
+    lookupState.textContent = lookupOn ? "Lookup ON" : "Lookup OFF";
+    btnToggleLookup.textContent = lookupOn ? "Disattiva lookup" : "Attiva lookup";
+    lookupHint.textContent = lookupOn
+      ? "Digita almeno 2 caratteri. Seleziona un risultato per compilare titolo/autore e (opzionale) scegliere l’edizione."
+      : "Lookup disattivato: puoi inserire testo libero (titolo o autore) e salvare comunque.";
+    saveLookup();
+  }
+  btnToggleLookup.addEventListener("click", () => {
+    lookupOn = !lookupOn;
+    applyLookup();
+    closeDropdown();
+  });
+
+  // -------- Dropdown ----------
+  function openDropdown(){
+    dropdown.classList.add("on");
+  }
+  function closeDropdown(){
+    dropdown.classList.remove("on");
+    ddList.innerHTML = "";
+    ddItems = [];
+    ddIndex = -1;
+  }
+  function setDdIndex(i){
+    ddIndex = i;
+    const nodes = ddList.querySelectorAll(".dd-item");
+    nodes.forEach((n, idx) => {
+      n.style.background = idx === ddIndex ? "rgba(122,162,255,.14)" : "";
+    });
+    if(ddIndex >= 0 && nodes[ddIndex]){
+      nodes[ddIndex].scrollIntoView({block:"nearest"});
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    if(!dropdown.contains(e.target) && e.target !== q){
+      closeDropdown();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if(!dropdown.classList.contains("on")) return;
+    if(e.key === "Escape"){ closeDropdown(); return; }
+    if(e.key === "ArrowDown"){ e.preventDefault(); setDdIndex(Math.min(ddItems.length-1, ddIndex+1)); }
+    if(e.key === "ArrowUp"){ e.preventDefault(); setDdIndex(Math.max(0, ddIndex-1)); }
+    if(e.key === "Enter"){
+      if(ddIndex >= 0 && ddItems[ddIndex]){
+        e.preventDefault();
+        pickSuggestion(ddItems[ddIndex]);
+      }
+    }
+  });
+
+  // -------- Open Library lookup ----------
+  let debounceT = null;
+  q.addEventListener("input", () => {
+    // quando cambi query, reset selezioni work/edition (evita bug “autore bloccato”)
+    selectedWork = null;
+    editionsCache = null;
+    selectedEdition = null;
+    btnPickEdition.style.display = "none";
+
+    const text = q.value.trim();
+    if(!lookupOn){
+      closeDropdown();
+      return;
+    }
+    if(debounceT) clearTimeout(debounceT);
+    debounceT = setTimeout(() => doLookup(text), 220);
+  });
+
+  async function doLookup(text){
+    if(!lookupOn) return;
+    const term = text.trim();
+    if(term.length < 2){
+      closeDropdown();
+      return;
+    }
+
+    // abort precedente
+    if(lookupAbort) lookupAbort.abort();
+    lookupAbort = new AbortController();
+
+    ddTitle.textContent = "Suggerimenti (Open Library)";
+    ddList.innerHTML = `<div style="padding:12px; color:var(--muted);">Ricerca…</div>`;
+    openDropdown();
+
+    try{
+      const preferIt = preferItalianEl.checked;
+      const qTerm = preferIt ? `${term} language:ita` : term;
+      const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(qTerm)}&limit=12`;
+      const res = await fetch(url, {signal: lookupAbort.signal});
+      const data = await res.json();
+
+      const docs = (data && data.docs) ? data.docs : [];
+      ddItems = docs.map(d => ({
+        type:"work",
+        workKey: d.key, // "/works/OL...W" oppure "/books/..." (di solito works)
+        title: d.title || "",
+        author: (d.author_name && d.author_name[0]) ? d.author_name[0] : "",
+        year: d.first_publish_year || "",
+        editionCount: d.edition_count || 0,
+        coverUrl: coverFromDoc(d),
+      }));
+
+      if(ddItems.length === 0){
+        ddList.innerHTML = `<div style="padding:12px; color:var(--muted);">Nessun match. Continua a scrivere…</div>`;
+        ddIndex = -1;
+        return;
+      }
+
+      ddList.innerHTML = ddItems.map((it, idx) => {
+        const c = it.coverUrl ? `<img class="cover" src="${it.coverUrl}" alt="">` : `<div class="cover" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:11px;">—</div>`;
+        const sub = `${it.author || "Autore sconosciuto"}${it.year ? " • " + it.year : ""}`;
+        const editions = it.editionCount ? `${it.editionCount} edizioni` : "—";
+        return `
+          <div class="dd-item" data-idx="${idx}">
+            ${c}
+            <div class="dd-main">
+              <div class="dd-title">${escapeHtml(it.title)}</div>
+              <div class="dd-sub">${escapeHtml(sub)}</div>
+            </div>
+            <div class="badge">${escapeHtml(editions)}</div>
+          </div>
+        `;
+      }).join("");
+
+      ddList.querySelectorAll(".dd-item").forEach(n => {
+        n.addEventListener("click", () => {
+          const idx = Number(n.getAttribute("data-idx"));
+          pickSuggestion(ddItems[idx]);
+        });
+      });
+
+      ddIndex = 0;
+      setDdIndex(ddIndex);
+
+    }catch(err){
+      if(err && err.name === "AbortError") return;
+      ddList.innerHTML = `<div style="padding:12px; color:var(--bad);">Errore lookup (Open Library).</div>`;
+    }
+  }
+
+  function pickSuggestion(item){
+    selectedWork = {
+      workKey: item.workKey,
+      title: item.title,
+      author: item.author,
+      coverUrl: item.coverUrl,
+      editionCount: item.editionCount
+    };
+    // riempi campo di ricerca con il titolo “pulito”
+    q.value = `${item.title}`;
+    closeDropdown();
+
+    // se ha molte edizioni, abilita pulsante “Scegli edizione”
+    if(selectedWork.editionCount && selectedWork.editionCount > 1 && (selectedWork.workKey||"").startsWith("/works/")){
+      btnPickEdition.style.display = "";
+      toastMsg("Selezionato: " + item.title, "Se vuoi, scegli anche l’edizione (anno/editore/copertina).");
+    }else{
+      btnPickEdition.style.display = "none";
+      toastMsg("Selezionato: " + item.title, item.author || "");
+    }
+  }
+
+  // -------- Edizioni ----------
+  btnPickEdition.addEventListener("click", () => openEditions());
+  edClose.addEventListener("click", () => closeEditions());
+  edSkip.addEventListener("click", () => {
+    selectedEdition = null;
+    closeEditions();
+    toastMsg("Ok", "Uso il work (senza edizione specifica).");
+  });
+  edReload.addEventListener("click", () => openEditions(true));
+  edUse.addEventListener("click", () => {
+    if(!selectedEdition){
+      toastMsg("Seleziona un’edizione", "Oppure usa ‘work’ senza edizione.");
+      return;
+    }
+    closeEditions();
+    toastMsg("Edizione selezionata", selectedEdition.publisher ? selectedEdition.publisher : "");
+  });
+
+  async function openEditions(force=false){
+    if(!selectedWork || !(selectedWork.workKey||"").startsWith("/works/")){
+      toastMsg("Nessun work selezionato", "Seleziona prima un risultato dalla tendina.");
+      return;
+    }
+    edSub.textContent = `${selectedWork.title} — ${selectedWork.author || "autore sconosciuto"}`;
+    edInfo.textContent = "Caricamento…";
+    edList.innerHTML = "";
+    edModal.classList.add("on");
+
+    if(editionsCache && !force){
+      renderEditions(editionsCache);
+      return;
+    }
+
+    try{
+      // Open Library editions endpoint
+      const url = `https://openlibrary.org${selectedWork.workKey}/editions.json?limit=50`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const entries = (data && data.entries) ? data.entries : [];
+
+      // Normalizza + ordina “sensatamente”: prima quelle con cover, poi per data (se parseabile)
+      const normalized = entries.map(e => {
+        const publisher = (e.publishers && e.publishers[0]) ? e.publishers[0] : "";
+        const publishDate = e.publish_date || "";
+        const lang = (e.languages && e.languages[0] && e.languages[0].key) ? e.languages[0].key.replace("/languages/","") : "";
+        const coverUrl = coverFromEdition(e);
+        return {
+          editionKey: e.key || "",
+          title: (e.title || selectedWork.title || ""),
+          publisher,
+          publishDate,
+          language: lang,
+          coverUrl
+        };
+      });
+
+      normalized.sort((a,b) => {
+        const ac = a.coverUrl ? 1 : 0;
+        const bc = b.coverUrl ? 1 : 0;
+        if(ac !== bc) return bc - ac;
+
+        const ad = parseYear(a.publishDate);
+        const bd = parseYear(b.publishDate);
+        if(ad !== bd) return bd - ad;
+        return (a.publisher||"").localeCompare(b.publisher||"");
+      });
+
+      editionsCache = normalized;
+      renderEditions(normalized);
+    }catch(err){
+      edInfo.textContent = "Errore caricamento edizioni.";
+      edList.innerHTML = `<div style="color:var(--bad); padding:10px 2px;">Non sono riuscito a leggere le edizioni da Open Library.</div>`;
+    }
+  }
+
+  function renderEditions(arr){
+    edInfo.textContent = `${arr.length} edizioni trovate (mostro le prime ${Math.min(arr.length,50)}).`;
+
+    if(arr.length === 0){
+      edList.innerHTML = `<div style="color:var(--muted); padding:10px 2px;">Nessuna edizione disponibile.</div>`;
+      return;
+    }
+
+    edList.innerHTML = arr.map((e, idx) => {
+      const img = e.coverUrl
+        ? `<img src="${e.coverUrl}" alt="">`
+        : `<img src="" alt="" style="background:rgba(255,255,255,.06)"/>`;
+      const sub1 = [e.publishDate, e.publisher].filter(Boolean).join(" • ") || "—";
+      const sub2 = e.language ? `Lingua: ${e.language}` : "";
+      const on = selectedEdition && selectedEdition.editionKey === e.editionKey ? "on" : "";
+      return `
+        <div class="edition ${on}" data-idx="${idx}">
+          ${img}
+          <div class="e-meta">
+            <div class="e-title">${escapeHtml(e.title)}</div>
+            <div class="e-sub">${escapeHtml(sub1)}</div>
+            <div class="e-sub2">${escapeHtml(sub2)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    edList.querySelectorAll(".edition").forEach(n => {
+      n.addEventListener("click", () => {
+        const idx = Number(n.getAttribute("data-idx"));
+        const e = arr[idx];
+        selectedEdition = {
+          editionKey: e.editionKey,
+          publishDate: e.publishDate,
+          publisher: e.publisher,
+          language: e.language,
+          coverUrl: e.coverUrl
+        };
+        renderEditions(arr);
+      });
+    });
+  }
+
+  function closeEditions(){
+    edModal.classList.remove("on");
+  }
+
+  function parseYear(s){
+    if(!s) return 0;
+    const m = String(s).match(/(\d{4})/);
+    return m ? Number(m[1]) : 0;
+  }
+
+  // -------- CRUD libri ----------
+  btnSave.addEventListener("click", () => {
+    const text = q.value.trim();
+    if(!text){
+      toastMsg("Titolo/autore richiesto", "Inserisci almeno qualcosa nel campo ricerca.");
+      return;
+    }
+
+    // Se ho selezionato un work, titolo/autore arrivano da lì
+    const title = selectedWork?.title || text;
+    const author = selectedWork?.author || guessAuthorFromFreeText(text);
+
+    // Copertina: preferisci edizione se selezionata, altrimenti work
+    const coverUrl = selectedEdition?.coverUrl || selectedWork?.coverUrl || "";
+
+    const editionInfo = selectedEdition
+      ? {
+          editionKey: selectedEdition.editionKey,
+          publisher: selectedEdition.publisher || "",
+          publishDate: selectedEdition.publishDate || "",
+          language: selectedEdition.language || ""
+        }
+      : {
+          editionKey: "",
+          publisher: "",
+          publishDate: "",
+          language: ""
+        };
+
+        const payload = {
+      id: editingId || cryptoRandomId(),
+      title,
+      author,
+      status: statusEl.value,
+      rating: ratingEl.value || "",
+      comment: commentEl.value || "",
+      coverUrl,
+      workKey: selectedWork?.workKey || "",
+      ...editionInfo,
+      updatedAt: nowISO(),
+      createdAt: editingId ? (books.find(b => b.id === editingId)?.createdAt || nowISO()) : nowISO()
     };
 
-    function nowIso(){ return new Date().toISOString(); }
-    function uid(){ return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16); }
-    function normalize(s){ return (s||"").toString().trim().toLowerCase(); }
-
-    function statusLabel(s){
-      if(s==="read") return "Letto";
-      if(s==="reading") return "In lettura";
-      return "Da leggere";
+    if (editingId) {
+      books = books.map(b => (b.id === editingId ? payload : b));
+      toastMsg("Aggiornato", payload.title);
+    } else {
+      books.unshift(payload);
+      toastMsg("Salvato", payload.title);
     }
 
-    function setHint(msg, kind){
-      const h = el("hint");
-      h.textContent = msg || "";
-      h.className = "hint" + (kind ? (" " + kind) : "");
-    }
-
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.books)); }
-    function load(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        state.books = raw ? JSON.parse(raw) : [];
-        if(!Array.isArray(state.books)) state.books = [];
-      }catch{ state.books = []; }
-
-      const v = localStorage.getItem(STORAGE_KEY + "_view");
-      if(v === "room" || v === "list") state.view = v;
-
-      const lk = localStorage.getItem(STORAGE_KEY + "_lookup");
-      if(lk === "0") state.lookupEnabled = false;
-    }
-    function saveView(){ localStorage.setItem(STORAGE_KEY + "_view", state.view); }
-    function saveLookup(){ localStorage.setItem(STORAGE_KEY + "_lookup", state.lookupEnabled ? "1" : "0"); }
-
-    function debounce(fn, ms){
-      let t = null;
-      return (...args) => {
-        if(t) clearTimeout(t);
-        t = setTimeout(() => fn(...args), ms);
-      };
-    }
-
-    // ---- Genere da OpenLibrary subjects (euristica, semplice ma utile)
-    const GENRE_MAP = [
-      { key:"philosophy", label:"Filosofia" },
-      { key:"philosophical", label:"Filosofia" },
-      { key:"dystopia", label:"Distopia" },
-      { key:"science fiction", label:"Fantascienza" },
-      { key:"fantasy", label:"Fantasy" },
-      { key:"mystery", label:"Giallo / Mystery" },
-      { key:"thriller", label:"Thriller" },
-      { key:"crime", label:"Crime" },
-      { key:"romance", label:"Romance" },
-      { key:"classic", label:"Classico" },
-      { key:"literature", label:"Narrativa / Letteratura" },
-      { key:"novel", label:"Romanzo" },
-      { key:"biography", label:"Biografia" },
-      { key:"memoir", label:"Memorie" },
-      { key:"history", label:"Storia" },
-      { key:"politics", label:"Politica" },
-      { key:"psychology", label:"Psicologia" },
-      { key:"self-help", label:"Crescita personale" }
-    ];
-    function guessGenre(subjects){
-      if(!subjects || !subjects.length) return "";
-      const hay = subjects.map(s => (s||"").toString().toLowerCase());
-      for(const m of GENRE_MAP){
-        if(hay.some(x => x.includes(m.key))) return m.label;
-      }
-      // fallback: primo subject “umano”
-      const s0 = subjects[0];
-      if(!s0) return "";
-      return s0.toString();
-    }
-
-    // ---- Open Library
-    function coverFromId(coverId){
-      return coverId ? ("https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg") : "";
-    }
-    function openLibraryUrlFromKey(key){
-      if(!key) return "";
-      if(key.startsWith("/")) return "https://openlibrary.org" + key;
-      return "https://openlibrary.org/works/" + key;
-    }
-
-    // ---- Dropdown in flow
-    function showSuggest(items, infoText){
-      state.suggestItems = items;
-      state.suggestIndex = items.length ? 0 : -1;
-      state.suggestOpen = true;
-
-      el("ddStatus").textContent = infoText || (items.length ? "Seleziona un risultato" : "Nessun risultato");
-      const list = el("ddList");
-      list.innerHTML = "";
-
-      if(!items.length){
-        const div = document.createElement("div");
-        div.className = "ddItem";
-        div.innerHTML = `<div class="ddMain"><div class="ddTitle">Nessun match</div><div class="ddMeta">Continua a scrivere…</div></div>`;
-        list.appendChild(div);
-      } else {
-        items.forEach((it, idx) => {
-          const row = document.createElement("div");
-          row.className = "ddItem";
-          row.dataset.idx = String(idx);
-
-          const c = document.createElement("div");
-          c.className = "ddCover";
-          if(it.coverUrl) c.style.backgroundImage = `url("${it.coverUrl}")`;
-
-          const main = document.createElement("div");
-          main.className = "ddMain";
-
-          const t = document.createElement("div");
-          t.className = "ddTitle";
-          t.textContent = it.title || "(senza titolo)";
-
-          const m = document.createElement("div");
-          m.className = "ddMeta";
-          const parts = [];
-          if(it.author) parts.push(it.author);
-          if(it.firstPublishYear) parts.push(String(it.firstPublishYear));
-          if(it.editionCount) parts.push(it.editionCount + " edizioni");
-          if(it.genre) parts.push(it.genre);
-          m.textContent = parts.join(" • ") || "—";
-
-          main.appendChild(t);
-          main.appendChild(m);
-
-          row.appendChild(c);
-          row.appendChild(main);
-
-          row.addEventListener("mousedown", (e) => {
-            e.preventDefault();
-            selectSuggest(idx);
-          });
-
-          list.appendChild(row);
-        });
-      }
-
-      el("suggestBox").classList.remove("hidden");
-      paintSuggestActive();
-    }
-
-    function paintSuggestActive(){
-      const list = el("ddList");
-      const children = Array.from(list.children);
-      children.forEach((node, i) => {
-        node.style.background = (i === state.suggestIndex) ? "rgba(122,162,247,.12)" : "transparent";
-      });
-    }
-
-    function closeSuggest(){
-      state.suggestOpen = false;
-      state.suggestItems = [];
-      state.suggestIndex = -1;
-      el("suggestBox").classList.add("hidden");
-      el("ddList").innerHTML = "";
-    }
-
-    function selectSuggest(idx){
-      const it = state.suggestItems[idx];
-      if(!it) return;
-
-      // popolo il campo query in forma “Titolo — Autore” (chiaro e stabile)
-      const q = [it.title, it.author].filter(Boolean).join(" — ");
-      el("query").value = q;
-
-      state.selectedSuggestion = it;
-      closeSuggest();
-      setHint("Selezionato da Open Library. Ora puoi salvare.", "ok");
-    }
-
-    async function fetchSuggestions(query){
-      if(!state.lookupEnabled) return;
-      if(state.editingId) return;
-
-      const q = (query || "").trim();
-      if(q.length < 2){
-        closeSuggest();
-        return;
-      }
-
-      const reqId = ++state.suggestReqId;
-      setHint("Ricerca su Open Library…", "warn");
-
-      // ricerca unificata (titolo + autore)
-      const url = "https://openlibrary.org/search.json?q=" + encodeURIComponent(q) + "&limit=12";
-
-      let data;
-      try{
-        const res = await fetch(url);
-        if(!res.ok) throw new Error("HTTP");
-        data = await res.json();
-      } catch {
-        if(reqId !== state.suggestReqId) return;
-        setHint("Lookup non disponibile (rete o blocco).", "warn");
-        closeSuggest();
-        return;
-      }
-      if(reqId !== state.suggestReqId) return;
-
-      const docs = (data && Array.isArray(data.docs)) ? data.docs : [];
-      const items = docs.slice(0, 12).map(d => {
-        const title = d.title ? String(d.title) : "";
-        const author = (d.author_name && d.author_name.length) ? String(d.author_name[0]) : "";
-        const coverUrl = coverFromId(d.cover_i || null);
-        const openLibraryKey = d.key ? String(d.key) : ""; // "/works/OL...W"
-        const firstPublishYear = d.first_publish_year || "";
-        const editionCount = d.edition_count || "";
-        const subjects = Array.isArray(d.subject) ? d.subject.slice(0, 12).map(x => String(x)) : [];
-        const genre = guessGenre(subjects);
-
-        return { title, author, coverUrl, openLibraryKey, firstPublishYear, editionCount, subjects, genre };
-      });
-
-      if(!items.length){
-        showSuggest([], "Nessun risultato • continua a scrivere");
-        setHint("Nessun match trovato. Continua a scrivere.", "warn");
-        return;
-      }
-
-      showSuggest(items, "Suggerimenti (Open Library)");
-      setHint("Suggerimenti pronti: ↑↓ + invio oppure clic.", "ok");
-    }
-
-    const onQueryType = debounce(() => fetchSuggestions(el("query").value), 250);
-    el("query").addEventListener("input", () => {
-      // se l’utente modifica dopo selezione, invalido
-      state.selectedSuggestion = null;
-      onQueryType();
-    });
-
-    el("query").addEventListener("keydown", (e) => {
-      if(!state.suggestOpen) return;
-
-      if(e.key === "ArrowDown"){
-        e.preventDefault();
-        if(state.suggestItems.length){
-          state.suggestIndex = Math.min(state.suggestIndex + 1, state.suggestItems.length - 1);
-          paintSuggestActive();
-        }
-      } else if(e.key === "ArrowUp"){
-        e.preventDefault();
-        if(state.suggestItems.length){
-          state.suggestIndex = Math.max(state.suggestIndex - 1, 0);
-          paintSuggestActive();
-        }
-      } else if(e.key === "Enter"){
-        if(state.suggestIndex >= 0){
-          e.preventDefault();
-          selectSuggest(state.suggestIndex);
-        }
-      } else if(e.key === "Escape"){
-        e.preventDefault();
-        closeSuggest();
-      }
-    });
-
-    document.addEventListener("mousedown", (e) => {
-      const box = el("suggestBox");
-      const q = el("query");
-      if(state.suggestOpen && !box.contains(e.target) && e.target !== q){
-        closeSuggest();
-      }
-    });
-
-    // ---- Parsing title/author dalla query (se non seleziono dalla tendina)
-    function splitQueryToTitleAuthor(q){
-      // se l’utente usa “—” o “-” come separatore: Titolo — Autore
-      const s = (q || "").trim();
-      const sep = s.includes(" — ") ? " — " : (s.includes(" - ") ? " - " : null);
-      if(sep){
-        const [t,a] = s.split(sep);
-        return { title:(t||"").trim(), author:(a||"").trim() };
-      }
-      // fallback: tutto come titolo
-      return { title:s, author:"" };
-    }
-
-    // ---- Autoselezione “intelligente” al salvataggio:
-    // se non ho selectedSuggestion, provo ad agganciare un match (titolo uguale o molto simile)
-    function bestMatchFromSuggestions(q){
-      const typed = normalize(q);
-      if(!typed || !state.suggestItems.length) return null;
-
-      // match “forte”: titolo presente nella query e autore presente nella query
-      const strong = state.suggestItems.find(it => {
-        const t = normalize(it.title);
-        const a = normalize(it.author);
-        return t && typed.includes(t) && (!a || typed.includes(a));
-      });
-      if(strong) return strong;
-
-      // match “medio”: query contiene titolo
-      const medium = state.suggestItems.find(it => typed.includes(normalize(it.title)));
-      if(medium) return medium;
-
-      // fallback: primo risultato
-      return state.suggestItems[0] || null;
-    }
-
-    // ---- CRUD
-    function upsertBook(book){
-      const idx = state.books.findIndex(b => b.id === book.id);
-      if(idx >= 0) state.books[idx] = book;
-      else state.books.push(book);
-      save();
-      render();
-    }
-
-    function removeBook(id){
-      state.books = state.books.filter(b => b.id !== id);
-      save();
-      render();
-    }
-
-    function setEditing(book){
-      state.editingId = book.id;
-
-      // ricostruisco query leggibile
-      el("query").value = [book.title, book.author].filter(Boolean).join(" — ");
-      el("status").value = book.status || "to-read";
-      el("rating").value = book.rating ?? "";
-      el("comment").value = book.comment || "";
-
-      el("saveBtn").textContent = "Aggiorna";
-      el("cancelEditBtn").classList.remove("hidden");
-
-      closeSuggest();
-      state.selectedSuggestion = null;
-    }
-
-    function clearForm(){
-      state.editingId = null;
-      el("query").value = "";
-      el("status").value = "to-read";
-      el("rating").value = "";
-      el("comment").value = "";
-      el("saveBtn").textContent = "Salva";
-      el("cancelEditBtn").classList.add("hidden");
-      closeSuggest();
-      state.selectedSuggestion = null;
-
-      setHint(state.lookupEnabled ? "Lookup attivo: digita titolo o autore e scegli dalla tendina." : "Lookup disattivato.", state.lookupEnabled ? "ok" : "warn");
-    }
-
-    // ---- Filtri/Sort
-    function getFilteredSorted(){
-      const q = normalize(state.filter);
-      let items = [...state.books];
-
-      if(q){
-        items = items.filter(b => {
-          const hay = [
-            b.title, b.author, b.genre, b.comment
-          ].map(x => normalize(x)).join(" ");
-          return hay.includes(q);
-        });
-      }
-
-      const sort = state.sort;
-      const cmpStr = (a,b) => (a||"").localeCompare(b||"", "it", { sensitivity:"base" });
-
-      items.sort((a,b) => {
-        if(sort === "updated_desc") return (b.updatedAt||"").localeCompare(a.updatedAt||"");
-        if(sort === "updated_asc")  return (a.updatedAt||"").localeCompare(b.updatedAt||"");
-        if(sort === "title_asc")    return cmpStr(a.title, b.title);
-        if(sort === "title_desc")   return cmpStr(b.title, a.title);
-        if(sort === "author_asc")   return cmpStr(a.author, b.author);
-        if(sort === "author_desc")  return cmpStr(b.author, a.author);
-        return 0;
-      });
-
-      return items;
-    }
-
-    // ---- RENDER LISTA
-    function bookCard(book){
-      const wrap = document.createElement("div");
-      wrap.className = "item";
-
-      const left = document.createElement("div");
-      left.className = "meta";
-
-      const t = document.createElement("div");
-      t.className = "title";
-      t.textContent = book.title || "(senza titolo)";
-
-      const a = document.createElement("div");
-      a.className = "small";
-      const rating = book.rating ? `★ ${book.rating}/5` : "";
-      a.textContent = [book.author, rating].filter(Boolean).join(" • ") || "—";
-
-      const g = document.createElement("div");
-      g.className = "pill";
-      g.textContent = book.genre ? ("Genere: " + book.genre) : "Genere: —";
-
-      const u = document.createElement("div");
-      u.className = "small";
-      u.textContent = book.updatedAt ? ("Aggiornato: " + new Date(book.updatedAt).toLocaleString("it-IT")) : "";
-
-      left.appendChild(t);
-      left.appendChild(a);
-      left.appendChild(g);
-      if(u.textContent) left.appendChild(u);
-
-      if(book.comment){
-        const c = document.createElement("div");
-        c.className = "small";
-        c.textContent = "Commento: " + book.comment;
-        left.appendChild(c);
-      }
-
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const openBtn = document.createElement("button");
-      openBtn.className = "secondary";
-      openBtn.textContent = "Apri";
-      openBtn.onclick = () => openBookModal(book);
-
-      const cycleBtn = document.createElement("button");
-      cycleBtn.className = "secondary";
-      cycleBtn.textContent = "Cambia stato";
-      cycleBtn.onclick = () => {
-        const order = ["to-read","reading","read"];
-        const i = order.indexOf(book.status);
-        const next = order[(i + 1) % order.length];
-        upsertBook({ ...book, status: next, updatedAt: nowIso() });
-      };
-
-      const delBtn = document.createElement("button");
-      delBtn.className = "danger";
-      delBtn.textContent = "Elimina";
-      delBtn.onclick = () => {
-        const ok = confirm(`Eliminare "${book.title}"?`);
-        if(ok) removeBook(book.id);
-      };
-
-      actions.appendChild(openBtn);
-      actions.appendChild(cycleBtn);
-      actions.appendChild(delBtn);
-
-      wrap.appendChild(left);
-      wrap.appendChild(actions);
-      return wrap;
-    }
-
-    function renderList(items){
-      const lists = {
-        "to-read": el("list-to-read"),
-        "reading": el("list-reading"),
-        "read": el("list-read")
-      };
-      Object.values(lists).forEach(node => node.innerHTML = "");
-
-      items.forEach(book => {
-        const target = lists[book.status] || lists["to-read"];
-        target.appendChild(bookCard(book));
-      });
-
-      for(const node of Object.values(lists)){
-        if(!node.children.length){
-          const p = document.createElement("div");
-          p.className = "small";
-          p.textContent = "Nessun libro qui (per ora).";
-          node.appendChild(p);
-        }
-      }
-    }
-
-    // ---- RENDER STANZA
-    function fallbackGradient(seed){
-      const s = (seed || "x").toString();
-      let h = 0;
-      for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-      const hue = h % 360;
-      return `linear-gradient(180deg, hsl(${hue} 55% 55%), hsl(${(hue+25)%360} 55% 38%))`;
-    }
-
-    function makeTip(text){
-      const tip = document.createElement("div");
-      tip.className = "tip";
-      tip.textContent = text;
-      return tip;
-    }
-
-    function makeSpine(book, kind){
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "bookBtn";
-      btn.dataset.id = book.id;
-
-      const div = document.createElement("div");
-      div.className = kind;
-
-      const cover = (book.coverUrl || "").trim();
-      div.style.backgroundImage = cover ? `url("${cover}")` : fallbackGradient(book.title + "|" + book.author);
-
-      const txt = document.createElement("div");
-      txt.className = (kind === "spine") ? "spineTxt" : "miniTxt";
-      txt.textContent = (book.title || "").slice(0, 28);
-
-      btn.appendChild(makeTip(`${book.title || ""}${book.author ? " — " + book.author : ""}`));
-      div.appendChild(txt);
-      btn.appendChild(div);
-
-      return btn;
-    }
-
-    function makeHBook(book){
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "bookBtn hbook";
-      btn.dataset.id = book.id;
-
-      const cover = (book.coverUrl || "").trim();
-      btn.style.backgroundImage = cover ? `url("${cover}")` : fallbackGradient(book.title + "|" + book.author);
-
-      const info = document.createElement("div");
-      info.className = "hbookInfo";
-
-      const t = document.createElement("div");
-      t.className = "hbookTitle";
-      t.textContent = book.title || "(senza titolo)";
-
-      const a = document.createElement("div");
-      a.className = "hbookAuthor";
-      a.textContent = book.author || "—";
-
-      info.appendChild(t);
-      info.appendChild(a);
-
-      btn.appendChild(makeTip(`${book.title || ""}${book.author ? " — " + book.author : ""}`));
-      btn.appendChild(info);
-
-      return btn;
-    }
-
-    function renderRoom(items){
-      const read = items.filter(b => b.status === "read");
-      const reading = items.filter(b => b.status === "reading");
-      const toread = items.filter(b => b.status === "to-read");
-
-      const R = el("room-read");
-      const G = el("room-reading");
-      const T = el("room-toread");
-
-      R.innerHTML = "";
-      G.innerHTML = "";
-      T.innerHTML = "";
-
-      if(!read.length){
-        const p = document.createElement("div");
-        p.className = "small";
-        p.textContent = "Scaffale vuoto (per ora).";
-        R.appendChild(p);
-      } else {
-        read.slice(0, 80).forEach(b => R.appendChild(makeSpine(b, "spine")));
-      }
-
-      if(!reading.length){
-        const p = document.createElement("div");
-        p.className = "small";
-        p.textContent = "Nessun libro in lettura.";
-        G.appendChild(p);
-      } else {
-        reading.slice(0, 24).forEach(b => G.appendChild(makeSpine(b, "miniSpine")));
-      }
-
-      if(!toread.length){
-        const p = document.createElement("div");
-        p.className = "small";
-        p.textContent = "Nessun libro da leggere.";
-        T.appendChild(p);
-      } else {
-        toread.slice(0, 24).forEach(b => T.appendChild(makeHBook(b)));
-      }
-    }
-
-    // ---- MODAL
-    function openUrl(url){
-      if(!url) return;
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-
-    function openBookModal(book){
-      el("modalTitle").textContent = book.title || "(senza titolo)";
-      el("modalSub").textContent = book.author ? book.author : "Autore non valorizzato";
-
-      el("modalStatus").textContent = statusLabel(book.status);
-      el("modalRating").textContent = book.rating ? `${book.rating}/5` : "—";
-      el("modalGenre").textContent = book.genre || "—";
-      el("modalUpdated").textContent = book.updatedAt ? new Date(book.updatedAt).toLocaleString("it-IT") : "—";
-      el("modalComment").textContent = book.comment || "—";
-
-      const cover = (book.coverUrl || "").trim();
-      el("modalCover").style.backgroundImage = cover ? `url("${cover}")` : fallbackGradient(book.title + "|" + book.author);
-
-      el("modalEdit").onclick = () => { setEditing(book); closeBookModal(); window.scrollTo({top:0, behavior:"smooth"}); };
-      el("modalCycle").onclick = () => {
-        const order = ["to-read","reading","read"];
-        const i = order.indexOf(book.status);
-        const next = order[(i+1)%order.length];
-        upsertBook({ ...book, status: next, updatedAt: nowIso() });
-        closeBookModal();
-      };
-      el("modalDelete").onclick = () => {
-        const ok = confirm(`Eliminare "${book.title}"?`);
-        if(ok) removeBook(book.id);
-        closeBookModal();
-      };
-
-      const q = encodeURIComponent(`${book.title || ""} ${book.author || ""}`.trim());
-      const ol = book.openLibraryKey ? openLibraryUrlFromKey(book.openLibraryKey) : ("https://openlibrary.org/search?q=" + q);
-      const audible = "https://www.audible.it/search?keywords=" + q;
-      const kindle = "https://www.amazon.it/s?k=" + q + "&i=digital-text";
-
-      el("modalOpenLibrary").onclick = () => openUrl(ol);
-      el("modalAudible").onclick = () => openUrl(audible);
-      el("modalKindle").onclick = () => openUrl(kindle);
-
-      el("bookModal").classList.remove("hidden");
-    }
-
-    function closeBookModal(){ el("bookModal").classList.add("hidden"); }
-    el("modalClose").addEventListener("click", closeBookModal);
-    el("bookModal").addEventListener("click", (e) => {
-      if(e.target && e.target.dataset && e.target.dataset.close) closeBookModal();
-    });
-    document.addEventListener("keydown", (e) => {
-      if(e.key === "Escape" && !el("bookModal").classList.contains("hidden")) closeBookModal();
-    });
-
-    el("viewRoom").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-id]");
-      if(!btn) return;
-      const book = state.books.find(b => b.id === btn.dataset.id);
-      if(book) openBookModal(book);
-    });
-
-    // ---- Vista
-    function setView(v){
-      state.view = v;
-      saveView();
-
-      const isList = v === "list";
-      el("viewList").classList.toggle("hidden", !isList);
-      el("viewRoom").classList.toggle("hidden", isList);
-
-      const bl = el("btnList");
-      const br = el("btnRoom");
-      if(isList){
-        bl.classList.add("active"); bl.classList.remove("inactive");
-        br.classList.add("inactive"); br.classList.remove("active");
-      } else {
-        br.classList.add("active"); br.classList.remove("inactive");
-        bl.classList.add("inactive"); bl.classList.remove("active");
-      }
-    }
-
-    // ---- Render globale
-    function render(){
-      const items = getFilteredSorted();
-
-      const counts = { "to-read":0, "reading":0, "read":0 };
-      items.forEach(b => { if(counts[b.status] !== undefined) counts[b.status]++; });
-
-      el("counts").textContent =
-        `Totale: ${items.length} • Da leggere: ${counts["to-read"]} • In lettura: ${counts["reading"]} • Letti: ${counts["read"]}`;
-
-      renderList(items);
-      renderRoom(items);
-      setView(state.view);
-
-      el("toggleLookup").textContent = state.lookupEnabled ? "Lookup ON" : "Lookup OFF";
-    }
-
-    // ---- Eventi form
-    el("saveBtn").addEventListener("click", () => {
-      const q = el("query").value.trim();
-      if(!q){ alert("Inserisci almeno titolo o autore."); return; }
-
-      const status = el("status").value;
-      const ratingRaw = el("rating").value;
-      const rating = ratingRaw ? Number(ratingRaw) : null;
-      const comment = el("comment").value.trim();
-
-      // Ricavo title/author
-      let title = "";
-      let author = "";
-
-      // 1) se ho selezione esplicita, uso quella
-      let picked = state.selectedSuggestion;
-
-      // 2) altrimenti provo ad agganciare un match dai suggerimenti già scaricati
-      if(!picked && state.suggestItems.length){
-        picked = bestMatchFromSuggestions(q);
-      }
-
-      if(picked){
-        title = picked.title || q;
-        author = picked.author || "";
-      } else {
-        const split = splitQueryToTitleAuthor(q);
-        title = split.title || q;
-        author = split.author || "";
-      }
-
-      // Copertina / link / genere
-      const coverUrl = picked ? (picked.coverUrl || "") : "";
-      const openLibraryKey = picked ? (picked.openLibraryKey || "") : "";
-      const genre = picked ? (picked.genre || "") : "";
-
-      const ts = nowIso();
-
-      if(state.editingId){
-        const existing = state.books.find(b => b.id === state.editingId);
-        if(!existing){ clearForm(); return; }
-
-        upsertBook({
-          ...existing,
-          title,
-          author,
-          status,
-          rating,
-          comment,
-          genre: existing.genre || genre,
-          coverUrl: existing.coverUrl || coverUrl,
-          openLibraryKey: existing.openLibraryKey || openLibraryKey,
-          updatedAt: ts
-        });
-      } else {
-        upsertBook({
-          id: uid(),
-          title,
-          author,
-          status,
-          rating,
-          comment,
-          genre,
-          coverUrl,
-          openLibraryKey,
-          createdAt: ts,
-          updatedAt: ts
-        });
-      }
-
-      clearForm();
-    });
-
-    el("cancelEditBtn").addEventListener("click", clearForm);
-
-    el("filter").addEventListener("input", (e) => { state.filter = e.target.value; render(); });
-    el("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
-
-    el("btnList").addEventListener("click", () => setView("list"));
-    el("btnRoom").addEventListener("click", () => setView("room"));
-
-    el("toggleLookup").addEventListener("click", () => {
-      state.lookupEnabled = !state.lookupEnabled;
-      saveLookup();
-      if(!state.lookupEnabled){
-        setHint("Lookup disattivato.", "warn");
-        closeSuggest();
-      } else {
-        setHint("Lookup attivo: digita titolo o autore e scegli dalla tendina.", "ok");
-        fetchSuggestions(el("query").value);
-      }
-      render();
-    });
-
-    // export/import
-    el("exportBtn").addEventListener("click", () => {
-      el("exportText").value = JSON.stringify(state.books, null, 2);
-      el("exportArea").classList.remove("hidden");
-      el("importArea").classList.add("hidden");
-    });
-    el("closeExportBtn").addEventListener("click", () => el("exportArea").classList.add("hidden"));
-
-    el("importBtn").addEventListener("click", () => {
-      el("importText").value = "";
-      el("importArea").classList.remove("hidden");
-      el("exportArea").classList.add("hidden");
-    });
-    el("cancelImportBtn").addEventListener("click", () => el("importArea").classList.add("hidden"));
-
-    el("confirmImportBtn").addEventListener("click", () => {
-      try{
-        const parsed = JSON.parse(el("importText").value);
-        if(!Array.isArray(parsed)) throw new Error("JSON non è una lista");
-        state.books = parsed.filter(x => x && typeof x === "object").map(x => ({
-          id: x.id || uid(),
-          title: (x.title || "").toString(),
-          author: (x.author || "").toString(),
-          status: ["to-read","reading","read"].includes(x.status) ? x.status : "to-read",
-          rating: (x.rating === null || x.rating === undefined || x.rating === "") ? null : Number(x.rating),
-          comment: (x.comment || "").toString(),
-          genre: (x.genre || "").toString(),
-          coverUrl: (x.coverUrl || "").toString(),
-          openLibraryKey: (x.openLibraryKey || "").toString(),
-          createdAt: x.createdAt || nowIso(),
-          updatedAt: x.updatedAt || nowIso()
-        }));
-        save();
-        el("importArea").classList.add("hidden");
-        render();
-      } catch(err){
-        alert("Import fallito: " + (err?.message || "errore"));
-      }
-    });
-
-    el("wipeBtn").addEventListener("click", () => {
-      const ok = confirm("Eliminare TUTTI i libri salvati in questo browser?");
-      if(!ok) return;
-      state.books = [];
-      save();
-      clearForm();
-      render();
-    });
-
-    // init
-    load();
-    setView(state.view);
+    saveBooks();
     render();
-    setHint(state.lookupEnabled ? "Lookup attivo: digita titolo o autore e scegli dalla tendina." : "Lookup disattivato.", state.lookupEnabled ? "ok" : "warn");
+    clearForm();
+  });
 
-    // evento click sullo scaffale in LISTA (Apri)
-    function wireListOpenButtons(){
-      // niente: già agganciati nei componenti
-    }
-  </script>
+  btnClearForm.addEventListener("click", () => clearForm());
+
+  function clearForm() {
+    q.value = "";
+    statusEl.value = "to_read";
+    ratingEl.value = "";
+    commentEl.value = "";
+
+    selectedWork = null;
+    editionsCache = null;
+    selectedEdition = null;
+    editingId = null;
+
+    btnPickEdition.style.display = "none";
+    closeDropdown();
+  }
+
+  // -------- Export / Import / Wipe ----------
+  btnExport.addEventListener("click", () => {
+    const data = JSON.stringify(books, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "libreria.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  btnImport.addEventListener("click", () => {
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "application/json";
+    inp.onchange = async () => {
+      const file = inp.files && inp.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const arr = JSON.parse(text);
+        if (!Array.isArray(arr)) throw new Error("JSON non è un array");
+        books = arr;
+        saveBooks();
+        render();
+        toastMsg("Import ok", `${books.length} libri`);
+      } catch (e) {
+        toastMsg("Import fallito", "JSON non valido.");
+      }
+    };
+    inp.click();
+  });
+
+  btnWipe.addEventListener("click", () => {
+    if (!confirm("Sicuro di svuotare la libreria?")) return;
+    books = [];
+    saveBooks();
+    render();
+    clearForm();
+    toastMsg("Svuotata", "Libreria azzerata.");
+  });
+
+  // -------- Render ----------
+  localFilter.addEventListener("input", () => render());
+  orderBy.addEventListener("change", () => render());
+
+  function render() {
+    // stats
+    stats.textContent = `Totale: ${books.length}`;
+
+    // filtro + sort
+    const f = normalize(localFilter.value);
+    let arr = books.filter(b => {
+      if (!f) return true;
+      const blob = `${b.title} ${b.author} ${b.comment}`.toLowerCase();
+      return blob.includes(f);
+    });
+
+    const ob = orderBy.value;
+    arr.sort((a, b) => {
+      if (ob === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+      if (ob === "updated_asc") return (a.updatedAt || "").localeCompare(b.updatedAt || "");
+      if (ob === "title_asc") return (a.title || "").localeCompare(b.title || "");
+      if (ob === "title_desc") return (b.title || "").localeCompare(a.title || "");
+      return 0;
+    });
+
+    // lista
+    listEl.innerHTML = arr.map(b => {
+      const dot = statusDotClass(b.status);
+      const cover = b.coverUrl
+        ? `<img src="${b.coverUrl}" alt="">`
+        : `<img src="" alt="" style="background:rgba(255,255,255,.06)"/>`;
+
+      return `
+        <div class="card" data-id="${b.id}">
+          ${cover}
+          <div class="meta">
+            <div class="t">${escapeHtml(b.title || "—")}</div>
+            <div class="a">${escapeHtml(b.author || "—")}</div>
+          </div>
+          <div class="chip">
+            <span class="dot ${dot}"></span>
+            <span>${escapeHtml(statusLabel(b.status))}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    listEl.querySelectorAll(".card").forEach(n => {
+      n.addEventListener("click", () => openBookModal(n.getAttribute("data-id")));
+    });
+
+    // stanza (scaffali)
+    const read = books.filter(b => b.status === "read");
+    const reading = books.filter(b => b.status === "reading");
+    const toRead = books.filter(b => b.status === "to_read");
+
+    renderShelf(shelfRead, emptyRead, read);
+    renderShelf(shelfReading, emptyReading, reading);
+    renderShelf(shelfToRead, emptyToRead, toRead);
+  }
+
+  function renderShelf(el, emptyEl, arr) {
+    el.innerHTML = arr.map(b => {
+      if (b.coverUrl) {
+        return `<div class="book" data-id="${b.id}" title="${escapeAttr(b.title)}">
+          <img src="${b.coverUrl}" alt="">
+        </div>`;
+      }
+      // fallback senza cover
+      const initials = (b.title || "—").split(" ").slice(0, 3).join(" ");
+      return `<div class="book fallback" data-id="${b.id}" title="${escapeAttr(b.title)}">${escapeHtml(initials)}</div>`;
+    }).join("");
+
+    emptyEl.style.display = arr.length ? "none" : "";
+    el.querySelectorAll(".book").forEach(n => {
+      n.addEventListener("click", () => openBookModal(n.getAttribute("data-id")));
+    });
+  }
+
+  // -------- Modale libro ----------
+  function openBookModal(id) {
+    const b = books.find(x => x.id === id);
+    if (!b) return;
+
+    bookModal.classList.add("on");
+    mTitle.textContent = b.title || "—";
+    mAuthor.textContent = b.author || "—";
+    mCover.src = b.coverUrl || "";
+    mStatus.textContent = statusLabel(b.status);
+    mRating.textContent = b.rating ? `${b.rating}/5` : "—";
+    mEdition.textContent = b.publisher || b.publishDate || b.language ? [b.publishDate, b.publisher, b.language].filter(Boolean).join(" • ") : "—";
+    mUpdated.textContent = b.updatedAt ? fmtDate(b.updatedAt) : "—";
+    mComment.textContent = b.comment || "—";
+
+    mEdit.onclick = () => startEdit(id);
+    mDelete.onclick = () => deleteBook(id);
+    mCycle.onclick = () => cycleStatus(id);
+
+    mOpenLibrary.onclick = () => window.open(`https://openlibrary.org/search?q=${encodeURIComponent(b.title + " " + (b.author||""))}`, "_blank");
+    mAudible.onclick = () => window.open(`https://www.audible.it/search?keywords=${encodeURIComponent(b.title + " " + (b.author||""))}`, "_blank");
+    mKindle.onclick = () => window.open(`https://www.amazon.it/s?k=${encodeURIComponent(b.title + " " + (b.author||"") + " kindle")}`, "_blank");
+  }
+
+  function closeBookModal() { bookModal.classList.remove("on"); }
+  mClose.addEventListener("click", closeBookModal);
+  mOk.addEventListener("click", closeBookModal);
+  bookModal.addEventListener("click", (e) => { if (e.target === bookModal) closeBookModal(); });
+
+  function startEdit(id) {
+    const b = books.find(x => x.id === id);
+    if (!b) return;
+    editingId = id;
+
+    // In edit: disattivo selezione lookup “vecchia” per evitare mismatch
+    selectedWork = null;
+    selectedEdition = null;
+    editionsCache = null;
+    btnPickEdition.style.display = "none";
+
+    q.value = b.title || "";
+    statusEl.value = b.status || "to_read";
+    ratingEl.value = b.rating || "";
+    commentEl.value = b.comment || "";
+
+    closeBookModal();
+    toastMsg("Modifica", b.title || "");
+  }
+
+  function deleteBook(id) {
+    const b = books.find(x => x.id === id);
+    if (!b) return;
+    if (!confirm(`Eliminare "${b.title}"?`)) return;
+    books = books.filter(x => x.id !== id);
+    saveBooks();
+    render();
+    closeBookModal();
+    toastMsg("Eliminato", b.title);
+  }
+
+  function cycleStatus(id) {
+    const b = books.find(x => x.id === id);
+    if (!b) return;
+    const next = b.status === "to_read" ? "reading" : (b.status === "reading" ? "read" : "to_read");
+    b.status = next;
+    b.updatedAt = nowISO();
+    saveBooks();
+    render();
+    openBookModal(id); // refresh
+  }
+
+  // -------- Helpers mancanti ----------
+  function cryptoRandomId() {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now();
+  }
+
+  function guessAuthorFromFreeText(text) {
+    // euristica minimale: se scrivi "Titolo - Autore" o "Titolo, Autore"
+    const s = text.trim();
+    const m = s.match(/(.+?)(?:\s[-,–]\s)(.+)$/);
+    if (m) return m[2].trim();
+    return "";
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function escapeAttr(str) { return escapeHtml(str).replaceAll("\n", " "); }
+
+  // init
+  applyView();
+  applyLookup();
+  render();
+})();
+</script>
 </body>
 </html>
