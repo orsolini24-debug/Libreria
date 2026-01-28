@@ -32,7 +32,7 @@
       overflow-x:hidden;
     }
 
-    /* STANZA (background) */
+    /* Background stanza (decorativo) */
     body.room-on{
       background-image:
         radial-gradient(1200px 600px at 30% 30%, rgba(255,180,110,.12), transparent 55%),
@@ -42,7 +42,6 @@
       background-position:center;
       background-attachment:fixed;
     }
-    /* Vignettatura leggera, NON “tappo nero” */
     body.room-on::before{
       content:"";
       position:fixed; inset:0;
@@ -84,6 +83,7 @@
       display:flex;
       gap:10px;
       align-items:center;
+      flex-wrap:wrap;
     }
 
     .pill{
@@ -131,10 +131,12 @@
       background:var(--panel);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      overflow:hidden;
       backdrop-filter: blur(10px);
     }
     .panel.pad{padding:16px}
+    /* IMPORTANT: evita che la tendina venga “tagliata” */
+    .panel.formpanel{ overflow: visible; }
+    .panel.listpanel{ overflow:hidden; }
 
     .grid{
       display:grid;
@@ -183,7 +185,7 @@
     .muted{color:var(--muted)}
     .hint{font-size:12px; color:var(--muted); margin-top:8px}
 
-    /* Lookup dropdown: deve stare SOPRA tutto */
+    /* Lookup dropdown */
     .lookup-wrap{position:relative;}
     .dropdown{
       position:absolute;
@@ -195,7 +197,7 @@
       background:rgba(10,12,18,.96);
       box-shadow:0 30px 90px rgba(0,0,0,.75);
       overflow:hidden;
-      max-height:320px;
+      max-height:340px;
       display:none;
     }
     .dropdown.on{display:block;}
@@ -208,7 +210,7 @@
       color:var(--muted);
       font-size:12px;
     }
-    .dd-list{max-height:280px; overflow:auto;}
+    .dd-list{max-height:300px; overflow:auto;}
     .dd-item{
       display:flex;
       gap:10px;
@@ -238,6 +240,7 @@
       color:var(--muted);
       background:rgba(255,255,255,.04);
       flex:0 0 auto;
+      white-space:nowrap;
     }
 
     /* toggle vista */
@@ -260,94 +263,10 @@
       color:var(--text);
     }
 
-    /* Sezioni libri */
     .sections{
       padding:16px;
       display:grid;
       gap:14px;
-    }
-    .room{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-    }
-    @media (max-width: 900px){
-      .room{grid-template-columns:1fr}
-    }
-
-    .zone{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.22);
-      border-radius:16px;
-      padding:14px;
-      min-height:210px;
-      position:relative;
-      overflow:hidden;
-    }
-    .zone::before{
-      content:"";
-      position:absolute; inset:0;
-      background:radial-gradient(700px 260px at 50% 0%, rgba(255,180,110,.10), transparent 60%);
-      opacity:.8;
-      pointer-events:none;
-    }
-    .zone h3{
-      margin:0 0 8px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      z-index:1;
-      position:relative;
-    }
-    .zone h3 span{font-size:12px; color:var(--muted); font-weight:650; border:1px solid rgba(255,255,255,.12); padding:4px 8px; border-radius:999px;}
-    .shelf{
-      position:relative;
-      z-index:1;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:flex-end;
-      padding-top:6px;
-    }
-
-    /* “libro” in stanza: mostriamo cover/spine */
-    .book{
-      width:44px;
-      height:150px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
-      box-shadow:0 12px 30px rgba(0,0,0,.45);
-      cursor:pointer;
-      overflow:hidden;
-      position:relative;
-    }
-    .book img{width:100%; height:100%; object-fit:cover; display:block;}
-    .book.fallback{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:8px;
-      color:rgba(255,255,255,.80);
-      font-size:11px;
-      font-weight:800;
-      text-align:center;
-      line-height:1.1;
-    }
-
-    .book.horizontal{
-      width:170px;
-      height:46px;
-      border-radius:12px;
-    }
-    .book.horizontal img{object-fit:cover}
-
-    .empty{
-      color:var(--muted);
-      font-size:13px;
-      padding:14px 0 0;
-      position:relative;
-      z-index:1;
     }
 
     /* Lista view */
@@ -384,7 +303,7 @@
     .dot.reading{background:var(--warn)}
     .dot.to_read{background:rgba(255,255,255,.35)}
 
-    /* Modali */
+    /* Modali base */
     .modal-backdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.65);
@@ -422,6 +341,7 @@
       flex-wrap:wrap;
     }
 
+    /* Edizioni */
     .editions{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -458,6 +378,7 @@
     .edition .e-sub{color:var(--muted); font-size:12px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .edition .e-sub2{color:var(--muted); font-size:12px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
+    /* Toast */
     .toast{
       position:fixed;
       right:16px;
@@ -481,14 +402,147 @@
       color:var(--muted);
       margin-top:10px;
     }
+
+    /* -------- STANZA INTERATTIVA (SCENE) -------- */
+    .scene{
+      position:relative;
+      width:100%;
+      aspect-ratio: 16 / 7;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      background: rgba(0,0,0,.22);
+      box-shadow: var(--shadow);
+    }
+    .scene-bg{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter:saturate(1.05) contrast(1.02);
+      transform: scale(1.005);
+    }
+    .books-layer{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    /* libri nella scena */
+    .room-book{
+      position:absolute;
+      pointer-events:auto;
+      cursor:pointer;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 14px 40px rgba(0,0,0,.55);
+      overflow:hidden;
+      background: rgba(255,255,255,.06);
+      transform-origin:center;
+      transition: transform .12s ease, filter .12s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .room-book:hover{ transform: translateY(-2px) scale(1.02); filter:brightness(1.04); }
+    .room-book img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .room-book.vertical{ width:42px; height:140px; border-radius:10px; }
+    .room-book.horizontal{ width:150px; height:44px; border-radius:12px; }
+    .room-book.open{ width:180px; height:110px; border-radius:14px; }
+
+    .room-book .fallback{
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:850;
+      color: rgba(255,255,255,.82);
+      padding:8px;
+      text-align:center;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.10));
+    }
+
+    /* overlay “fly to screen” */
+    .focus-layer{
+      position:fixed;
+      inset:0;
+      z-index:25000;
+      pointer-events:none; /* abilitiamo solo sul pannello focus */
+    }
+    .focus-card{
+      position:fixed;
+      z-index:26000;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 50px 140px rgba(0,0,0,.85);
+      background:rgba(14,18,26,.96);
+      overflow:hidden;
+      pointer-events:auto;
+      opacity:0;
+    }
+    .focus-inner{
+      display:flex;
+      gap:14px;
+      padding:14px;
+      align-items:flex-start;
+    }
+    .focus-cover{
+      width:180px;
+      height:270px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      object-fit:cover;
+      background:rgba(255,255,255,.06);
+      flex:0 0 auto;
+    }
+    .focus-meta{min-width:0; flex:1;}
+    .focus-title{font-weight:900; font-size:18px; margin:0;}
+    .focus-sub{color:var(--muted); margin-top:6px; font-size:13px;}
+    .focus-grid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .kv{border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.20); border-radius:14px; padding:10px;}
+    .kv .k{color:var(--muted); font-size:12px;}
+    .kv .v{font-weight:850; margin-top:4px; font-size:13px;}
+    .focus-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .focus-actions .btn{ padding:9px 11px; border-radius:12px; font-size:13px; }
+    .focus-comment{
+      margin-top:12px;
+      border-top:1px solid rgba(255,255,255,.10);
+      padding-top:10px;
+      color:rgba(255,255,255,.90);
+      font-size:13px;
+      line-height:1.35;
+      white-space:pre-wrap;
+      max-height:150px;
+      overflow:auto;
+    }
+    .focus-close{
+      position:absolute;
+      top:10px;
+      right:10px;
+    }
+
+    /* in stanza: nascondi filtri/ricerca lista */
+    .room-only{ display:none; }
+    body.is-room .room-only{ display:inline-flex; }
+    body.is-room .list-only{ display:none; }
   </style>
 </head>
+
 <body class="room-on">
   <div class="wrap">
     <header>
       <div class="title">
         <h1>Libreria</h1>
-        <p>Gestione locale (localStorage). Lookup: Open Library. Vista “Stanza” usa <code>assets/room.jpg</code>.</p>
+        <p>Gestione locale (localStorage). Lookup: Open Library. Vista “Stanza”: interattiva.</p>
       </div>
       <div class="top-actions">
         <div class="view-toggle" aria-label="toggle vista">
@@ -498,10 +552,12 @@
         <button class="btn small" id="btnExport" type="button">Esporta JSON</button>
         <button class="btn small" id="btnImport" type="button">Importa JSON</button>
         <button class="btn small danger" id="btnWipe" type="button">Svuota</button>
+        <button class="btn small primary room-only" id="btnGoAdd" type="button">Aggiungi libro</button>
       </div>
     </header>
 
-    <div class="panel pad">
+    <!-- FORM (usato per aggiungere/modificare): in stanza lo lasciamo, ma lo raggiungi col bottone -->
+    <div class="panel pad formpanel list-only" id="formPanel">
       <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
         <div class="pill" id="stats">Totale: 0</div>
         <div class="row">
@@ -558,15 +614,20 @@
             <input type="checkbox" id="preferItalian" checked style="width:auto;"/>
             preferisci risultati in italiano (quando possibile)
           </label>
+          <label style="display:flex; gap:8px; align-items:center; margin:0; color:var(--muted); font-size:12px;">
+            <input type="checkbox" id="onlyItalianEditions" checked style="width:auto;"/>
+            mostra solo edizioni in italiano (se disponibili)
+          </label>
         </div>
       </div>
 
       <div class="smallnote">
-        Nota: le copertine arrivano da Open Library (se disponibili). Se il tuo <code>room.jpg</code> non si vede, quasi sempre è un problema di path/case: deve essere esattamente <code>assets/room.jpg</code>.
+        Nota: se la tendina “sparisce sotto”, era l’overflow del pannello: ora è risolto.
       </div>
     </div>
 
-    <div class="panel" style="margin-top:14px;">
+    <!-- LISTA -->
+    <div class="panel listpanel list-only" style="margin-top:14px;">
       <div class="sections" id="viewList">
         <div class="row" style="justify-content:space-between;">
           <div class="row" style="gap:12px;">
@@ -587,71 +648,28 @@
         </div>
         <div class="list" id="list"></div>
       </div>
-
-      <div class="sections" id="viewRoom" style="display:none;">
-        <div class="room">
-          <div class="zone">
-            <h3>Letti <span>Scaffale</span></h3>
-            <div class="shelf" id="shelfRead"></div>
-            <div class="empty" id="emptyRead" style="display:none;">Scaffale vuoto (per ora).</div>
-          </div>
-
-          <div class="zone">
-            <h3>In lettura <span>Vicino al fuoco</span></h3>
-            <div class="shelf" id="shelfReading"></div>
-            <div class="empty" id="emptyReading" style="display:none;">Nessun libro in lettura.</div>
-          </div>
-
-          <div class="zone" style="grid-column:1/-1;">
-            <h3>Da leggere <span>Stack</span></h3>
-            <div class="shelf" id="shelfToRead"></div>
-            <div class="empty" id="emptyToRead" style="display:none;">Nessun libro da leggere.</div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- MODAL: Dettaglio libro -->
-  <div class="modal-backdrop" id="bookModal">
-    <div class="modal">
-      <div class="mhead">
-        <div>
-          <h2 id="mTitle">—</h2>
-          <div class="sub" id="mAuthor">—</div>
-        </div>
-        <button class="btn small" id="mClose" type="button">✕</button>
-      </div>
-      <div class="mbody">
-        <div class="row" style="align-items:flex-start; gap:14px;">
-          <img id="mCover" alt="" style="width:160px; height:240px; border-radius:16px; border:1px solid rgba(255,255,255,.12); object-fit:cover; background:rgba(255,255,255,.06)"/>
-          <div style="flex:1; min-width:0;">
-            <div class="row" style="gap:18px; flex-wrap:wrap;">
-              <div><div class="muted" style="font-size:12px;">Stato</div><div id="mStatus" style="font-weight:800;">—</div></div>
-              <div><div class="muted" style="font-size:12px;">Valutazione</div><div id="mRating" style="font-weight:800;">—</div></div>
-              <div><div class="muted" style="font-size:12px;">Edizione</div><div id="mEdition" style="font-weight:800;">—</div></div>
-              <div><div class="muted" style="font-size:12px;">Aggiornato</div><div id="mUpdated" style="font-weight:800;">—</div></div>
-            </div>
-            <div style="margin-top:12px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Commento</div>
-              <div id="mComment" style="white-space:pre-wrap; line-height:1.35; color:rgba(255,255,255,.90)"></div>
-            </div>
-
-            <div class="row" style="margin-top:14px; justify-content:flex-start;">
-              <button class="btn" id="mEdit" type="button">Modifica</button>
-              <button class="btn" id="mCycle" type="button">Cambia stato</button>
-              <button class="btn danger" id="mDelete" type="button">Elimina</button>
-              <button class="btn" id="mOpenLibrary" type="button">Open Library</button>
-              <button class="btn" id="mAudible" type="button">Audible</button>
-              <button class="btn" id="mKindle" type="button">Kindle</button>
-            </div>
-
-            <div class="hint">Nota: Audible/Kindle sono ricerche. In futuro puoi salvare link specifici per libro/edizione.</div>
-          </div>
+    <!-- STANZA (scene) -->
+    <div class="panel pad" id="viewRoom" style="margin-top:14px; display:none;">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div class="pill" id="roomStats">Stanza: 0 libri</div>
+        <div class="row">
+          <span class="pill muted">Clicca un libro per aprire (zoom)</span>
         </div>
       </div>
-      <div class="mfoot">
-        <button class="btn small" id="mOk" type="button">Chiudi</button>
+
+      <div style="margin-top:12px;">
+        <div class="scene" id="scene">
+          <img class="scene-bg" src="./assets/room.jpg" alt="Stanza" />
+          <div class="books-layer" id="roomRead"></div>
+          <div class="books-layer" id="roomReading"></div>
+          <div class="books-layer" id="roomToRead"></div>
+        </div>
+      </div>
+
+      <div class="smallnote" style="margin-top:10px;">
+        In “Stanza” non c’è ricerca: è solo visualizzazione interattiva. Per aggiungere/modificare usa la vista “Lista” oppure il pulsante “Aggiungi libro”.
       </div>
     </div>
   </div>
@@ -672,10 +690,41 @@
           <button class="btn small ghost" id="edReload" type="button">Ricarica edizioni</button>
         </div>
         <div class="editions" id="edList"></div>
+        <div class="hint" id="edHint" style="margin-top:10px;"></div>
       </div>
       <div class="mfoot">
         <button class="btn" id="edSkip" type="button">Usa work (senza edizione)</button>
         <button class="btn primary" id="edUse" type="button">Usa questa edizione</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay focus (zoom) -->
+  <div class="focus-layer" id="focusLayer" style="display:none;"></div>
+  <div class="focus-card" id="focusCard" aria-hidden="true">
+    <button class="btn small focus-close" id="focusClose" type="button">✕</button>
+    <div class="focus-inner">
+      <img id="focusCover" class="focus-cover" alt="">
+      <div class="focus-meta">
+        <div class="focus-title" id="focusTitle">—</div>
+        <div class="focus-sub" id="focusAuthor">—</div>
+
+        <div class="focus-grid">
+          <div class="kv"><div class="k">Stato</div><div class="v" id="focusStatus">—</div></div>
+          <div class="kv"><div class="k">Valutazione</div><div class="v" id="focusRating">—</div></div>
+          <div class="kv"><div class="k">Edizione</div><div class="v" id="focusEdition">—</div></div>
+          <div class="kv"><div class="k">Aggiornato</div><div class="v" id="focusUpdated">—</div></div>
+        </div>
+
+        <div class="focus-actions">
+          <button class="btn" id="focusCycle" type="button">Cambia stato</button>
+          <button class="btn danger" id="focusDelete" type="button">Elimina</button>
+          <button class="btn" id="focusOpenLibrary" type="button">Open Library</button>
+          <button class="btn" id="focusAudible" type="button">Audible</button>
+          <button class="btn" id="focusKindle" type="button">Kindle</button>
+        </div>
+
+        <div class="focus-comment" id="focusComment"></div>
       </div>
     </div>
   </div>
@@ -687,21 +736,26 @@
 
 <script>
 (() => {
-  const LS_KEY = "libreria.books.v2";
+  const LS_KEY = "libreria.books.v3";
 
   // DOM
   const q = document.getElementById("q");
   const dropdown = document.getElementById("dropdown");
   const ddList = document.getElementById("ddList");
   const ddTitle = document.getElementById("ddTitle");
+
   const statusEl = document.getElementById("status");
   const ratingEl = document.getElementById("rating");
   const commentEl = document.getElementById("comment");
+
   const preferItalianEl = document.getElementById("preferItalian");
+  const onlyItalianEditionsEl = document.getElementById("onlyItalianEditions");
+
   const btnSave = document.getElementById("btnSave");
   const btnClearForm = document.getElementById("btnClearForm");
   const btnPickEdition = document.getElementById("btnPickEdition");
   const stats = document.getElementById("stats");
+
   const lookupState = document.getElementById("lookupState");
   const btnToggleLookup = document.getElementById("btnToggleLookup");
   const lookupHint = document.getElementById("lookupHint");
@@ -714,45 +768,49 @@
   const btnRoom = document.getElementById("btnRoom");
   const viewList = document.getElementById("viewList");
   const viewRoom = document.getElementById("viewRoom");
+  const formPanel = document.getElementById("formPanel");
+  const btnGoAdd = document.getElementById("btnGoAdd");
 
   const localFilter = document.getElementById("localFilter");
   const orderBy = document.getElementById("orderBy");
   const listEl = document.getElementById("list");
-  const shelfRead = document.getElementById("shelfRead");
-  const shelfReading = document.getElementById("shelfReading");
-  const shelfToRead = document.getElementById("shelfToRead");
-  const emptyRead = document.getElementById("emptyRead");
-  const emptyReading = document.getElementById("emptyReading");
-  const emptyToRead = document.getElementById("emptyToRead");
 
-  // Modali
-  const bookModal = document.getElementById("bookModal");
-  const mTitle = document.getElementById("mTitle");
-  const mAuthor = document.getElementById("mAuthor");
-  const mCover = document.getElementById("mCover");
-  const mStatus = document.getElementById("mStatus");
-  const mRating = document.getElementById("mRating");
-  const mEdition = document.getElementById("mEdition");
-  const mUpdated = document.getElementById("mUpdated");
-  const mComment = document.getElementById("mComment");
-  const mClose = document.getElementById("mClose");
-  const mOk = document.getElementById("mOk");
-  const mEdit = document.getElementById("mEdit");
-  const mCycle = document.getElementById("mCycle");
-  const mDelete = document.getElementById("mDelete");
-  const mOpenLibrary = document.getElementById("mOpenLibrary");
-  const mAudible = document.getElementById("mAudible");
-  const mKindle = document.getElementById("mKindle");
+  // Scene stanza
+  const roomStats = document.getElementById("roomStats");
+  const roomRead = document.getElementById("roomRead");
+  const roomReading = document.getElementById("roomReading");
+  const roomToRead = document.getElementById("roomToRead");
 
+  // Edizioni modal
   const edModal = document.getElementById("edModal");
   const edSub = document.getElementById("edSub");
   const edInfo = document.getElementById("edInfo");
   const edList = document.getElementById("edList");
+  const edHint = document.getElementById("edHint");
   const edClose = document.getElementById("edClose");
   const edReload = document.getElementById("edReload");
   const edSkip = document.getElementById("edSkip");
   const edUse = document.getElementById("edUse");
 
+  // Focus overlay
+  const focusLayer = document.getElementById("focusLayer");
+  const focusCard = document.getElementById("focusCard");
+  const focusClose = document.getElementById("focusClose");
+  const focusCover = document.getElementById("focusCover");
+  const focusTitle = document.getElementById("focusTitle");
+  const focusAuthor = document.getElementById("focusAuthor");
+  const focusStatus = document.getElementById("focusStatus");
+  const focusRating = document.getElementById("focusRating");
+  const focusEdition = document.getElementById("focusEdition");
+  const focusUpdated = document.getElementById("focusUpdated");
+  const focusComment = document.getElementById("focusComment");
+  const focusCycle = document.getElementById("focusCycle");
+  const focusDelete = document.getElementById("focusDelete");
+  const focusOpenLibrary = document.getElementById("focusOpenLibrary");
+  const focusAudible = document.getElementById("focusAudible");
+  const focusKindle = document.getElementById("focusKindle");
+
+  // Toast
   const toast = document.getElementById("toast");
   const toast1 = document.getElementById("toast1");
   const toast2 = document.getElementById("toast2");
@@ -765,21 +823,22 @@
   let ddItems = [];
   let ddIndex = -1;
 
-  // Selezione corrente da lookup
+  // Lookup selection
   let selectedWork = null;     // {workKey, title, author, coverUrl, editionCount}
-  let editionsCache = null;    // array di edizioni per work
-  let selectedEdition = null;  // {editionKey, publishDate, publisher, coverUrl}
+  let editionsCache = null;
+  let selectedEdition = null;  // {editionKey, publishDate, publisher, language, coverUrl}
 
-  // Se stai modificando un libro esistente
+  // editing
   let editingId = null;
+
+  // focus open id
+  let focusId = null;
 
   // -------- Utils ----------
   function nowISO(){ return new Date().toISOString(); }
   function fmtDate(iso){
-    try{
-      const d = new Date(iso);
-      return d.toLocaleString("it-IT");
-    }catch{ return iso; }
+    try{ return new Date(iso).toLocaleString("it-IT"); }
+    catch{ return iso; }
   }
   function toastMsg(t1, t2=""){
     toast1.textContent = t1;
@@ -793,45 +852,26 @@
       const raw = localStorage.getItem(LS_KEY);
       if(!raw) return [];
       const arr = JSON.parse(raw);
-      if(!Array.isArray(arr)) return [];
-      return arr;
+      return Array.isArray(arr) ? arr : [];
     }catch{ return []; }
   }
-  function saveBooks(){
-    localStorage.setItem(LS_KEY, JSON.stringify(books));
-  }
+  function saveBooks(){ localStorage.setItem(LS_KEY, JSON.stringify(books)); }
 
-  function loadView(){
-    return localStorage.getItem("libreria.view") || "list";
-  }
-  function saveView(){
-    localStorage.setItem("libreria.view", view);
-  }
+  function loadView(){ return localStorage.getItem("libreria.view") || "list"; }
+  function saveView(){ localStorage.setItem("libreria.view", view); }
 
   function loadLookup(){
     const v = localStorage.getItem("libreria.lookup");
     return v === null ? true : v === "1";
   }
-  function saveLookup(){
-    localStorage.setItem("libreria.lookup", lookupOn ? "1" : "0");
-  }
+  function saveLookup(){ localStorage.setItem("libreria.lookup", lookupOn ? "1" : "0"); }
 
-  function coverFromDoc(doc){
-    // preferisci cover_i se c’è
-    if(doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
-    // fallback: nessuna
-    return "";
+  function loadOnlyItalianEditions(){
+    const v = localStorage.getItem("libreria.onlyItalianEditions");
+    return v === null ? true : v === "1";
   }
-  function coverFromEdition(ed){
-    // ed.key: "/books/OLxxxxM"
-    const olid = (ed.key || "").split("/").pop();
-    if(ed.covers && ed.covers.length){
-      return `https://covers.openlibrary.org/b/id/${ed.covers[0]}-M.jpg`;
-    }
-    if(olid && olid.startsWith("OL")){
-      return `https://covers.openlibrary.org/b/olid/${olid}-M.jpg`;
-    }
-    return "";
+  function saveOnlyItalianEditions(){
+    localStorage.setItem("libreria.onlyItalianEditions", onlyItalianEditionsEl.checked ? "1" : "0");
   }
 
   function statusLabel(s){
@@ -844,604 +884,9 @@
     if(s==="reading") return "reading";
     return "to_read";
   }
+  function normalize(s){ return (s||"").toLowerCase().trim(); }
 
-  function normalize(s){
-    return (s||"").toLowerCase().trim();
-  }
-
-  // -------- View toggle ----------
-  function applyView(){
-    if(view === "room"){
-      btnRoom.classList.add("on"); btnList.classList.remove("on");
-      viewRoom.style.display = "";
-      viewList.style.display = "none";
-      document.body.classList.add("room-on");
-    }else{
-      btnList.classList.add("on"); btnRoom.classList.remove("on");
-      viewList.style.display = "";
-      viewRoom.style.display = "none";
-      document.body.classList.add("room-on"); // puoi lasciarla sempre on; se vuoi in lista: rimuovi
-    }
-    saveView();
-  }
-  btnList.addEventListener("click", () => { view="list"; applyView(); render(); });
-  btnRoom.addEventListener("click", () => { view="room"; applyView(); render(); });
-
-  // -------- Lookup toggle ----------
-  function applyLookup(){
-    lookupState.textContent = lookupOn ? "Lookup ON" : "Lookup OFF";
-    btnToggleLookup.textContent = lookupOn ? "Disattiva lookup" : "Attiva lookup";
-    lookupHint.textContent = lookupOn
-      ? "Digita almeno 2 caratteri. Seleziona un risultato per compilare titolo/autore e (opzionale) scegliere l’edizione."
-      : "Lookup disattivato: puoi inserire testo libero (titolo o autore) e salvare comunque.";
-    saveLookup();
-  }
-  btnToggleLookup.addEventListener("click", () => {
-    lookupOn = !lookupOn;
-    applyLookup();
-    closeDropdown();
-  });
-
-  // -------- Dropdown ----------
-  function openDropdown(){
-    dropdown.classList.add("on");
-  }
-  function closeDropdown(){
-    dropdown.classList.remove("on");
-    ddList.innerHTML = "";
-    ddItems = [];
-    ddIndex = -1;
-  }
-  function setDdIndex(i){
-    ddIndex = i;
-    const nodes = ddList.querySelectorAll(".dd-item");
-    nodes.forEach((n, idx) => {
-      n.style.background = idx === ddIndex ? "rgba(122,162,255,.14)" : "";
-    });
-    if(ddIndex >= 0 && nodes[ddIndex]){
-      nodes[ddIndex].scrollIntoView({block:"nearest"});
-    }
-  }
-
-  document.addEventListener("click", (e) => {
-    if(!dropdown.contains(e.target) && e.target !== q){
-      closeDropdown();
-    }
-  });
-  document.addEventListener("keydown", (e) => {
-    if(!dropdown.classList.contains("on")) return;
-    if(e.key === "Escape"){ closeDropdown(); return; }
-    if(e.key === "ArrowDown"){ e.preventDefault(); setDdIndex(Math.min(ddItems.length-1, ddIndex+1)); }
-    if(e.key === "ArrowUp"){ e.preventDefault(); setDdIndex(Math.max(0, ddIndex-1)); }
-    if(e.key === "Enter"){
-      if(ddIndex >= 0 && ddItems[ddIndex]){
-        e.preventDefault();
-        pickSuggestion(ddItems[ddIndex]);
-      }
-    }
-  });
-
-  // -------- Open Library lookup ----------
-  let debounceT = null;
-  q.addEventListener("input", () => {
-    // quando cambi query, reset selezioni work/edition (evita bug “autore bloccato”)
-    selectedWork = null;
-    editionsCache = null;
-    selectedEdition = null;
-    btnPickEdition.style.display = "none";
-
-    const text = q.value.trim();
-    if(!lookupOn){
-      closeDropdown();
-      return;
-    }
-    if(debounceT) clearTimeout(debounceT);
-    debounceT = setTimeout(() => doLookup(text), 220);
-  });
-
-  async function doLookup(text){
-    if(!lookupOn) return;
-    const term = text.trim();
-    if(term.length < 2){
-      closeDropdown();
-      return;
-    }
-
-    // abort precedente
-    if(lookupAbort) lookupAbort.abort();
-    lookupAbort = new AbortController();
-
-    ddTitle.textContent = "Suggerimenti (Open Library)";
-    ddList.innerHTML = `<div style="padding:12px; color:var(--muted);">Ricerca…</div>`;
-    openDropdown();
-
-    try{
-      const preferIt = preferItalianEl.checked;
-      const qTerm = preferIt ? `${term} language:ita` : term;
-      const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(qTerm)}&limit=12`;
-      const res = await fetch(url, {signal: lookupAbort.signal});
-      const data = await res.json();
-
-      const docs = (data && data.docs) ? data.docs : [];
-      ddItems = docs.map(d => ({
-        type:"work",
-        workKey: d.key, // "/works/OL...W" oppure "/books/..." (di solito works)
-        title: d.title || "",
-        author: (d.author_name && d.author_name[0]) ? d.author_name[0] : "",
-        year: d.first_publish_year || "",
-        editionCount: d.edition_count || 0,
-        coverUrl: coverFromDoc(d),
-      }));
-
-      if(ddItems.length === 0){
-        ddList.innerHTML = `<div style="padding:12px; color:var(--muted);">Nessun match. Continua a scrivere…</div>`;
-        ddIndex = -1;
-        return;
-      }
-
-      ddList.innerHTML = ddItems.map((it, idx) => {
-        const c = it.coverUrl ? `<img class="cover" src="${it.coverUrl}" alt="">` : `<div class="cover" style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:11px;">—</div>`;
-        const sub = `${it.author || "Autore sconosciuto"}${it.year ? " • " + it.year : ""}`;
-        const editions = it.editionCount ? `${it.editionCount} edizioni` : "—";
-        return `
-          <div class="dd-item" data-idx="${idx}">
-            ${c}
-            <div class="dd-main">
-              <div class="dd-title">${escapeHtml(it.title)}</div>
-              <div class="dd-sub">${escapeHtml(sub)}</div>
-            </div>
-            <div class="badge">${escapeHtml(editions)}</div>
-          </div>
-        `;
-      }).join("");
-
-      ddList.querySelectorAll(".dd-item").forEach(n => {
-        n.addEventListener("click", () => {
-          const idx = Number(n.getAttribute("data-idx"));
-          pickSuggestion(ddItems[idx]);
-        });
-      });
-
-      ddIndex = 0;
-      setDdIndex(ddIndex);
-
-    }catch(err){
-      if(err && err.name === "AbortError") return;
-      ddList.innerHTML = `<div style="padding:12px; color:var(--bad);">Errore lookup (Open Library).</div>`;
-    }
-  }
-
-  function pickSuggestion(item){
-    selectedWork = {
-      workKey: item.workKey,
-      title: item.title,
-      author: item.author,
-      coverUrl: item.coverUrl,
-      editionCount: item.editionCount
-    };
-    // riempi campo di ricerca con il titolo “pulito”
-    q.value = `${item.title}`;
-    closeDropdown();
-
-    // se ha molte edizioni, abilita pulsante “Scegli edizione”
-    if(selectedWork.editionCount && selectedWork.editionCount > 1 && (selectedWork.workKey||"").startsWith("/works/")){
-      btnPickEdition.style.display = "";
-      toastMsg("Selezionato: " + item.title, "Se vuoi, scegli anche l’edizione (anno/editore/copertina).");
-    }else{
-      btnPickEdition.style.display = "none";
-      toastMsg("Selezionato: " + item.title, item.author || "");
-    }
-  }
-
-  // -------- Edizioni ----------
-  btnPickEdition.addEventListener("click", () => openEditions());
-  edClose.addEventListener("click", () => closeEditions());
-  edSkip.addEventListener("click", () => {
-    selectedEdition = null;
-    closeEditions();
-    toastMsg("Ok", "Uso il work (senza edizione specifica).");
-  });
-  edReload.addEventListener("click", () => openEditions(true));
-  edUse.addEventListener("click", () => {
-    if(!selectedEdition){
-      toastMsg("Seleziona un’edizione", "Oppure usa ‘work’ senza edizione.");
-      return;
-    }
-    closeEditions();
-    toastMsg("Edizione selezionata", selectedEdition.publisher ? selectedEdition.publisher : "");
-  });
-
-  async function openEditions(force=false){
-    if(!selectedWork || !(selectedWork.workKey||"").startsWith("/works/")){
-      toastMsg("Nessun work selezionato", "Seleziona prima un risultato dalla tendina.");
-      return;
-    }
-    edSub.textContent = `${selectedWork.title} — ${selectedWork.author || "autore sconosciuto"}`;
-    edInfo.textContent = "Caricamento…";
-    edList.innerHTML = "";
-    edModal.classList.add("on");
-
-    if(editionsCache && !force){
-      renderEditions(editionsCache);
-      return;
-    }
-
-    try{
-      // Open Library editions endpoint
-      const url = `https://openlibrary.org${selectedWork.workKey}/editions.json?limit=50`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const entries = (data && data.entries) ? data.entries : [];
-
-      // Normalizza + ordina “sensatamente”: prima quelle con cover, poi per data (se parseabile)
-      const normalized = entries.map(e => {
-        const publisher = (e.publishers && e.publishers[0]) ? e.publishers[0] : "";
-        const publishDate = e.publish_date || "";
-        const lang = (e.languages && e.languages[0] && e.languages[0].key) ? e.languages[0].key.replace("/languages/","") : "";
-        const coverUrl = coverFromEdition(e);
-        return {
-          editionKey: e.key || "",
-          title: (e.title || selectedWork.title || ""),
-          publisher,
-          publishDate,
-          language: lang,
-          coverUrl
-        };
-      });
-
-      normalized.sort((a,b) => {
-        const ac = a.coverUrl ? 1 : 0;
-        const bc = b.coverUrl ? 1 : 0;
-        if(ac !== bc) return bc - ac;
-
-        const ad = parseYear(a.publishDate);
-        const bd = parseYear(b.publishDate);
-        if(ad !== bd) return bd - ad;
-        return (a.publisher||"").localeCompare(b.publisher||"");
-      });
-
-      editionsCache = normalized;
-      renderEditions(normalized);
-    }catch(err){
-      edInfo.textContent = "Errore caricamento edizioni.";
-      edList.innerHTML = `<div style="color:var(--bad); padding:10px 2px;">Non sono riuscito a leggere le edizioni da Open Library.</div>`;
-    }
-  }
-
-  function renderEditions(arr){
-    edInfo.textContent = `${arr.length} edizioni trovate (mostro le prime ${Math.min(arr.length,50)}).`;
-
-    if(arr.length === 0){
-      edList.innerHTML = `<div style="color:var(--muted); padding:10px 2px;">Nessuna edizione disponibile.</div>`;
-      return;
-    }
-
-    edList.innerHTML = arr.map((e, idx) => {
-      const img = e.coverUrl
-        ? `<img src="${e.coverUrl}" alt="">`
-        : `<img src="" alt="" style="background:rgba(255,255,255,.06)"/>`;
-      const sub1 = [e.publishDate, e.publisher].filter(Boolean).join(" • ") || "—";
-      const sub2 = e.language ? `Lingua: ${e.language}` : "";
-      const on = selectedEdition && selectedEdition.editionKey === e.editionKey ? "on" : "";
-      return `
-        <div class="edition ${on}" data-idx="${idx}">
-          ${img}
-          <div class="e-meta">
-            <div class="e-title">${escapeHtml(e.title)}</div>
-            <div class="e-sub">${escapeHtml(sub1)}</div>
-            <div class="e-sub2">${escapeHtml(sub2)}</div>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    edList.querySelectorAll(".edition").forEach(n => {
-      n.addEventListener("click", () => {
-        const idx = Number(n.getAttribute("data-idx"));
-        const e = arr[idx];
-        selectedEdition = {
-          editionKey: e.editionKey,
-          publishDate: e.publishDate,
-          publisher: e.publisher,
-          language: e.language,
-          coverUrl: e.coverUrl
-        };
-        renderEditions(arr);
-      });
-    });
-  }
-
-  function closeEditions(){
-    edModal.classList.remove("on");
-  }
-
-  function parseYear(s){
-    if(!s) return 0;
-    const m = String(s).match(/(\d{4})/);
-    return m ? Number(m[1]) : 0;
-  }
-
-  // -------- CRUD libri ----------
-  btnSave.addEventListener("click", () => {
-    const text = q.value.trim();
-    if(!text){
-      toastMsg("Titolo/autore richiesto", "Inserisci almeno qualcosa nel campo ricerca.");
-      return;
-    }
-
-    // Se ho selezionato un work, titolo/autore arrivano da lì
-    const title = selectedWork?.title || text;
-    const author = selectedWork?.author || guessAuthorFromFreeText(text);
-
-    // Copertina: preferisci edizione se selezionata, altrimenti work
-    const coverUrl = selectedEdition?.coverUrl || selectedWork?.coverUrl || "";
-
-    const editionInfo = selectedEdition
-      ? {
-          editionKey: selectedEdition.editionKey,
-          publisher: selectedEdition.publisher || "",
-          publishDate: selectedEdition.publishDate || "",
-          language: selectedEdition.language || ""
-        }
-      : {
-          editionKey: "",
-          publisher: "",
-          publishDate: "",
-          language: ""
-        };
-
-        const payload = {
-      id: editingId || cryptoRandomId(),
-      title,
-      author,
-      status: statusEl.value,
-      rating: ratingEl.value || "",
-      comment: commentEl.value || "",
-      coverUrl,
-      workKey: selectedWork?.workKey || "",
-      ...editionInfo,
-      updatedAt: nowISO(),
-      createdAt: editingId ? (books.find(b => b.id === editingId)?.createdAt || nowISO()) : nowISO()
-    };
-
-    if (editingId) {
-      books = books.map(b => (b.id === editingId ? payload : b));
-      toastMsg("Aggiornato", payload.title);
-    } else {
-      books.unshift(payload);
-      toastMsg("Salvato", payload.title);
-    }
-
-    saveBooks();
-    render();
-    clearForm();
-  });
-
-  btnClearForm.addEventListener("click", () => clearForm());
-
-  function clearForm() {
-    q.value = "";
-    statusEl.value = "to_read";
-    ratingEl.value = "";
-    commentEl.value = "";
-
-    selectedWork = null;
-    editionsCache = null;
-    selectedEdition = null;
-    editingId = null;
-
-    btnPickEdition.style.display = "none";
-    closeDropdown();
-  }
-
-  // -------- Export / Import / Wipe ----------
-  btnExport.addEventListener("click", () => {
-    const data = JSON.stringify(books, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "libreria.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  btnImport.addEventListener("click", () => {
-    const inp = document.createElement("input");
-    inp.type = "file";
-    inp.accept = "application/json";
-    inp.onchange = async () => {
-      const file = inp.files && inp.files[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const arr = JSON.parse(text);
-        if (!Array.isArray(arr)) throw new Error("JSON non è un array");
-        books = arr;
-        saveBooks();
-        render();
-        toastMsg("Import ok", `${books.length} libri`);
-      } catch (e) {
-        toastMsg("Import fallito", "JSON non valido.");
-      }
-    };
-    inp.click();
-  });
-
-  btnWipe.addEventListener("click", () => {
-    if (!confirm("Sicuro di svuotare la libreria?")) return;
-    books = [];
-    saveBooks();
-    render();
-    clearForm();
-    toastMsg("Svuotata", "Libreria azzerata.");
-  });
-
-  // -------- Render ----------
-  localFilter.addEventListener("input", () => render());
-  orderBy.addEventListener("change", () => render());
-
-  function render() {
-    // stats
-    stats.textContent = `Totale: ${books.length}`;
-
-    // filtro + sort
-    const f = normalize(localFilter.value);
-    let arr = books.filter(b => {
-      if (!f) return true;
-      const blob = `${b.title} ${b.author} ${b.comment}`.toLowerCase();
-      return blob.includes(f);
-    });
-
-    const ob = orderBy.value;
-    arr.sort((a, b) => {
-      if (ob === "updated_desc") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
-      if (ob === "updated_asc") return (a.updatedAt || "").localeCompare(b.updatedAt || "");
-      if (ob === "title_asc") return (a.title || "").localeCompare(b.title || "");
-      if (ob === "title_desc") return (b.title || "").localeCompare(a.title || "");
-      return 0;
-    });
-
-    // lista
-    listEl.innerHTML = arr.map(b => {
-      const dot = statusDotClass(b.status);
-      const cover = b.coverUrl
-        ? `<img src="${b.coverUrl}" alt="">`
-        : `<img src="" alt="" style="background:rgba(255,255,255,.06)"/>`;
-
-      return `
-        <div class="card" data-id="${b.id}">
-          ${cover}
-          <div class="meta">
-            <div class="t">${escapeHtml(b.title || "—")}</div>
-            <div class="a">${escapeHtml(b.author || "—")}</div>
-          </div>
-          <div class="chip">
-            <span class="dot ${dot}"></span>
-            <span>${escapeHtml(statusLabel(b.status))}</span>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    listEl.querySelectorAll(".card").forEach(n => {
-      n.addEventListener("click", () => openBookModal(n.getAttribute("data-id")));
-    });
-
-    // stanza (scaffali)
-    const read = books.filter(b => b.status === "read");
-    const reading = books.filter(b => b.status === "reading");
-    const toRead = books.filter(b => b.status === "to_read");
-
-    renderShelf(shelfRead, emptyRead, read);
-    renderShelf(shelfReading, emptyReading, reading);
-    renderShelf(shelfToRead, emptyToRead, toRead);
-  }
-
-  function renderShelf(el, emptyEl, arr) {
-    el.innerHTML = arr.map(b => {
-      if (b.coverUrl) {
-        return `<div class="book" data-id="${b.id}" title="${escapeAttr(b.title)}">
-          <img src="${b.coverUrl}" alt="">
-        </div>`;
-      }
-      // fallback senza cover
-      const initials = (b.title || "—").split(" ").slice(0, 3).join(" ");
-      return `<div class="book fallback" data-id="${b.id}" title="${escapeAttr(b.title)}">${escapeHtml(initials)}</div>`;
-    }).join("");
-
-    emptyEl.style.display = arr.length ? "none" : "";
-    el.querySelectorAll(".book").forEach(n => {
-      n.addEventListener("click", () => openBookModal(n.getAttribute("data-id")));
-    });
-  }
-
-  // -------- Modale libro ----------
-  function openBookModal(id) {
-    const b = books.find(x => x.id === id);
-    if (!b) return;
-
-    bookModal.classList.add("on");
-    mTitle.textContent = b.title || "—";
-    mAuthor.textContent = b.author || "—";
-    mCover.src = b.coverUrl || "";
-    mStatus.textContent = statusLabel(b.status);
-    mRating.textContent = b.rating ? `${b.rating}/5` : "—";
-    mEdition.textContent = b.publisher || b.publishDate || b.language ? [b.publishDate, b.publisher, b.language].filter(Boolean).join(" • ") : "—";
-    mUpdated.textContent = b.updatedAt ? fmtDate(b.updatedAt) : "—";
-    mComment.textContent = b.comment || "—";
-
-    mEdit.onclick = () => startEdit(id);
-    mDelete.onclick = () => deleteBook(id);
-    mCycle.onclick = () => cycleStatus(id);
-
-    mOpenLibrary.onclick = () => window.open(`https://openlibrary.org/search?q=${encodeURIComponent(b.title + " " + (b.author||""))}`, "_blank");
-    mAudible.onclick = () => window.open(`https://www.audible.it/search?keywords=${encodeURIComponent(b.title + " " + (b.author||""))}`, "_blank");
-    mKindle.onclick = () => window.open(`https://www.amazon.it/s?k=${encodeURIComponent(b.title + " " + (b.author||"") + " kindle")}`, "_blank");
-  }
-
-  function closeBookModal() { bookModal.classList.remove("on"); }
-  mClose.addEventListener("click", closeBookModal);
-  mOk.addEventListener("click", closeBookModal);
-  bookModal.addEventListener("click", (e) => { if (e.target === bookModal) closeBookModal(); });
-
-  function startEdit(id) {
-    const b = books.find(x => x.id === id);
-    if (!b) return;
-    editingId = id;
-
-    // In edit: disattivo selezione lookup “vecchia” per evitare mismatch
-    selectedWork = null;
-    selectedEdition = null;
-    editionsCache = null;
-    btnPickEdition.style.display = "none";
-
-    q.value = b.title || "";
-    statusEl.value = b.status || "to_read";
-    ratingEl.value = b.rating || "";
-    commentEl.value = b.comment || "";
-
-    closeBookModal();
-    toastMsg("Modifica", b.title || "");
-  }
-
-  function deleteBook(id) {
-    const b = books.find(x => x.id === id);
-    if (!b) return;
-    if (!confirm(`Eliminare "${b.title}"?`)) return;
-    books = books.filter(x => x.id !== id);
-    saveBooks();
-    render();
-    closeBookModal();
-    toastMsg("Eliminato", b.title);
-  }
-
-  function cycleStatus(id) {
-    const b = books.find(x => x.id === id);
-    if (!b) return;
-    const next = b.status === "to_read" ? "reading" : (b.status === "reading" ? "read" : "to_read");
-    b.status = next;
-    b.updatedAt = nowISO();
-    saveBooks();
-    render();
-    openBookModal(id); // refresh
-  }
-
-  // -------- Helpers mancanti ----------
-  function cryptoRandomId() {
-    if (crypto && crypto.randomUUID) return crypto.randomUUID();
-    return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now();
-  }
-
-  function guessAuthorFromFreeText(text) {
-    // euristica minimale: se scrivi "Titolo - Autore" o "Titolo, Autore"
-    const s = text.trim();
-    const m = s.match(/(.+?)(?:\s[-,–]\s)(.+)$/);
-    if (m) return m[2].trim();
-    return "";
-  }
-
-  function escapeHtml(str) {
+  function escapeHtml(str){
     return String(str || "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
@@ -1449,13 +894,76 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-  function escapeAttr(str) { return escapeHtml(str).replaceAll("\n", " "); }
+  function escapeAttr(str){ return escapeHtml(str).replaceAll("\n", " "); }
 
-  // init
-  applyView();
-  applyLookup();
-  render();
+  function cryptoRandomId(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Math.random().toString(16).slice(2) + "-" + Date.now();
+  }
+
+  function coverFromDoc(doc){
+    if(doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+    return "";
+  }
+  function coverFromEdition(ed){
+    const olid = (ed.key || "").split("/").pop();
+    if(ed.covers && ed.covers.length){
+      return `https://covers.openlibrary.org/b/id/${ed.covers[0]}-M.jpg`;
+    }
+    if(olid && olid.startsWith("OL")){
+      return `https://covers.openlibrary.org/b/olid/${olid}-M.jpg`;
+    }
+    return "";
+  }
+
+  function guessAuthorFromFreeText(text){
+    const s = text.trim();
+    const m = s.match(/(.+?)(?:\s[-,–]\s)(.+)$/);
+    if(m) return m[2].trim();
+    return "";
+  }
+
+  // -------- View toggle ----------
+  function applyView(){
+    if(view === "room"){
+      btnRoom.classList.add("on"); btnList.classList.remove("on");
+            viewRoom.style.display = "block";
+      document.body.classList.add("is-room");
+      renderRoom();
+    } else {
+      btnList.classList.add("on"); 
+      btnRoom.classList.remove("on");
+      viewRoom.style.display = "none";
+      document.body.classList.remove("is-room");
+      renderList();
+    }
+    saveView();
+    updateStats();
+  }
+
+  // -------- Stats ----------
+  function updateStats(){
+    const total = books.length;
+    const read = books.filter(b => b.status === "read").length;
+    const reading = books.filter(b => b.status === "reading").length;
+    const toRead = books.filter(b => b.status === "to_read").length;
+
+    stats.textContent = `Totale: ${total} · Letti: ${read} · In lettura: ${reading} · Da leggere: ${toRead}`;
+    roomStats.textContent = `Stanza: ${total} libri`;
+  }
+
+  // -------- Init + bind ----------
+  function init(){
+    preferItalianEl.checked = loadPreferItalian();
+    onlyItalianEditionsEl.checked = loadOnlyItalianEditions();
+    setLookupUI();
+    bindEvents();
+    applyView();
+  }
+
+  init();
 })();
 </script>
 </body>
 </html>
+
