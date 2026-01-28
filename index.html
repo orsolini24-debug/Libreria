@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 8.0 - Italian Engine</title>
+<title>Libreria 8.1 - Enhanced Search</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
 
@@ -140,7 +140,7 @@
     .res-info div { margin-bottom: 2px; }
     .res-title { font-weight: 700; color: #fff; font-size: 13px; }
     .res-meta { font-size: 11px; color: #94a3b8; }
-    .res-pub { font-size: 10px; color: var(--accent); text-transform: uppercase; }
+    .res-pub { font-size: 10px; color: var(--accent); text-transform: uppercase; display: flex; justify-content: space-between; }
 
     /* FORM */
     label { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block; }
@@ -181,7 +181,7 @@
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">8.0</span></h2>
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">8.1</span></h2>
     <div style="display:flex; gap:10px">
         <button class="btn btn-danger" onclick="app.reset()">RESET DATI</button>
         <button class="btn" onclick="app.export()">Backup</button>
@@ -299,46 +299,51 @@
 
 <script>
 // --- CORE LOGIC ---
-const DB_KEY = "lib_v8_final";
+const DB_KEY = "lib_v8_1_enhanced";
 let books = [];
 let tempCover = "";
 let focusId = null;
 
-// Gestione Motore di Ricerca
+// Gestione Motore di Ricerca Migliorato
 const searchEngine = {
     timer: null,
     
-    // 1. Funzione Principale di Ricerca
+    // Funzione di ricerca ottimizzata
     search: async (query) => {
         const status = document.getElementById('search-status');
         const dropdown = document.getElementById('search-dropdown');
         
-        status.innerText = "Cerco su Google Books...";
+        status.innerText = "Interrogo i database...";
         dropdown.innerHTML = "";
         dropdown.classList.remove('active');
 
         try {
-            // PROVA 1: GOOGLE BOOKS (Priorità Italiano)
-            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&langRestrict=it&maxResults=8`;
+            // PROVA 1: GOOGLE BOOKS (Senza restrizioni lingua severe, filtro client-side)
+            // A volte langRestrict è troppo aggressivo con l'API pubblica
+            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10`;
             let res = await fetch(url);
             let data = await res.json();
             let items = data.items || [];
 
-            // Se Google fallisce o trova poco, PROVA 2: OPEN LIBRARY
+            // Filtro manuale per lingua (opzionale, ma utile per ordinare)
+            items.sort((a,b) => (a.volumeInfo.language === 'it' ? -1 : 1));
+
+            // Se Google fallisce o trova zero, PROVA 2: OPEN LIBRARY
             if (items.length === 0) {
-                status.innerText = "Google vuoto. Provo OpenLibrary...";
-                url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&language=ita&limit=5`;
+                status.innerText = "Google non ha trovato nulla. Provo OpenLibrary...";
+                url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8`;
                 res = await fetch(url);
                 data = await res.json();
                 
-                // Mappa risultati OpenLibrary in formato standard
+                // Mappa risultati OpenLibrary in formato compatibile
                 items = data.docs.map(d => ({
                     volumeInfo: {
                         title: d.title,
                         authors: d.author_name || [],
-                        publisher: d.publisher ? d.publisher[0] : "N/A",
+                        publisher: d.publisher ? d.publisher[0] : "OpenLibrary Data",
                         pageCount: d.number_of_pages_median || 200,
-                        imageLinks: { smallThumbnail: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '' }
+                        imageLinks: { smallThumbnail: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '' },
+                        source: "OL"
                     }
                 }));
             }
@@ -351,8 +356,9 @@ const searchEngine = {
                     const img = info.imageLinks?.smallThumbnail || '';
                     const title = info.title || "Senza Titolo";
                     const author = info.authors ? info.authors[0] : "Sconosciuto";
-                    const publisher = info.publisher || "";
+                    const publisher = info.publisher || "Editore N/A";
                     const date = info.publishedDate ? info.publishedDate.substring(0,4) : "";
+                    const source = info.source === "OL" ? "OpenLib" : "Google";
                     
                     // Creiamo stringa dati sicura
                     const dataStr = encodeURIComponent(JSON.stringify({
@@ -366,13 +372,16 @@ const searchEngine = {
                         <div class="res-info">
                             <div class="res-title">${title}</div>
                             <div class="res-meta">${author}</div>
-                            <div class="res-pub">${publisher} ${date ? `(${date})` : ''}</div>
+                            <div class="res-pub">
+                                <span>${publisher} ${date ? `(${date})` : ''}</span>
+                                <span style="color:#64748b; font-size:8px;">${source}</span>
+                            </div>
                         </div>
                     </div>`;
                 }).join('');
                 dropdown.classList.add('active');
             } else {
-                status.innerText = "Nessun risultato trovato.";
+                status.innerText = "Nessun risultato trovato in nessun DB.";
             }
 
         } catch (e) {
@@ -474,7 +483,7 @@ const app = {
                 el.className = 'spine';
                 el.style.background = b.color;
                 el.style.width = Math.min(Math.max(b.pages/10, 24), 45) + 'px'; // Spessore basato su pagine
-                el.style.height = (80 + (b.title.length % 15)) + '%';
+                el.style.height = (80 + (b.title.length % 20)) + '%';
                 el.innerHTML = `<div class="spine-txt">${b.title}</div>`;
                 
                 const dest = b.status === 'read' ? 'zone-read' : 'zone-toread';
