@@ -3,555 +3,327 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria Finale - Funzionale</title>
+<title>Libreria 7.1 - Fix Ricerca</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
     :root {
         --c-accent: #fbbf24;
-        --c-dark: #0f172a;
-        --c-panel: rgba(15, 23, 42, 0.98);
-        --c-border: rgba(255,255,255,0.15);
-        --shadow-elevation: 0 20px 50px rgba(0,0,0,0.8);
+        --c-panel: #0f172a;
+        --c-border: 1px solid rgba(255,255,255,0.2);
     }
+    body { margin: 0; overflow: hidden; background: #000; color: #fff; font-family: 'Inter', sans-serif; }
 
-    * { box-sizing: border-box; outline: none; }
-    
-    body { 
-        margin: 0; height: 100vh; overflow: hidden; 
-        background: #000; color: #fff; font-family: 'Inter', sans-serif;
-    }
+    /* SCENA */
+    #viewport { position: relative; width: 100vw; height: 100vh; perspective: 1500px; overflow: hidden; }
+    #room-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); transform: scale(1.05); }
+    #scene-layer { position: absolute; inset: 0; transform-style: preserve-3d; }
 
-    /* --- LIVELLO 1: SCENA --- */
-    #viewport {
-        position: relative; width: 100vw; height: 100vh;
-        perspective: 1500px; overflow: hidden;
-    }
-
-    #room-bg {
-        position: absolute; inset: 0; width: 100%; height: 100%;
-        object-fit: cover; z-index: 0; filter: brightness(0.5);
-        transform: scale(1.05); pointer-events: none;
-    }
-
-    /* Layer contenitore per gli oggetti 3D */
-    #scene-layer {
-        position: absolute; inset: 0; z-index: 10;
-        transform-style: preserve-3d;
-    }
-
-    /* ZONE DI ANCORAGGIO (Invisibili ma posizionano i libri) */
-    .anchor-zone { position: absolute; /* border: 1px dashed red; */ }
-    
-    /* Scaffali (Verticali) */
-    #shelf-high { top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
-    #shelf-low { top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
-    
-    /* Tavolo (Prospettiva) */
-    #table-surface { 
-        bottom: 15%; left: 20%; width: 40%; height: 30%; 
-        display: flex; align-items: center; justify-content: center; 
-        perspective: 800px; z-index: 20;
-    }
-    
-    /* Wishlist */
-    #wishlist-corner { bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
-
-    /* --- OGGETTI LIBRO --- */
-
-    /* 1. DORSO (Scaffale) */
-    .spine {
-        position: relative; width: 30px; 
-        background: linear-gradient(90deg, #222, #444 40%, #222);
-        border-radius: 2px; cursor: pointer; transition: transform 0.2s;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.8);
-    }
-    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; background: #555; }
-    .spine span {
-        writing-mode: vertical-rl; text-orientation: mixed;
-        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        font-family: 'Playfair Display', serif; font-size: 10px; color: rgba(255,255,255,0.8);
-        white-space: nowrap; overflow: hidden; padding: 5px 0;
-    }
-    /* Varianti colore dorso */
-    .bg-red { background: linear-gradient(90deg, #450a0a, #7f1d1d 40%, #450a0a); }
-    .bg-blue { background: linear-gradient(90deg, #172554, #1e40af 40%, #172554); }
-    .bg-green { background: linear-gradient(90deg, #052e16, #15803d 40%, #052e16); }
-    .bg-black { background: linear-gradient(90deg, #0a0a0a, #262626 40%, #0a0a0a); }
-
-    /* 2. LIBRO 3D (Tavolo) */
-    .book-3d {
-        width: 150px; height: 220px; position: relative;
-        transform-style: preserve-3d; cursor: pointer;
-        transform: rotateX(40deg) rotateZ(-10deg);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .book-3d:hover {
-        transform: rotateX(10deg) rotateZ(0deg) translateZ(50px) scale(1.1);
-        z-index: 1000;
-    }
-    .b-face { position: absolute; backface-visibility: hidden; }
-    
-    /* Copertina (Faccia Frontale) */
-    .b-front {
-        width: 100%; height: 100%; background: #333;
-        background-size: cover; background-position: center;
-        transform: translateZ(15px); border-radius: 2px 5px 5px 2px;
-        box-shadow: inset 2px 0 10px rgba(0,0,0,0.5);
-    }
-    /* Pagine (Lato destro) */
-    .b-side {
-        right: 0; width: 30px; height: 100%;
-        background: linear-gradient(to right, #e2e8f0, #cbd5e1 20%, #e2e8f0 40%);
-        transform: rotateY(90deg) translateZ(-1px); transform-origin: right;
-    }
-    /* Pagine (Lato sotto) */
-    .b-bottom {
-        bottom: 0; width: 100%; height: 30px;
-        background: #cbd5e1;
-        transform: rotateX(-90deg) translateZ(0); transform-origin: bottom;
-    }
-    /* Ombra (separata) */
-    .b-shadow {
-        position: absolute; width: 100%; height: 100%; background: black;
-        filter: blur(20px); opacity: 0.6;
-        transform: translateZ(-30px) translateX(20px) translateY(20px);
-        pointer-events: none;
-    }
-
-    /* 3. WISHLIST */
-    .wish-card {
-        width: 90px; height: 120px; position: absolute;
-        background: #fff; color: #000; padding: 5px;
-        font-size: 9px; text-align: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        cursor: pointer; transition: 0.2s;
-    }
-    .wish-card img { width: 100%; height: 70px; object-fit: cover; background: #eee; }
-    .wish-card:hover { transform: scale(1.2) !important; z-index: 999; }
-
-    /* --- UI LAYER --- */
-    .ui-top {
-        position: absolute; top: 0; left: 0; right: 0; height: 70px;
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 0 30px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-        z-index: 1000; pointer-events: none;
-    }
+    /* UI TOP */
+    .ui-top { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); pointer-events: none; }
     .ui-top * { pointer-events: auto; }
-
-    .btn {
-        padding: 10px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
-        background: rgba(0,0,0,0.5); color: #fff; cursor: pointer;
-        font-weight: 600; font-size: 13px; backdrop-filter: blur(5px);
-        transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;
-    }
-    .btn:hover { background: #fff; color: #000; }
+    .btn { padding: 10px 20px; border-radius: 6px; border: var(--c-border); background: rgba(0,0,0,0.6); color: #fff; cursor: pointer; font-weight: bold; }
     .btn-primary { background: var(--c-accent); color: #000; border: none; }
-    .btn-primary:hover { background: #d97706; }
-    .btn-danger { border-color: #ef4444; color: #ef4444; }
-    .btn-danger:hover { background: #ef4444; color: #fff; }
 
     /* PANNELLO LATERALE */
     #side-panel {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 450px;
-        background: var(--c-panel); border-left: 1px solid var(--c-border);
-        transform: translateX(100%); transition: transform 0.3s ease-out;
-        z-index: 2000; padding: 30px; display: flex; flex-direction: column; gap: 20px;
-        overflow-y: auto;
+        position: fixed; top: 0; right: 0; bottom: 0; width: 400px;
+        background: rgba(15, 23, 42, 0.98); border-left: var(--c-border);
+        transform: translateX(100%); transition: 0.3s; z-index: 2000; padding: 30px;
+        display: flex; flex-direction: column; gap: 15px; overflow-y: visible; /* IMPORTANTE PER LA TENDINA */
     }
     #side-panel.open { transform: translateX(0); }
 
-    .inp-group { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 11px; text-transform: uppercase; color: var(--c-accent); font-weight: 700; }
-    input, select, textarea {
-        background: rgba(0,0,0,0.3); border: 1px solid #334155; padding: 12px;
-        color: #fff; border-radius: 6px; width: 100%; font-family: inherit;
-    }
-    input:focus { border-color: var(--c-accent); }
+    /* RICERCA FIX */
+    .search-wrapper { position: relative; z-index: 3000; } /* Z-Index alto per stare sopra a tutto */
+    input, select, textarea { width: 100%; background: #1e293b; border: 1px solid #334155; padding: 12px; color: #fff; border-radius: 6px; margin-top: 5px; }
+    
+    #search-status { font-size: 11px; color: #fbbf24; margin-top: 4px; height: 15px; }
 
-    /* DROPDOWN RICERCA */
     #search-results {
-        background: #0f172a; border: 1px solid #334155; border-radius: 6px;
-        max-height: 0; overflow: hidden; transition: 0.3s;
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: #0f172a; border: 1px solid #fbbf24; border-radius: 0 0 6px 6px;
+        max-height: 0; overflow: hidden; transition: 0.2s;
+        box-shadow: 0 10px 30px rgba(0,0,0,1);
     }
-    #search-results.active { max-height: 250px; overflow-y: auto; border-color: var(--c-accent); }
-    .res-item { display: flex; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #1e293b; }
+    #search-results.active { max-height: 300px; overflow-y: auto; }
+    
+    .res-item { display: flex; gap: 10px; padding: 12px; cursor: pointer; border-bottom: 1px solid #334155; }
     .res-item:hover { background: #1e293b; }
+    .res-img { width: 40px; height: 60px; object-fit: cover; background: #333; }
 
-    /* MODALE DETTAGLIO */
-    #modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000;
-        display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+    /* LIBRI 3D */
+    .book-3d {
+        position: absolute; width: 140px; height: 200px;
+        transform-style: preserve-3d; cursor: pointer;
+        transition: 0.3s;
+        transform: rotateX(40deg) rotateZ(-10deg);
+        box-shadow: -10px 20px 30px rgba(0,0,0,0.5);
     }
+    .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; }
+    .b-face { position: absolute; backface-visibility: hidden; }
+    .b-front { 
+        width: 100%; height: 100%; background: #444; 
+        transform: translateZ(15px); border-radius: 2px 4px 4px 2px;
+        background-size: cover; background-position: center;
+        display: flex; align-items: center; justify-content: center; text-align: center;
+        font-family: 'Playfair Display'; padding: 10px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .b-side { right: 0; width: 30px; height: 100%; background: #eee; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
+    .b-bottom { bottom: 0; width: 100%; height: 30px; background: #ccc; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
+
+    /* Zone */
+    #zone-table { position: absolute; bottom: 15%; left: 20%; width: 40%; height: 30%; display: flex; align-items: center; justify-content: center; perspective: 800px; z-index: 20; }
+    #zone-shelf-high { position: absolute; top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    #zone-shelf-low { position: absolute; top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
+    #zone-wishlist { position: absolute; bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
+
+    /* Spines */
+    .spine { width: 30px; height: 90%; background: #444; border-radius: 2px; cursor: pointer; position: relative; transition: 0.2s; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
+    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; }
+    .spine-txt { writing-mode: vertical-rl; position: absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 10px; color: rgba(255,255,255,0.8); }
+
+    /* MODAL */
+    #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
     #modal-overlay.active { display: flex; }
-    .modal-box {
-        background: #1e293b; width: 600px; max-width: 95%; border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.1); overflow: hidden; display: flex;
-        box-shadow: 0 50px 100px rgba(0,0,0,1);
-    }
-    .m-img-col { width: 200px; background: #000; display: flex; align-items: center; justify-content: center; }
-    .m-img-col img { width: 100%; height: 100%; object-fit: cover; }
-    .m-info-col { flex: 1; padding: 30px; display: flex; flex-direction: column; gap: 15px; }
-
-    /* COLLEGAMENTI ESTERNI */
-    .ext-actions {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .link-btn {
-        background: #334155; color: #fff; text-decoration: none; padding: 10px;
-        border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
-        transition: 0.2s;
-    }
-    .link-btn:hover { background: #fff; color: #000; }
-    .link-amazon:hover { background: #ff9900; color: #000; }
-    .link-audible:hover { background: #facc15; color: #000; }
-
-    /* Stelle */
-    .stars { display: flex; gap: 5px; font-size: 20px; color: #475569; cursor: pointer; }
-    .stars i.active { color: var(--c-accent); }
+    .modal-box { background: #1e293b; width: 500px; padding: 30px; border-radius: 12px; border: 1px solid #fbbf24; }
+    .links-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .link-btn { background: #334155; padding: 10px; text-align: center; color: white; text-decoration: none; border-radius: 6px; font-size: 12px; }
+    .link-btn:hover { background: #fbbf24; color: black; }
 
 </style>
 </head>
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--c-accent)">7.0</span></h2>
+    <h2>Libreria 7.1</h2>
     <div style="display:flex; gap:10px">
-        <button class="btn danger" onclick="app.resetData()">RESET DATI</button>
-        <button class="btn" onclick="app.exportData()">Backup JSON</button>
-        <button class="btn primary" onclick="ui.openPanel()">+ Aggiungi</button>
+        <button class="btn" style="background:#ef4444" onclick="app.reset()">RESET DATI</button>
+        <button class="btn btn-primary" onclick="ui.openPanel()">+ Aggiungi</button>
     </div>
 </div>
 
 <div id="viewport">
     <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'">
     <div id="scene-layer">
-        <div class="anchor-zone" id="shelf-high"></div>
-        <div class="anchor-zone" id="shelf-low"></div>
-        <div class="anchor-zone" id="table-surface"></div>
-        <div class="anchor-zone" id="wishlist-corner"></div>
+        <div id="zone-shelf-high"></div>
+        <div id="zone-shelf-low"></div>
+        <div id="zone-table"></div>
+        <div id="zone-wishlist"></div>
     </div>
 </div>
 
 <div id="side-panel">
     <div style="display:flex; justify-content:space-between; align-items:center">
-        <h2 style="margin:0">Gestisci Libro</h2>
-        <button class="btn" onclick="ui.closePanel()" style="padding:5px 10px">✕</button>
+        <h3>Gestisci Libro</h3>
+        <button class="btn" onclick="ui.closePanel()">✕</button>
     </div>
 
-    <div class="inp-group">
-        <label>Cerca su Google Books</label>
-        <input id="searchInp" placeholder="Es. Italo Calvino, Dante..." autocomplete="off">
-        <div id="search-results"></div>
+    <div class="search-wrapper">
+        <label>Cerca Google Books</label>
+        <input id="inpSearch" placeholder="Es. Calvino..." autocomplete="off">
+        <div id="search-status"></div> <div id="search-results"></div>
     </div>
 
-    <hr style="border-color:rgba(255,255,255,0.1); width:100%">
+    <hr style="border-color:rgba(255,255,255,0.1); width:100%; margin: 20px 0;">
 
-    <div class="inp-group">
-        <label>Titolo *</label>
-        <input id="inpTitle">
-    </div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-        <div class="inp-group">
-            <label>Autore</label>
-            <input id="inpAuthor">
-        </div>
-        <div class="inp-group">
-            <label>Pagine</label>
-            <input type="number" id="inpPages" value="200">
-        </div>
-    </div>
-    <div class="inp-group">
-        <label>Stato</label>
-        <select id="inpStatus">
-            <option value="reading">In Lettura (Tavolo)</option>
-            <option value="read">Letto (Scaffale Alto)</option>
-            <option value="toread">Da Leggere (Scaffale Basso)</option>
-            <option value="wishlist">Wishlist (Angolo)</option>
-        </select>
-    </div>
-    <div class="inp-group">
-        <label>Colore Dorso</label>
-        <select id="inpColor">
-            <option value="bg-red">Rosso</option>
-            <option value="bg-blue">Blu</option>
-            <option value="bg-green">Verde</option>
-            <option value="bg-black">Nero</option>
-        </select>
-    </div>
-    <div class="inp-group">
-        <label>Note</label>
-        <textarea id="inpNote" rows="3"></textarea>
-    </div>
+    <label>Titolo</label> <input id="inpTitle">
+    <label>Autore</label> <input id="inpAuthor">
+    <label>Stato</label>
+    <select id="inpStatus">
+        <option value="reading">In Lettura (Tavolo)</option>
+        <option value="read">Letto (Scaffale Alto)</option>
+        <option value="toread">Da Leggere (Scaffale Basso)</option>
+        <option value="wishlist">Wishlist (Angolo)</option>
+    </select>
+    <label>Note</label> <textarea id="inpNote" rows="3"></textarea>
 
-    <button class="btn primary" onclick="app.saveBook()" style="justify-content:center; padding:15px">SALVA</button>
+    <button class="btn btn-primary" style="margin-top:20px; width:100%" onclick="app.save()">SALVA</button>
 </div>
 
 <div id="modal-overlay">
     <div class="modal-box">
-        <div class="m-img-col">
-            <img id="m-cover" src="">
+        <h2 id="m-title" style="color:#fbbf24; margin-top:0">Titolo</h2>
+        <p id="m-author" style="color:#94a3b8">Autore</p>
+        <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic">...</p>
+        
+        <div class="links-row">
+            <a href="#" target="_blank" id="lnk-amazon" class="link-btn"><i class="fab fa-amazon"></i> Amazon</a>
+            <a href="#" target="_blank" id="lnk-kindle" class="link-btn"><i class="fas fa-tablet-alt"></i> Kindle</a>
+            <a href="#" target="_blank" id="lnk-audible" class="link-btn"><i class="fas fa-headphones"></i> Audible</a>
         </div>
-        <div class="m-info-col">
-            <div>
-                <h2 id="m-title" style="margin:0; font-family:'Playfair Display'; color:var(--c-accent)">Titolo</h2>
-                <div id="m-author" style="color:#94a3b8; font-size:14px; margin-top:5px">Autore</div>
-            </div>
-
-            <div class="stars" id="m-stars">
-                <i class="fas fa-star" data-v="1"></i>
-                <i class="fas fa-star" data-v="2"></i>
-                <i class="fas fa-star" data-v="3"></i>
-                <i class="fas fa-star" data-v="4"></i>
-                <i class="fas fa-star" data-v="5"></i>
-            </div>
-
-            <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic; font-size:13px; color:#cbd5e1; flex:1">
-                Nessuna nota.
-            </p>
-
-            <div class="ext-actions">
-                <a href="#" target="_blank" id="lnk-amazon" class="link-btn link-amazon"><i class="fab fa-amazon"></i> Amazon</a>
-                <a href="#" target="_blank" id="lnk-kindle" class="link-btn"><i class="fas fa-tablet-alt"></i> Kindle</a>
-                <a href="#" target="_blank" id="lnk-audible" class="link-btn link-audible"><i class="fas fa-headphones"></i> Audible</a>
-                <button onclick="app.deleteBook()" class="link-btn" style="background:#7f1d1d; border:none; color:white; cursor:pointer"><i class="fas fa-trash"></i> Elimina</button>
-            </div>
-            <button onclick="ui.closeModal()" style="background:none; border:none; color:#64748b; margin-top:10px; cursor:pointer; font-size:12px">Chiudi</button>
-        </div>
+        <button class="btn" style="width:100%; margin-top:10px; background:transparent; border:1px solid #666" onclick="ui.closeModal()">Chiudi</button>
+        <button class="btn" style="width:100%; margin-top:10px; background:#7f1d1d" onclick="app.delete()">Elimina</button>
     </div>
 </div>
 
 <script>
-/**
- * LIBRERIA APP - CORE LOGIC
- */
-const DB_KEY = "libreria_v7_final";
+const DB_KEY = "lib_7_1";
+let books = [];
+let tempCover = "";
+let focusId = null;
 
-class LibraryApp {
-    constructor() {
-        this.books = [];
-        this.tempCover = "";
-        this.activeBookId = null;
-        this.load();
-    }
-
-    load() {
-        const data = localStorage.getItem(DB_KEY);
-        try {
-            this.books = data ? JSON.parse(data) : [];
-        } catch(e) { this.books = []; }
-        this.render();
-    }
-
-    save() {
-        localStorage.setItem(DB_KEY, JSON.stringify(this.books));
-        this.render();
-    }
-
-    addBook(book) {
-        this.books.push(book);
-        this.save();
-    }
-
-    deleteBook() {
-        if(!confirm("Eliminare definitivamente?")) return;
-        this.books = this.books.filter(b => b.id !== this.activeBookId);
-        this.save();
-        ui.closeModal();
-    }
-
-    updateRating(val) {
-        const b = this.books.find(x => x.id === this.activeBookId);
-        if(b) {
-            b.rating = val;
-            this.save(); // Salva e renderizza
-            ui.openModal(b.id); // Riapri modale aggiornato
-        }
-    }
-
-    saveBook() {
-        const title = document.getElementById('inpTitle').value;
-        if(!title) return alert("Inserisci un titolo");
-
-        const newBook = {
-            id: Date.now().toString(),
-            title: title,
-            author: document.getElementById('inpAuthor').value,
-            pages: document.getElementById('inpPages').value,
-            status: document.getElementById('inpStatus').value,
-            color: document.getElementById('inpColor').value,
-            note: document.getElementById('inpNote').value,
-            cover: this.tempCover,
-            rating: 0
-        };
-
-        this.addBook(newBook);
-        ui.closePanel();
+// --- APP LOGIC ---
+const app = {
+    init: () => {
+        try { books = JSON.parse(localStorage.getItem(DB_KEY) || "[]"); } catch { books=[]; }
+        app.render();
+    },
+    save: () => {
+        const t = document.getElementById('inpTitle').value;
+        if(!t) return alert("Manca il titolo!");
         
-        // Reset form
+        books.push({
+            id: Date.now().toString(),
+            title: t,
+            author: document.getElementById('inpAuthor').value,
+            status: document.getElementById('inpStatus').value,
+            note: document.getElementById('inpNote').value,
+            cover: tempCover,
+            color: 'linear-gradient(45deg, #222, #444)' // Default color
+        });
+        localStorage.setItem(DB_KEY, JSON.stringify(books));
+        
+        // Reset e chiudi
         document.getElementById('inpTitle').value = "";
         document.getElementById('inpNote').value = "";
-        this.tempCover = "";
-    }
+        tempCover = "";
+        ui.closePanel();
+        app.render();
+    },
+    delete: () => {
+        if(!confirm("Eliminare?")) return;
+        books = books.filter(b => b.id !== focusId);
+        localStorage.setItem(DB_KEY, JSON.stringify(books));
+        ui.closeModal();
+        app.render();
+    },
+    reset: () => {
+        localStorage.removeItem(DB_KEY);
+        location.reload();
+    },
+    render: () => {
+        // Pulisci tutto
+        ['zone-table','zone-shelf-high','zone-shelf-low','zone-wishlist'].forEach(id => document.getElementById(id).innerHTML='');
 
-    resetData() {
-        if(confirm("ATTENZIONE: Questo cancellerà TUTTI i libri per riparare errori. Continuare?")) {
-            localStorage.removeItem(DB_KEY);
-            location.reload();
-        }
-    }
+        books.forEach(b => {
+            const div = document.createElement('div');
+            div.onclick = () => ui.openModal(b);
 
-    exportData() {
-        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.books));
-        const a = document.createElement('a');
-        a.href = data; a.download = 'backup_libreria.json';
-        a.click();
-    }
-
-    // MOTORE DI RENDERING SCENA
-    render() {
-        // Pulisci zone
-        ['shelf-high', 'shelf-low', 'table-surface', 'wishlist-corner'].forEach(id => {
-            document.getElementById(id).innerHTML = '';
-        });
-
-        this.books.forEach(b => {
-            const el = document.createElement('div');
-            el.onclick = () => ui.openModal(b.id);
-
-            // 1. SCAFFALI (Dorsi)
-            if(b.status === 'read' || b.status === 'toread') {
-                el.className = `spine ${b.color}`;
-                // Spessore dinamico
-                let thickness = Math.min(Math.max(b.pages/10, 20), 45);
-                el.style.width = thickness + 'px';
-                el.style.height = (80 + (b.title.length % 15)) + '%';
-                el.innerHTML = `<span>${b.title}</span>`;
+            // 1. TAVOLO (3D + Copertina Generata se manca)
+            if(b.status === 'reading') {
+                div.className = 'book-3d';
+                // Se c'è la cover usala, altrimenti generane una col titolo
+                const bg = b.cover ? `url('${b.cover}')` : `linear-gradient(135deg, #1e293b, #0f172a)`;
+                const text = b.cover ? '' : b.title; // Scrivi titolo solo se manca cover
                 
-                if(b.status === 'read') document.getElementById('shelf-high').appendChild(el);
-                else document.getElementById('shelf-low').appendChild(el);
-            }
-            // 2. TAVOLO (Libro 3D con Copertina)
-            else if(b.status === 'reading') {
-                el.className = 'book-3d';
-                const cvr = b.cover || 'https://via.placeholder.com/150x220/333/fff?text=' + encodeURI(b.title);
-                
-                el.innerHTML = `
-                    <div class="b-shadow"></div>
-                    <div class="b-face b-front" style="background-image:url('${cvr}')"></div>
+                div.innerHTML = `
+                    <div class="b-face b-front" style="background-image:${bg}">${text}</div>
                     <div class="b-face b-side"></div>
-                    <div class="b-face b-bottom"></div>
-                `;
-                document.getElementById('table-surface').appendChild(el);
+                    <div class="b-face b-bottom"></div>`;
+                document.getElementById('zone-table').appendChild(div);
+            }
+            // 2. SCAFFALI
+            else if(b.status === 'read' || b.status === 'toread') {
+                div.className = 'spine';
+                div.innerHTML = `<div class="spine-txt">${b.title}</div>`;
+                const dest = b.status==='read' ? 'zone-shelf-high' : 'zone-shelf-low';
+                document.getElementById(dest).appendChild(div);
             }
             // 3. WISHLIST
-            else if(b.status === 'wishlist') {
-                el.className = 'wish-card';
-                el.style.transform = `rotate(${(Math.random()*20)-10}deg)`;
-                el.style.marginTop = "-80px";
-                el.innerHTML = `<img src="${b.cover || 'https://via.placeholder.com/80'}"><div>${b.title}</div>`;
-                document.getElementById('wishlist-corner').appendChild(el);
+            else {
+                div.style.cssText = "position:absolute; width:60px; height:80px; background:white; color:black; font-size:10px; padding:5px; transform:rotate(5deg); box-shadow:0 5px 10px black; cursor:pointer;";
+                div.innerText = b.title;
+                document.getElementById('zone-wishlist').appendChild(div);
             }
         });
     }
-}
+};
 
-/**
- * GESTIONE UI (Modali, Ricerca, Eventi)
- */
-class UI {
-    constructor() {
-        this.searchTimer = null;
-        this.setupSearch();
-        this.setupStars();
-    }
-
-    setupSearch() {
-        const inp = document.getElementById('searchInp');
-        const box = document.getElementById('search-results');
-
-        inp.addEventListener('input', (e) => {
-            clearTimeout(this.searchTimer);
-            const q = e.target.value.trim();
-            if(q.length < 3) { box.classList.remove('active'); return; }
-
-            this.searchTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`);
-                    const data = await res.json();
-                    if(data.items) {
-                        box.innerHTML = data.items.map(i => {
-                            const info = i.volumeInfo;
-                            const safe = encodeURIComponent(JSON.stringify({
-                                t: info.title, a: info.authors?.[0]||'', p: info.pageCount||200, c: info.imageLinks?.thumbnail||''
-                            }));
-                            return `<div class="res-item" onclick="ui.fillForm('${safe}')">
-                                <img src="${info.imageLinks?.smallThumbnail||''}" style="width:30px">
-                                <div><b>${info.title}</b><br><small>${info.authors?.[0]||'?'}</small></div>
-                            </div>`;
-                        }).join('');
-                        box.classList.add('active');
-                    }
-                } catch(e) { console.error(e); }
-            }, 500);
-        });
-    }
-
-    fillForm(jsonStr) {
-        const data = JSON.parse(decodeURIComponent(jsonStr));
-        document.getElementById('inpTitle').value = data.t;
-        document.getElementById('inpAuthor').value = data.a;
-        document.getElementById('inpPages').value = data.p;
-        app.tempCover = data.c;
-        document.getElementById('search-results').classList.remove('active');
-        document.getElementById('searchInp').value = "";
-    }
-
-    openPanel() { document.getElementById('side-panel').classList.add('open'); }
-    closePanel() { document.getElementById('side-panel').classList.remove('open'); }
-
-    openModal(id) {
-        app.activeBookId = id;
-        const b = app.books.find(x => x.id === id);
-        if(!b) return;
-
-        // Popola dati
+// --- UI LOGIC ---
+const ui = {
+    openPanel: () => document.getElementById('side-panel').classList.add('open'),
+    closePanel: () => document.getElementById('side-panel').classList.remove('open'),
+    openModal: (b) => {
+        focusId = b.id;
         document.getElementById('m-title').innerText = b.title;
         document.getElementById('m-author').innerText = b.author;
-        document.getElementById('m-note').innerText = b.note || "Nessuna nota presente.";
-        document.getElementById('m-cover').src = b.cover || "https://via.placeholder.com/200x300?text=No+Cover";
-
-        // Stelle
-        const stars = document.querySelectorAll('#m-stars i');
-        stars.forEach(s => {
-            const v = parseInt(s.dataset.v);
-            s.className = v <= b.rating ? 'fas fa-star' : 'far fa-star';
-            s.style.color = v <= b.rating ? '#fbbf24' : '#475569';
-        });
-
-        // GENERAZIONE LINK ESTERNI (ECCO I COLLEGAMENTI RICHIESTI)
-        const q = encodeURIComponent(`${b.title} ${b.author}`);
+        document.getElementById('m-note').innerText = b.note || "Nessuna nota.";
+        
+        // LINK DINAMICI (Quello che chiedevi)
+        const q = encodeURIComponent(b.title + " " + b.author);
         document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
         document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
         document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
-
+        
         document.getElementById('modal-overlay').classList.add('active');
+    },
+    closeModal: () => document.getElementById('modal-overlay').classList.remove('active')
+};
+
+// --- RICERCA GOOGLE ROBUSTA ---
+const inp = document.getElementById('inpSearch');
+const res = document.getElementById('search-results');
+const stat = document.getElementById('search-status');
+let timer;
+
+inp.addEventListener('input', (e) => {
+    const q = e.target.value;
+    clearTimeout(timer);
+    
+    if(q.length < 3) { 
+        res.classList.remove('active'); 
+        stat.innerText = "";
+        return; 
     }
 
-    closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+    stat.innerText = "Sto cercando..."; // FEEDBACK VISIVO
+    
+    timer = setTimeout(async () => {
+        try {
+            const req = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=5`);
+            const data = await req.json();
+            
+            if(!data.items) {
+                stat.innerText = "Nessun risultato trovato.";
+                res.classList.remove('active');
+                return;
+            }
 
-    setupStars() {
-        document.querySelectorAll('#m-stars i').forEach(s => {
-            s.onclick = () => app.updateRating(parseInt(s.dataset.v));
-        });
-    }
+            stat.innerText = ""; // Pulisci status
+            res.innerHTML = data.items.map(i => {
+                const info = i.volumeInfo;
+                const img = info.imageLinks?.smallThumbnail || '';
+                // Passiamo i dati come stringa sicura
+                return `<div class="res-item" onclick="selectBook('${info.title?.replace(/'/g,"")}', '${info.authors?.[0]?.replace(/'/g,"")}', '${img}')">
+                    <img src="${img}" class="res-img">
+                    <div>
+                        <div style="font-weight:bold; font-size:12px">${info.title}</div>
+                        <div style="font-size:10px; color:#aaa">${info.authors?.[0]}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            res.classList.add('active');
+            
+        } catch(e) {
+            stat.innerText = "Errore di connessione API.";
+            console.error(e);
+        }
+    }, 600);
+});
+
+function selectBook(t, a, img) {
+    document.getElementById('inpTitle').value = t;
+    document.getElementById('inpAuthor').value = a;
+    tempCover = img;
+    res.classList.remove('active');
+    document.getElementById('inpSearch').value = ""; // Pulisci
+    stat.innerText = "Libro selezionato!";
 }
 
-// Inizializzazione
-const app = new LibraryApp();
-const ui = new UI(app);
-
+// Start
+app.init();
 </script>
 </body>
 </html>
