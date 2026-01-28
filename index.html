@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libreria 8.2 - Italian Aggressive</title>
+<title>Libreria 9.0 - Italian Strict</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 
 <style>
     :root {
         --accent: #fbbf24;
         --dark: #020617;
         --panel: #1e293b;
-        --border: 1px solid rgba(255,255,255,0.1);
-        --text-muted: #94a3b8;
+        --border: 1px solid rgba(255,255,255,0.15);
     }
     
     * { box-sizing: border-box; outline: none; }
@@ -23,174 +22,94 @@
         background: #000; color: #fff; font-family: 'Inter', sans-serif;
     }
 
-    /* --- LIVELLO 1: VISUALIZZAZIONE 3D --- */
+    /* SCENA 3D */
     #viewport { position: relative; width: 100%; height: 100%; perspective: 1200px; overflow: hidden; }
-    
-    #room-bg { 
-        position: absolute; inset: 0; width: 100%; height: 100%; 
-        object-fit: cover; filter: brightness(0.5); transform: scale(1.05); z-index: 0;
-    }
-
-    /* Container 3D */
+    #room-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5); transform: scale(1.05); pointer-events: none; }
     #scene { position: absolute; inset: 0; transform-style: preserve-3d; z-index: 10; pointer-events: none; }
     .zone { position: absolute; pointer-events: auto; }
 
-    /* Posizioni Scaffali e Tavolo */
+    /* POSIZIONI */
     #zone-read { top: 13%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
     #zone-toread { top: 31%; left: 47%; width: 28%; height: 14%; display: flex; align-items: flex-end; gap: 3px; }
     #zone-reading { bottom: 15%; left: 20%; width: 40%; height: 30%; display: flex; align-items: center; justify-content: center; perspective: 800px; z-index: 20; }
     #zone-wishlist { bottom: 5%; right: 5%; width: 15%; height: 15%; z-index: 20; }
 
-    /* OGGETTI: LIBRO 3D (TAVOLO) */
-    .book-3d {
-        width: 140px; height: 210px; position: relative;
-        transform-style: preserve-3d; cursor: pointer; transition: 0.4s ease;
-        transform: rotateX(40deg) rotateZ(-10deg);
-        box-shadow: -10px 20px 40px rgba(0,0,0,0.6);
-    }
-    .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; }
-    
-    .face { position: absolute; backface-visibility: hidden; }
-    .f-front { 
-        inset: 0; background: #333; transform: translateZ(12px); 
-        background-size: cover; background-position: center; border-radius: 2px 4px 4px 2px;
-        box-shadow: inset 3px 0 10px rgba(0,0,0,0.4);
-    }
-    .f-side { right: 0; width: 24px; height: 100%; background: #e2e8f0; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
-    .f-bottom { bottom: 0; width: 100%; height: 24px; background: #cbd5e1; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
-
-    /* OGGETTI: DORSO (SCAFFALE) */
-    .spine { 
-        width: 28px; height: 90%; background: linear-gradient(90deg, #222, #444 40%, #222);
-        border-radius: 2px; cursor: pointer; position: relative; transition: 0.2s;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.7);
-    }
-    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; background: #555; }
-    .spine-txt { 
-        writing-mode: vertical-rl; position: absolute; inset:0; 
-        display:flex; align-items:center; justify-content:center; 
-        font-size: 9px; color: rgba(255,255,255,0.8); font-family: 'Playfair Display';
-    }
-
-    /* OGGETTI: WISHLIST */
-    .wish-item {
-        position: absolute; width: 60px; height: 80px; background: #fff; color: #000;
-        padding: 5px; font-size: 8px; text-align: center; box-shadow: 0 5px 10px #000;
-        transform: rotate(10deg); cursor: pointer; overflow: hidden;
-    }
-    .wish-item:hover { transform: scale(1.2) rotate(0deg); z-index: 100; }
-    .wish-item img { width: 100%; height: 50px; object-fit: cover; margin-bottom: 2px; }
-
-    /* --- UI LAYER --- */
-    .ui-top {
-        position: absolute; top: 0; left: 0; right: 0; padding: 20px;
-        display: flex; justify-content: space-between; align-items: center;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-        z-index: 100; pointer-events: none;
-    }
+    /* UI TOP */
+    .ui-top { position: absolute; top: 0; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); z-index: 100; pointer-events: none; }
     .ui-top * { pointer-events: auto; }
-
-    .btn {
-        padding: 10px 16px; border-radius: 6px; border: var(--border);
-        background: rgba(30, 41, 59, 0.9); color: #fff; font-weight: 600; font-size: 13px;
-        cursor: pointer; backdrop-filter: blur(4px); transition: 0.2s; display: flex; align-items: center; gap: 8px;
-    }
-    .btn:hover { background: #fff; color: #000; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: var(--border); background: rgba(30,41,59,0.9); color: #fff; cursor: pointer; font-weight: 600; font-size: 13px; }
     .btn-accent { background: var(--accent); color: #000; border: none; }
     .btn-danger { border-color: #ef4444; color: #ef4444; }
-    .btn-danger:hover { background: #ef4444; color: white; }
 
-    /* --- PANNELLO GESTIONE (CRUCIALE) --- */
-    #panel {
-        position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 100%;
-        background: var(--panel); border-left: var(--border);
-        transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        z-index: 2000; padding: 0; display: flex; flex-direction: column;
-        box-shadow: -20px 0 50px #000;
-    }
+    /* PANNELLO */
+    #panel { position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 100%; background: var(--panel); transform: translateX(100%); transition: 0.3s; z-index: 2000; padding: 0; display: flex; flex-direction: column; box-shadow: -20px 0 50px #000; }
     #panel.open { transform: translateX(0); }
-
-    .panel-header { padding: 20px; border-bottom: var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
+    .panel-header { padding: 20px; border-bottom: var(--border); display: flex; justify-content: space-between; align-items: center; }
     .panel-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px; }
 
-    /* MOTORE DI RICERCA UI */
-    .search-block { position: relative; margin-bottom: 10px; }
-    .search-input {
-        width: 100%; background: #0f172a; border: 1px solid var(--accent); 
-        padding: 14px; font-size: 14px; color: #fff; border-radius: 6px;
-    }
-    
-    #search-status { font-size: 11px; color: var(--accent); margin-top: 5px; min-height: 15px; font-weight: 600; }
+    /* MOTORE DI RICERCA */
+    .search-block { position: relative; }
+    .search-input { width: 100%; background: #0f172a; border: 1px solid var(--accent); padding: 14px; font-size: 14px; color: #fff; border-radius: 6px; }
+    #search-status { font-size: 11px; color: var(--accent); margin-top: 5px; height: 15px; font-weight: 600; }
 
-    /* TENDINA RISULTATI (FIXED) */
-    #search-dropdown {
-        position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px;
-        background: #0f172a; border: 1px solid #334155; border-radius: 6px;
-        max-height: 0; overflow: hidden; transition: 0.2s; z-index: 5000; /* Z-INDEX ALTISSIMO */
-        box-shadow: 0 20px 50px rgba(0,0,0,1);
-    }
-    #search-dropdown.active { max-height: 350px; overflow-y: auto; border-color: var(--accent); }
+    #search-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; max-height: 0; overflow: hidden; transition: 0.2s; z-index: 5000; }
+    #search-dropdown.active { max-height: 400px; overflow-y: auto; border-color: var(--accent); }
 
-    .res-item { 
-        display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 12px; 
-        border-bottom: 1px solid #1e293b; cursor: pointer; transition: 0.1s;
-    }
+    .res-item { display: grid; grid-template-columns: 50px 1fr; gap: 15px; padding: 12px; border-bottom: 1px solid #1e293b; cursor: pointer; transition: 0.1s; }
     .res-item:hover { background: #334155; }
-    .res-img { width: 40px; height: 60px; object-fit: cover; background: #000; border-radius: 2px; }
-    .res-info div { margin-bottom: 2px; }
-    .res-title { font-weight: 700; color: #fff; font-size: 13px; }
-    .res-meta { font-size: 11px; color: #94a3b8; }
-    .res-pub { font-size: 10px; color: var(--accent); text-transform: uppercase; display: flex; justify-content: space-between; }
+    .res-img { width: 50px; height: 75px; object-fit: cover; background: #000; border-radius: 3px; }
+    .res-title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 4px; }
+    .res-meta { font-size: 12px; color: #94a3b8; }
+    .res-pub { font-size: 11px; color: var(--accent); margin-top: 4px; text-transform: uppercase; font-weight: bold; }
 
-    /* FORM */
+    /* INPUTS */
     label { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block; }
-    input, select, textarea {
-        width: 100%; background: #334155; border: 1px solid #475569;
-        padding: 10px; color: #fff; border-radius: 4px; font-family: inherit;
-    }
-    input:focus, textarea:focus { border-color: var(--accent); background: #1e293b; }
+    input, select, textarea { width: 100%; background: #334155; border: 1px solid #475569; padding: 10px; color: #fff; border-radius: 4px; }
+    input:focus { border-color: var(--accent); }
 
-    /* MODALE DETTAGLIO */
-    #modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 4000;
-        display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-    }
+    /* OGGETTI 3D */
+    .book-3d { width: 140px; height: 210px; position: relative; transform-style: preserve-3d; cursor: pointer; transition: 0.4s; transform: rotateX(40deg) rotateZ(-10deg); box-shadow: -10px 20px 40px rgba(0,0,0,0.6); }
+    .book-3d:hover { transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); z-index: 1000; }
+    .face { position: absolute; backface-visibility: hidden; }
+    .f-front { inset: 0; background: #333; transform: translateZ(12px); background-size: cover; border-radius: 2px; }
+    .f-side { right: 0; width: 24px; height: 100%; background: #eee; transform: rotateY(90deg) translateZ(-1px); transform-origin: right; }
+    .f-bottom { bottom: 0; width: 100%; height: 24px; background: #ccc; transform: rotateX(-90deg) translateZ(0); transform-origin: bottom; }
+
+    .spine { width: 28px; height: 90%; background: #444; border-radius: 2px; cursor: pointer; position: relative; transition: 0.2s; box-shadow: 2px 0 5px rgba(0,0,0,0.7); }
+    .spine:hover { transform: scale(1.1) translateZ(10px); z-index: 100; }
+    .spine-txt { writing-mode: vertical-rl; position: absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 9px; color: rgba(255,255,255,0.8); font-family: 'Playfair Display'; }
+
+    .wish-item { position: absolute; width: 60px; height: 80px; background: #fff; padding: 2px; transform: rotate(10deg); cursor: pointer; box-shadow: 0 5px 10px #000; }
+    .wish-item img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* MODALE */
+    #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 4000; display: none; align-items: center; justify-content: center; }
     #modal-overlay.active { display: flex; }
-    
-    .modal-card {
-        background: #1e293b; width: 600px; max-width: 90%; border-radius: 12px;
-        border: 1px solid #334155; display: flex; overflow: hidden;
-        box-shadow: 0 50px 100px #000;
-    }
+    .modal-card { background: #1e293b; width: 600px; border-radius: 12px; display: flex; overflow: hidden; border: 1px solid #334155; }
     .mc-img-box { width: 180px; background: #000; display: flex; align-items: center; justify-content: center; }
     .mc-img-box img { width: 100%; height: auto; max-height: 100%; object-fit: cover; }
     .mc-info { flex: 1; padding: 30px; display: flex; flex-direction: column; }
-
+    .link-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 20px; }
+    .ext-link { background: #334155; color: #fff; text-decoration: none; font-size: 11px; padding: 10px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .ext-link:hover { background: #fff; color: #000; }
     .stars { font-size: 18px; color: #475569; cursor: pointer; margin: 10px 0; }
     .stars i.active { color: var(--accent); }
-
-    .link-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 20px; }
-    .ext-link {
-        background: #334155; color: #fff; text-decoration: none; font-size: 11px; padding: 10px;
-        text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 5px;
-    }
-    .ext-link:hover { background: #fff; color: #000; }
 
 </style>
 </head>
 <body>
 
 <div class="ui-top">
-    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">8.2</span></h2>
+    <h2 style="margin:0; font-family:'Playfair Display'">Libreria <span style="color:var(--accent)">9.0</span></h2>
     <div style="display:flex; gap:10px">
-        <button class="btn btn-danger" onclick="app.reset()">RESET DATI</button>
+        <button class="btn btn-danger" onclick="app.reset()">RESET</button>
         <button class="btn" onclick="app.export()">Backup</button>
-        <button class="btn btn-accent" onclick="ui.openPanel()">+ Aggiungi Libro</button>
+        <button class="btn btn-accent" onclick="ui.openPanel()">+ Aggiungi</button>
     </div>
 </div>
 
 <div id="viewport">
-    <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'; document.body.style.background='#111'">
+    <img src="./assets/room.jpg" id="room-bg" onerror="this.style.display='none'">
     <div id="scene">
         <div class="zone" id="zone-read"></div>
         <div class="zone" id="zone-toread"></div>
@@ -204,371 +123,204 @@
         <h3 style="margin:0">Gestione Libro</h3>
         <button class="btn" style="padding:5px 10px" onclick="ui.closePanel()">✕</button>
     </div>
-    
     <div class="panel-body">
-        
         <div class="search-block">
-            <label style="color:#fff">CERCA LIBRO (Edizioni Italiane)</label>
-            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Italo Calvino..." autocomplete="off">
+            <label style="color:#fff">CERCA SOLO LIBRI ITALIANI</label>
+            <input type="text" class="search-input" id="inpSearch" placeholder="Es. Calvino, Eco..." autocomplete="off">
             <div id="search-status"></div>
-            
             <div id="search-dropdown"></div>
         </div>
-
         <hr style="border-color:rgba(255,255,255,0.1); width:100%; margin: 10px 0;">
-
-        <div>
-            <label>Titolo *</label>
-            <input id="inpTitle">
-        </div>
-        
+        <label>Titolo *</label><input id="inpTitle">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
             <div><label>Autore</label><input id="inpAuthor"></div>
             <div><label>Pagine</label><input type="number" id="inpPages" value="200"></div>
         </div>
-
-        <div style="margin-top:10px;">
-            <label>Casa Editrice</label>
-            <input id="inpPublisher" placeholder="Es. Mondadori, Einaudi...">
-        </div>
-
-        <div style="margin-top:10px;">
-            <label>Stato</label>
-            <select id="inpStatus">
-                <option value="reading">In Lettura (Sul Tavolo)</option>
-                <option value="read">Letto (Scaffale Alto)</option>
-                <option value="toread">Da Leggere (Scaffale Basso)</option>
-                <option value="wishlist">Wishlist (Note)</option>
-            </select>
-        </div>
-
-        <div style="margin-top:10px;">
-            <label>Colore Dorso</label>
-            <select id="inpColor">
-                <option value="linear-gradient(90deg, #450a0a, #7f1d1d 40%, #450a0a)">Rosso</option>
-                <option value="linear-gradient(90deg, #172554, #1e40af 40%, #172554)">Blu</option>
-                <option value="linear-gradient(90deg, #052e16, #15803d 40%, #052e16)">Verde</option>
-                <option value="linear-gradient(90deg, #0f172a, #334155 40%, #0f172a)">Nero/Grigio</option>
-            </select>
-        </div>
-
-        <div style="margin-top:10px;">
-            <label>Recensione</label>
-            <textarea id="inpNote" rows="3"></textarea>
-        </div>
-
-        <button class="btn btn-accent" style="width:100%; justify-content:center; margin-top:20px; padding:15px;" onclick="app.save()">
-            SALVA NELLA LIBRERIA
-        </button>
+        <div style="margin-top:10px;"><label>Casa Editrice</label><input id="inpPublisher"></div>
+        <div style="margin-top:10px;"><label>Stato</label><select id="inpStatus">
+            <option value="reading">In Lettura</option><option value="read">Letto</option><option value="toread">Da Leggere</option><option value="wishlist">Wishlist</option>
+        </select></div>
+        <div style="margin-top:10px;"><label>Colore Dorso</label><select id="inpColor">
+            <option value="linear-gradient(90deg, #450a0a, #7f1d1d)">Rosso</option>
+            <option value="linear-gradient(90deg, #172554, #1e40af)">Blu</option>
+            <option value="linear-gradient(90deg, #052e16, #15803d)">Verde</option>
+            <option value="linear-gradient(90deg, #0f172a, #334155)">Nero</option>
+        </select></div>
+        <div style="margin-top:10px;"><label>Recensione</label><textarea id="inpNote" rows="3"></textarea></div>
+        <button class="btn btn-accent" style="width:100%; margin-top:20px; padding:15px;" onclick="app.save()">SALVA</button>
     </div>
 </div>
 
 <div id="modal-overlay">
     <div class="modal-card">
-        <div class="mc-img-box">
-            <img id="m-cover" src="">
-        </div>
+        <div class="mc-img-box"><img id="m-cover" src=""></div>
         <div class="mc-info">
-            <h2 id="m-title" style="margin:0; font-family:'Playfair Display'; color:var(--accent)">Titolo</h2>
-            <div style="font-size:14px; color:#94a3b8; margin-top:5px;">
-                <span id="m-author">Autore</span> &bull; <span id="m-publisher" style="color:#fff">Editore</span>
-            </div>
-
+            <h2 id="m-title" style="margin:0; font-family:'Playfair Display'; color:var(--accent)"></h2>
+            <div style="font-size:14px; color:#94a3b8; margin-top:5px;"><span id="m-author"></span> &bull; <span id="m-publisher" style="color:#fff"></span></div>
             <div class="stars" id="m-stars">
-                <i class="fas fa-star" data-v="1"></i>
-                <i class="fas fa-star" data-v="2"></i>
-                <i class="fas fa-star" data-v="3"></i>
-                <i class="fas fa-star" data-v="4"></i>
-                <i class="fas fa-star" data-v="5"></i>
+                <i class="fas fa-star" data-v="1"></i><i class="fas fa-star" data-v="2"></i><i class="fas fa-star" data-v="3"></i><i class="fas fa-star" data-v="4"></i><i class="fas fa-star" data-v="5"></i>
             </div>
-
-            <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic; font-size:13px; color:#cbd5e1; flex:1">...</p>
-
+            <p id="m-note" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; font-style:italic; font-size:13px; color:#cbd5e1; flex:1"></p>
             <div class="link-row">
                 <a href="#" target="_blank" id="lnk-amazon" class="ext-link"><i class="fab fa-amazon"></i> Amazon</a>
                 <a href="#" target="_blank" id="lnk-kindle" class="ext-link"><i class="fas fa-tablet-alt"></i> Kindle</a>
                 <a href="#" target="_blank" id="lnk-audible" class="ext-link"><i class="fas fa-headphones"></i> Audible</a>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                <button onclick="app.delete()" class="btn btn-danger" style="padding:5px 10px; font-size:11px">Elimina</button>
-                <button onclick="ui.closeModal()" class="btn" style="padding:5px 10px; font-size:11px">Chiudi</button>
+                <button onclick="app.delete()" class="btn btn-danger">Elimina</button>
+                <button onclick="ui.closeModal()" class="btn">Chiudi</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// --- CORE LOGIC ---
-const DB_KEY = "lib_v8_2_aggressive";
-let books = [];
-let tempCover = "";
-let focusId = null;
+const DB_KEY = "lib_v9_strict";
+let books = [], tempCover = "", focusId = null;
 
-// Gestione Motore di Ricerca Migliorato
 const searchEngine = {
     timer: null,
-    
-    // Funzione di ricerca ottimizzata
     search: async (query) => {
         const status = document.getElementById('search-status');
         const dropdown = document.getElementById('search-dropdown');
-        
-        status.innerText = "Interrogo i database...";
-        dropdown.innerHTML = "";
-        dropdown.classList.remove('active');
+        status.innerText = "Cerco su Google Books...";
+        dropdown.innerHTML = ""; dropdown.classList.remove('active');
 
         try {
-            // PROVA 1: GOOGLE BOOKS
-            // Rimuovo restrizioni eccessive che bloccano i risultati
-            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books`;
-            let res = await fetch(url);
-            let data = await res.json();
-            let items = data.items || [];
+            // SCARICA 40 RISULTATI GREZZI
+            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=40&printType=books`);
+            const data = await res.json();
+            if(!data.items) throw new Error("Nessun dato");
 
-            // Filtraggio Lato Client (Se troviamo 'it', lo portiamo su)
-            items.sort((a,b) => (a.volumeInfo.language === 'it' ? -1 : 1));
+            // FILTRO ESTREMO LATO CLIENT
+            const italianBooks = data.items.filter(i => {
+                const lang = i.volumeInfo.language;
+                const hasImage = i.volumeInfo.imageLinks; // Solo libri con cover
+                return (lang === 'it') && hasImage;
+            });
 
-            // Se Google fallisce, PROVA 2: OPEN LIBRARY (FILTRATA)
-            if (items.length === 0) {
-                status.innerText = "Google vuoto. Provo OpenLibrary...";
-                url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`;
-                res = await fetch(url);
-                data = await res.json();
-                
-                // FILTRO BRUTALE: Solo se language contiene 'ita' o 'it'
-                const rawDocs = data.docs || [];
-                const filteredDocs = rawDocs.filter(d => 
-                    d.language && (d.language.includes('ita') || d.language.includes('it'))
-                );
-
-                // Mappa risultati OpenLibrary in formato compatibile
-                items = filteredDocs.map(d => ({
-                    volumeInfo: {
-                        title: d.title,
-                        authors: d.author_name || [],
-                        publisher: d.publisher ? d.publisher.join(', ') : "Editore sconosciuto", // Fix per array
-                        pageCount: d.number_of_pages_median || 200,
-                        imageLinks: { smallThumbnail: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '' },
-                        source: "OL"
-                    }
-                }));
-            }
-
-            // Renderizza Risultati
-            if (items.length > 0) {
-                status.innerText = `Trovati ${items.length} libri.`;
-                dropdown.innerHTML = items.map(item => {
+            if (italianBooks.length > 0) {
+                status.innerText = `Trovati ${italianBooks.length} libri italiani.`;
+                dropdown.innerHTML = italianBooks.map(item => {
                     const info = item.volumeInfo;
-                    const img = info.imageLinks?.smallThumbnail || '';
-                    const title = info.title || "Senza Titolo";
-                    const author = info.authors ? (Array.isArray(info.authors) ? info.authors[0] : info.authors) : "Sconosciuto";
-                    const publisher = info.publisher || "Editore N/A";
-                    const date = info.publishedDate ? info.publishedDate.substring(0,4) : "";
-                    const source = info.source === "OL" ? "OpenLib" : "Google";
-                    
-                    // Creiamo stringa dati sicura
                     const dataStr = encodeURIComponent(JSON.stringify({
-                        t: title, a: author, p: info.pageCount || 200, 
-                        pub: publisher, c: img.replace('http:', 'https:')
+                        t: info.title, a: info.authors?.[0]||"Sconosciuto", 
+                        p: info.pageCount||200, pub: info.publisher||"Editore N/A",
+                        c: info.imageLinks.thumbnail.replace('http:','https:')
                     }));
-
-                    return `
-                    <div class="res-item" onclick="ui.fillForm('${dataStr}')">
-                        <img src="${img}" class="res-img">
+                    return `<div class="res-item" onclick="ui.fillForm('${dataStr}')">
+                        <img src="${info.imageLinks.smallThumbnail}" class="res-img">
                         <div class="res-info">
-                            <div class="res-title">${title}</div>
-                            <div class="res-meta">${author}</div>
-                            <div class="res-pub">
-                                <span>${publisher} ${date ? `(${date})` : ''}</span>
-                                <span style="color:#64748b; font-size:8px;">${source}</span>
-                            </div>
+                            <div class="res-title">${info.title}</div>
+                            <div class="res-meta">${info.authors?.[0]||""}</div>
+                            <div class="res-pub">${info.publisher||""}</div>
                         </div>
                     </div>`;
                 }).join('');
                 dropdown.classList.add('active');
             } else {
-                status.innerText = "Nessun risultato trovato in nessun DB.";
+                status.innerText = "Nessun libro italiano trovato con copertina.";
             }
-
-        } catch (e) {
-            console.error(e);
-            status.innerText = "Errore di connessione. Inserisci manualmente.";
-        }
+        } catch (e) { status.innerText = "Nessun risultato. Inserisci manualmente."; }
     }
 };
 
-// --- APP LOGIC ---
 const app = {
     init: () => {
-        const saved = localStorage.getItem(DB_KEY);
-        if (saved) { try { books = JSON.parse(saved); } catch(e){ books=[]; } }
+        try { books = JSON.parse(localStorage.getItem(DB_KEY)|| "[]"); } catch{ books=[]; }
         app.render();
     },
-    
     save: () => {
         const t = document.getElementById('inpTitle').value;
-        if (!t) return alert("Inserisci almeno il titolo.");
-
-        const newBook = {
+        if (!t) return alert("Manca Titolo");
+        books.push({
             id: Date.now().toString(),
-            title: t,
-            author: document.getElementById('inpAuthor').value,
+            title: t, author: document.getElementById('inpAuthor').value,
             publisher: document.getElementById('inpPublisher').value,
             pages: document.getElementById('inpPages').value,
             status: document.getElementById('inpStatus').value,
             color: document.getElementById('inpColor').value,
             note: document.getElementById('inpNote').value,
-            cover: tempCover,
-            rating: 0
-        };
-
-        books.push(newBook);
+            cover: tempCover, rating: 0
+        });
         localStorage.setItem(DB_KEY, JSON.stringify(books));
-        
-        // Reset UI
-        document.getElementById('inpTitle').value = "";
-        document.getElementById('inpNote').value = "";
-        document.getElementById('inpPublisher').value = "";
-        tempCover = "";
-        ui.closePanel();
-        app.render();
+        ui.closePanel(); app.render();
     },
-
     delete: () => {
         if(!confirm("Eliminare?")) return;
         books = books.filter(b => b.id !== focusId);
         localStorage.setItem(DB_KEY, JSON.stringify(books));
-        ui.closeModal();
-        app.render();
+        ui.closeModal(); app.render();
     },
-
-    updateRating: (val) => {
-        const b = books.find(x => x.id === focusId);
-        if(b) {
-            b.rating = val;
-            localStorage.setItem(DB_KEY, JSON.stringify(books));
-            ui.renderStars(val);
-        }
-    },
-
-    reset: () => {
-        if(confirm("Cancellare TUTTO e ripristinare?")) {
-            localStorage.removeItem(DB_KEY);
-            location.reload();
-        }
-    },
-
+    reset: () => { if(confirm("Cancellare tutto?")) { localStorage.removeItem(DB_KEY); location.reload(); } },
     export: () => {
-        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
         const a = document.createElement('a');
-        a.href = data; a.download = 'libreria_backup.json';
-        a.click();
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
+        a.download = 'libreria.json'; a.click();
     },
-
     render: () => {
-        // Svuota zone
-        ['zone-read','zone-toread','zone-reading','zone-wishlist'].forEach(id => document.getElementById(id).innerHTML='');
-
+        document.querySelectorAll('.zone').forEach(z => z.innerHTML='');
         books.forEach(b => {
             const el = document.createElement('div');
             el.onclick = () => ui.openModal(b);
-
-            // 1. TAVOLO (3D)
-            if (b.status === 'reading') {
+            if(b.status==='reading') {
                 el.className = 'book-3d';
-                const bg = b.cover ? `url('${b.cover}')` : b.color;
-                const txt = b.cover ? '' : `<div style="padding:10px;text-align:center;font-size:12px;">${b.title}</div>`;
-                el.innerHTML = `
-                    <div class="face f-front" style="background:${bg}; background-size:cover;">${txt}</div>
-                    <div class="face f-side"></div>
-                    <div class="face f-bottom"></div>`;
+                el.innerHTML = `<div class="face f-front" style="background-image:url('${b.cover}')"></div><div class="face f-side"></div><div class="face f-bottom"></div>`;
                 document.getElementById('zone-reading').appendChild(el);
-            }
-            // 2. SCAFFALI (DORSI)
-            else if (b.status === 'read' || b.status === 'toread') {
-                el.className = 'spine';
-                el.style.background = b.color;
-                el.style.width = Math.min(Math.max(b.pages/10, 24), 45) + 'px'; // Spessore basato su pagine
-                el.style.height = (80 + (b.title.length % 20)) + '%';
+            } else if(b.status.includes('read')) {
+                el.className = 'spine'; el.style.background = b.color;
+                el.style.height = (80+(b.title.length%15))+'%';
                 el.innerHTML = `<div class="spine-txt">${b.title}</div>`;
-                
-                const dest = b.status === 'read' ? 'zone-read' : 'zone-toread';
-                document.getElementById(dest).appendChild(el);
-            }
-            // 3. WISHLIST
-            else {
+                document.getElementById(b.status==='read'?'zone-read':'zone-toread').appendChild(el);
+            } else {
                 el.className = 'wish-item';
-                el.style.transform = `rotate(${Math.random()*20-10}deg)`;
-                el.style.marginTop = "-50px";
-                const content = b.cover ? `<img src="${b.cover}">` : '';
-                el.innerHTML = `${content}<div>${b.title.substring(0,15)}...</div>`;
+                el.innerHTML = `<img src="${b.cover}">`;
                 document.getElementById('zone-wishlist').appendChild(el);
             }
         });
+    },
+    updateRating: (v) => {
+        const b = books.find(x => x.id === focusId);
+        if(b) { b.rating = v; localStorage.setItem(DB_KEY, JSON.stringify(books)); ui.renderStars(v); }
     }
 };
 
-// --- UI LOGIC ---
 const ui = {
-    openPanel: () => document.getElementById('panel').classList.add('open'),
+    openPanel: () => { document.getElementById('panel').classList.add('open'); document.getElementById('inpTitle').value=""; tempCover=""; },
     closePanel: () => document.getElementById('panel').classList.remove('open'),
-    
-    fillForm: (dataStr) => {
-        const data = JSON.parse(decodeURIComponent(dataStr));
-        document.getElementById('inpTitle').value = data.t;
-        document.getElementById('inpAuthor').value = data.a;
-        document.getElementById('inpPublisher').value = data.pub;
-        document.getElementById('inpPages').value = data.p;
-        tempCover = data.c;
-        document.getElementById('search-dropdown').classList.remove('active');
-        document.getElementById('inpSearch').value = "";
+    fillForm: (s) => {
+        const d = JSON.parse(decodeURIComponent(s));
+        document.getElementById('inpTitle').value = d.t; document.getElementById('inpAuthor').value = d.a;
+        document.getElementById('inpPublisher').value = d.pub; document.getElementById('inpPages').value = d.p;
+        tempCover = d.c; document.getElementById('search-dropdown').classList.remove('active');
     },
-
     openModal: (b) => {
         focusId = b.id;
-        document.getElementById('m-title').innerText = b.title;
-        document.getElementById('m-author').innerText = b.author;
-        document.getElementById('m-publisher').innerText = b.publisher || "Editore sconosciuto";
-        document.getElementById('m-note').innerText = b.note || "Nessuna nota.";
-        document.getElementById('m-cover').src = b.cover || "https://via.placeholder.com/200x300?text=No+Cover";
-        
+        document.getElementById('m-title').innerText = b.title; document.getElementById('m-author').innerText = b.author;
+        document.getElementById('m-publisher').innerText = b.publisher; document.getElementById('m-note').innerText = b.note || "Nessuna nota.";
+        document.getElementById('m-cover').src = b.cover;
         ui.renderStars(b.rating);
-
-        // CONFIGURAZIONE LINK ESTERNI
-        const q = encodeURIComponent(`${b.title} ${b.author}`);
+        
+        const q = encodeURIComponent(b.title + " " + b.author);
         document.getElementById('lnk-amazon').href = `https://www.amazon.it/s?k=${q}&i=stripbooks`;
         document.getElementById('lnk-kindle').href = `https://www.amazon.it/s?k=${q}&i=digital-text`;
         document.getElementById('lnk-audible').href = `https://www.audible.it/search?keywords=${q}`;
-
         document.getElementById('modal-overlay').classList.add('active');
     },
-
     closeModal: () => document.getElementById('modal-overlay').classList.remove('active'),
-
-    renderStars: (val) => {
+    renderStars: (v) => {
         const stars = document.getElementById('m-stars').children;
-        for(let i=0; i<5; i++) {
-            stars[i].className = i < val ? 'fas fa-star active' : 'far fa-star';
-            stars[i].onclick = () => app.updateRating(i+1);
-        }
+        for(let i=0;i<5;i++) { stars[i].className = i<v?'fas fa-star active':'far fa-star'; stars[i].onclick=()=>app.updateRating(i+1); }
     }
 };
 
-// --- EVENT LISTENERS ---
-const searchInp = document.getElementById('inpSearch');
-let timer;
-
-searchInp.addEventListener('input', (e) => {
-    clearTimeout(timer);
-    const q = e.target.value.trim();
-    if(q.length < 3) return;
-    
-    timer = setTimeout(() => searchEngine.search(q), 800); // 800ms debounce
+document.getElementById('inpSearch').addEventListener('input', (e) => {
+    const q = e.target.value; clearTimeout(searchEngine.timer);
+    if(q.length<3) return;
+    searchEngine.timer = setTimeout(() => searchEngine.search(q), 800);
 });
 
-// START
 app.init();
-
 </script>
 </body>
 </html>
