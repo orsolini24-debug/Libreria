@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Libreria 3.0 - Google Books & Real 3D</title>
+  <title>Libreria 3.1 - Fix Ricerca & Inserimento</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;500;800&family=Libre+Baskerville:ital@0;1&display=swap" rel="stylesheet">
@@ -16,9 +16,9 @@
       --wood-top: #5c4033;
       --shadow-shelf: rgba(0,0,0,0.8);
       
-      --ui-glass: rgba(20, 20, 24, 0.85);
-      --ui-border: rgba(255,255,255,0.1);
-      --accent: #d4af37; /* Oro antico */
+      --ui-glass: rgba(20, 20, 24, 0.95); /* Più scuro per leggibilità */
+      --ui-border: rgba(255,255,255,0.15);
+      --accent: #d4af37;
     }
 
     body{
@@ -27,124 +27,91 @@
       height:100vh; width:100vw;
     }
 
-    /* --- LAYOUT GENERALE --- */
-    .app-wrapper{
-      position: relative; width:100%; height:100%;
-      display: flex; flex-direction: column;
-    }
+    /* --- STRUTTURA --- */
+    .app-wrapper{ position: relative; width:100%; height:100%; display: flex; flex-direction: column; }
 
-    /* HEADER MINIMAL */
+    /* HEADER */
     header{
       position: absolute; top:0; left:0; right:0; z-index: 1000;
       display:flex; justify-content:space-between; align-items:center;
       padding: 15px 30px;
       background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-      pointer-events: none; /* Lascia cliccare la stanza sotto */
+      pointer-events: none; 
     }
-    header * { pointer-events: auto; } /* Riattiva click sui bottoni */
+    header * { pointer-events: auto; }
 
     h1{ font-family: 'Cinzel', serif; font-size: 20px; color: var(--accent); margin:0; text-shadow:0 2px 10px black;}
     
     .actions button{
       background: var(--ui-glass); border: 1px solid var(--ui-border);
       color: #eee; padding: 8px 16px; border-radius: 6px; cursor: pointer;
-      backdrop-filter: blur(10px); transition: .2s; font-size:12px;
+      backdrop-filter: blur(10px); transition: .2s; font-size:12px; font-weight: 600;
     }
     .actions button:hover{ background: white; color:black; }
     .actions button.primary{ border-color: var(--accent); color: var(--accent); }
     .actions button.primary:hover{ background: var(--accent); color: black; }
 
-    /* --- SCENA 3D (IL CUORE) --- */
+    /* --- SCENA 3D --- */
     .room-viewport{
       flex: 1; position: relative; overflow: hidden;
-      perspective: 1200px; /* Profondità di campo */
+      perspective: 1200px;
       display: flex; align-items: flex-end; justify-content: center;
     }
 
-    /* Sfondo Atmosferico (Muro/Finestra) */
     .room-bg-layer{
       position: absolute; inset: -50px; 
+      /* Placeholder scuro se manca l'immagine */
+      background-color: #1a1a1a;
       background-image: url('./assets/room.jpg'); 
       background-size: cover; background-position: center;
-      filter: brightness(0.4) blur(0px); z-index: 0;
-      /* Se l'utente non ha l'immagine, usiamo un gradiente elegante */
-      background-color: #1a1a1a;
+      filter: brightness(0.3); z-index: 0;
     }
 
-    /* COSTRUZIONE LIBRERIA PROCEDURALE */
+    /* SCAFFALE PROCEDURALE */
     .bookshelf-container{
       position: relative; z-index: 10;
-      width: 90%; max-width: 1200px;
-      height: 85%;
+      width: 90%; max-width: 1200px; height: 85%;
       margin-bottom: 0;
       transform-style: preserve-3d;
-      transform: rotateX(5deg); /* Leggera inclinazione dal basso per imponenza */
+      transform: rotateX(5deg);
       transition: transform 0.5s ease;
       display: flex; flex-direction: column; justify-content: flex-end;
     }
 
-    /* Singolo Scaffale (Legno) */
     .shelf-row{
-      position: relative;
-      height: 160px; /* Altezza spazio libri */
-      width: 100%;
-      margin-bottom: 20px;
+      position: relative; height: 160px; width: 100%; margin-bottom: 25px;
       transform-style: preserve-3d;
-      border-bottom: 25px solid var(--wood-dark); /* Spessore legno frontale */
+      border-bottom: 25px solid var(--wood-dark);
       box-shadow: 0 30px 40px var(--shadow-shelf);
-      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); /* Ombra interna */
+      background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
       display: flex; align-items: flex-end; padding: 0 40px; gap: 4px;
     }
-
-    /* Piano d'appoggio (Top del legno) */
+    
     .shelf-row::after{
       content:''; position: absolute; bottom: -25px; left: 0; width: 100%; height: 60px;
-      background: var(--wood-top);
-      transform-origin: top; transform: rotateX(90deg);
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+      background: var(--wood-top); transform-origin: top; transform: rotateX(90deg);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
     }
-    
-    /* Spalle laterali (Montanti) */
-    .bookshelf-container::before, .bookshelf-container::after{
-      content:''; position: absolute; top:0; bottom:0; width: 40px;
-      background: var(--wood-light); transform-style: preserve-3d;
-      box-shadow: inset 0 0 20px black;
-    }
-    .bookshelf-container::before{ left: -40px; transform: rotateY(90deg); transform-origin: right;}
-    .bookshelf-container::after{ right: -40px; transform: rotateY(-90deg); transform-origin: left;}
 
-
-    /* --- LIBRI 3D AVANZATI --- */
+    /* LIBRI 3D */
     .book-spine{
-      position: relative;
-      width: 32px; /* Larghezza standard dorso */
-      height: 130px; /* Altezza base */
-      border-radius: 2px 4px 4px 2px;
-      cursor: pointer;
+      position: relative; width: 32px; height: 130px;
+      border-radius: 2px 4px 4px 2px; cursor: pointer;
       transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
       transform-origin: bottom center;
-      /* Texture dorso generica fallback */
-      background: linear-gradient(to right, #444, #666 20%, #444 40%, #222);
-      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      background: #444; box-shadow: 2px 0 5px rgba(0,0,0,0.6);
     }
+    .book-spine:hover{ transform: scale(1.05) translateZ(20px); z-index: 100; }
 
-    .book-spine:hover{
-      transform: scale(1.05) translateZ(20px); z-index: 100;
-    }
-
-    /* Etichetta titolo sul dorso */
     .spine-label{
       position: absolute; inset:0; 
       writing-mode: vertical-rl; text-orientation: mixed;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Libre Baskerville', serif;
-      font-size: 9px; color: rgba(255,255,255,0.8);
-      text-shadow: 0 1px 2px black;
-      padding: 5px 0; overflow: hidden;
+      font-family: 'Libre Baskerville', serif; font-size: 10px; color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 2px black; padding: 5px 0; overflow: hidden;
       white-space: nowrap; text-overflow: ellipsis;
     }
     
-    /* Varianti di colore generate via JS */
     .bk-red   { background: linear-gradient(to right, #5c1818, #8a2b2b 25%, #4a1010); }
     .bk-blue  { background: linear-gradient(to right, #182b5c, #2b458a 25%, #101c4a); }
     .bk-green { background: linear-gradient(to right, #185c2b, #2b8a45 25%, #104a20); }
@@ -152,75 +119,61 @@
     .bk-white { background: linear-gradient(to right, #ccc, #eee 25%, #bbb); color:#111; }
     .bk-white .spine-label { color: #222; text-shadow:none; }
 
-
-    /* --- INTERFACCIA GESTIONE (A SCOMPARSA) --- */
+    /* --- PANNELLO GESTIONE (FIXED) --- */
     .manager-panel{
-      position: fixed; top: 70px; right: 30px; bottom: 30px; width: 400px;
-      background: var(--ui-glass);
-      border: 1px solid var(--ui-border);
-      border-radius: 12px;
-      backdrop-filter: blur(20px);
-      box-shadow: -20px 0 60px rgba(0,0,0,0.7);
+      position: fixed; top: 70px; right: 30px; bottom: 30px; width: 420px;
+      background: var(--ui-glass); border: 1px solid var(--ui-border);
+      border-radius: 12px; backdrop-filter: blur(20px);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.9);
       transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 2000;
-      display: flex; flex-direction: column;
+      z-index: 2000; display: flex; flex-direction: column;
     }
     .manager-panel.open{ transform: translateX(0); }
 
     .mp-header{ padding: 20px; border-bottom: 1px solid var(--ui-border); display:flex; justify-content:space-between; align-items:center;}
     .mp-body{ flex:1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
     
-    /* Search Box */
-    .search-group{ position: relative; }
-    .search-input{
-      width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--ui-border);
-      padding: 12px; color: white; border-radius: 8px; font-family: inherit;
+    /* Input Styles */
+    label{ font-size:11px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; display:block; font-weight:bold;}
+    input, select, textarea{ 
+      width:100%; background: rgba(255,255,255,0.1); border: 1px solid var(--ui-border); 
+      color:white; padding:12px; border-radius:6px; font-family:inherit; 
     }
-    .search-input:focus{ border-color: var(--accent); outline: none; }
+    input:focus, select:focus, textarea:focus{ border-color: var(--accent); outline: none; background: rgba(255,255,255,0.15); }
     
+    /* Search Results */
     .results-dropdown{
-      margin-top: 10px; background: #1a1a1a; border-radius: 8px; overflow: hidden;
-      max-height: 0; transition: max-height 0.3s;
+      margin-top: 5px; background: #111; border-radius: 8px;
+      max-height: 0; transition: max-height 0.3s; overflow: hidden;
     }
-    .results-dropdown.has-data{ max-height: 300px; overflow-y: auto; border: 1px solid var(--ui-border); }
+    .results-dropdown.has-data{ max-height: 250px; overflow-y: auto; border: 1px solid var(--ui-border); }
     
     .res-item{
-      display: flex; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
-      transition: background .2s;
+      display: flex; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .res-item:hover{ background: rgba(255,255,255,0.1); }
-    .res-img{ width: 40px; height: 60px; object-fit: cover; background: #333; }
+    .res-item:hover{ background: rgba(255,255,255,0.2); }
+    .res-img{ width: 35px; height: 50px; object-fit: cover; background: #333; flex-shrink: 0;}
 
-    /* Form Details */
-    .form-row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    label{ font-size:11px; text-transform: uppercase; color: #888; margin-bottom: 5px; display:block;}
-    select, textarea{ width:100%; background: rgba(0,0,0,0.3); border: 1px solid var(--ui-border); color:white; padding:10px; border-radius:6px; }
+    .form-row{ display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
 
-    /* --- MODAL DETTAGLIO --- */
+    /* MODAL */
     .detail-overlay{
       position: fixed; inset:0; background: rgba(0,0,0,0.8); z-index: 3000;
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(5px);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
     .detail-overlay.active{ opacity: 1; pointer-events: auto; }
     
     .book-detail-card{
-      background: #151515; width: 600px; max-width: 90%;
+      background: #1a1a1a; width: 600px; max-width: 90%;
       border: 1px solid var(--ui-border); border-radius: 12px;
       display: grid; grid-template-columns: 200px 1fr; overflow: hidden;
       box-shadow: 0 50px 100px black; transform: scale(0.9); transition: transform 0.3s;
     }
     .detail-overlay.active .book-detail-card{ transform: scale(1); }
-    
     .bd-cover{ width: 100%; height: 100%; object-fit: cover; background: #222; }
     .bd-info{ padding: 30px; display: flex; flex-direction: column; }
-    .bd-title{ font-family: 'Cinzel', serif; font-size: 24px; margin: 0 0 5px 0; color: var(--accent); line-height: 1.2;}
-    .bd-meta{ font-size: 14px; color: #888; margin-bottom: 20px; }
-    .bd-comment{ flex: 1; font-style: italic; color: #ccc; line-height: 1.6; font-size: 14px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
     
-    .bd-actions{ margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
-
-
   </style>
 </head>
 <body>
@@ -228,45 +181,47 @@
 <div class="app-wrapper">
   
   <header>
-    <h1>BIBLIOTHECA <span style="font-size:12px; color:#666; font-family:sans-serif; letter-spacing:1px; margin-left:10px;">3.0</span></h1>
+    <h1>BIBLIOTHECA <span style="font-size:12px; color:#aaa; font-family:sans-serif; letter-spacing:1px; margin-left:10px;">3.1</span></h1>
     <div class="actions">
       <button onclick="exportJSON()">Backup Dati</button>
-      <button class="primary" onclick="toggleManager()">+ Aggiungi / Gestisci</button>
+      <button class="primary" onclick="toggleManager()">+ Gestisci Libri</button>
     </div>
   </header>
 
   <div class="room-viewport" id="roomScene">
-    <div class="room-bg-layer"></div> <div class="bookshelf-container" id="bookshelf">
+    <div class="room-bg-layer"></div>
+    <div class="bookshelf-container" id="bookshelf">
        </div>
   </div>
 
   <div class="manager-panel" id="managerPanel">
     <div class="mp-header">
-      <h3 style="margin:0">Gestione Biblioteca</h3>
-      <button onclick="toggleManager()" style="background:transparent; border:none; color:#888; cursor:pointer; font-size:20px;">✕</button>
+      <h3 style="margin:0">Aggiungi Libro</h3>
+      <button onclick="toggleManager()" style="background:transparent; border:none; color:#888; cursor:pointer; font-size:24px;">&times;</button>
     </div>
     
     <div class="mp-body">
-      <div class="search-group">
-        <label>Cerca Nuovi Libri (Google Books API)</label>
-        <input class="search-input" id="inpSearch" placeholder="Es. Italo Calvino, Adelphi..." autocomplete="off">
+      <div>
+        <label>Cerca (Google Books) o Inserisci Manualmente</label>
+        <input id="inpSearch" placeholder="Es. Calvino, Eco..." autocomplete="off">
         <div class="results-dropdown" id="searchResults"></div>
       </div>
 
-      <hr style="border:0; border-top:1px solid var(--ui-border); width:100%;">
+      <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); width:100%;">
 
       <div>
-        <label>Titolo Selezionato</label>
-        <div id="selTitle" style="font-weight:bold; margin-bottom:10px; color:var(--accent);">Nessun libro selezionato</div>
+        <label>Dati Libro (Modificabili)</label>
+        
+        <input id="inpTitle" placeholder="Titolo del libro" style="margin-bottom:10px; font-weight:bold; border-color:var(--accent);">
         
         <div class="form-row">
            <div>
              <label>Autore</label>
-             <input id="inpAuthor" class="search-input" style="padding:8px;" readonly>
+             <input id="inpAuthor" placeholder="Autore">
            </div>
            <div>
              <label>Pagine</label>
-             <input id="inpPages" class="search-input" style="padding:8px;" readonly>
+             <input id="inpPages" type="number" placeholder="Es. 200">
            </div>
         </div>
         
@@ -274,30 +229,29 @@
            <div>
              <label>Stato</label>
              <select id="inpStatus">
-               <option value="read">Letto (Scaffale)</option>
-               <option value="reading">In Lettura</option>
+               <option value="read">Letto</option>
                <option value="toread">Da Leggere</option>
              </select>
            </div>
            <div>
              <label>Colore Dorso</label>
              <select id="inpColor">
-               <option value="bk-red">Rosso Antico</option>
-               <option value="bk-blue">Blu Notte</option>
-               <option value="bk-green">Verde Bosco</option>
-               <option value="bk-black">Nero Pelle</option>
-               <option value="bk-white">Pergamena</option>
+               <option value="bk-red">Rosso</option>
+               <option value="bk-blue">Blu</option>
+               <option value="bk-green">Verde</option>
+               <option value="bk-black">Nero</option>
+               <option value="bk-white">Bianco</option>
              </select>
            </div>
         </div>
 
         <div style="margin-top:15px;">
           <label>Note / Recensione</label>
-          <textarea id="inpNote" rows="3"></textarea>
+          <textarea id="inpNote" rows="3" placeholder="Scrivi qui..."></textarea>
         </div>
 
-        <button class="primary" style="width:100%; margin-top:20px; padding:12px;" onclick="saveBook()">Salva nella Libreria</button>
-        <div id="saveMsg" style="text-align:center; color:#4ade80; margin-top:5px; opacity:0; transition:0.3s;">Salvato con successo</div>
+        <button class="primary" style="width:100%; margin-top:20px; padding:12px; font-size:14px;" onclick="saveBook()">SALVA NELLA LIBRERIA</button>
+        <div id="saveMsg" style="text-align:center; color:#4ade80; margin-top:5px; opacity:0; transition:0.3s; font-size:12px;">Salvato con successo</div>
       </div>
     </div>
   </div>
@@ -306,31 +260,31 @@
 
 <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this) closeDetail()">
   <div class="book-detail-card">
-    <img src="" id="d-cover" class="bd-cover">
+    <img src="" id="d-cover" class="bd-cover" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTAwIDE1MCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNzUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Db3ZlcnTwL3RleHQ+PC9zdmc+'">
     <div class="bd-info">
-      <div class="bd-title" id="d-title">Titolo</div>
-      <div class="bd-meta">di <span id="d-author" style="color:white;">Autore</span> &bull; <span id="d-publisher">Editore</span></div>
+      <div class="bd-title" id="d-title" style="font-family:'Cinzel', serif; font-size:24px; color:var(--accent); margin-bottom:5px;">Titolo</div>
+      <div style="font-size:14px; color:#999; margin-bottom:20px;">di <span id="d-author" style="color:white;">Autore</span></div>
       
-      <div class="bd-comment" id="d-comment">
+      <div id="d-comment" style="flex:1; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; font-style:italic; font-size:14px; color:#ccc; line-height:1.5;">
         Nessuna nota.
       </div>
 
-      <div class="bd-actions">
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
         <button onclick="deleteBook()" style="background:#311; color:#f87171; border:1px solid #522; padding:8px 16px; border-radius:6px; cursor:pointer;">Elimina</button>
-        <button onclick="closeDetail()" class="primary" style="background:var(--accent); color:black; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Chiudi</button>
+        <button onclick="closeDetail()" style="background:var(--accent); color:black; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Chiudi</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* --- CONFIGURAZIONE & DB --- */
-const LS_KEY = "library_v3_google";
+/* --- CONFIGURAZIONE --- */
+const LS_KEY = "library_v3_1";
 let books = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-let tempBookData = null;
+let tempCover = ""; // Store cover URL separately since it's not an input field
 let currentFocusId = null;
 
-// --- GOOGLE BOOKS API (THE GAME CHANGER) ---
+// --- FUNZIONALITÀ DI RICERCA (GOOGLE BOOKS) ---
 const inpSearch = document.getElementById('inpSearch');
 const resBox = document.getElementById('searchResults');
 let searchTimer;
@@ -341,9 +295,8 @@ inpSearch.addEventListener('input', (e) => {
   if(q.length < 3) { resBox.classList.remove('has-data'); return; }
 
   searchTimer = setTimeout(async () => {
-    // Cerchiamo specificatamente libri in lingua italiana o rilevanti
-    // langRestrict=it aiuta molto per Calvino, Eco, ecc.
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=10&printType=books`;
+    // URL API per libri in Italiano
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=6&printType=books`;
     
     try {
       const req = await fetch(url);
@@ -354,54 +307,50 @@ inpSearch.addEventListener('input', (e) => {
           const info = item.volumeInfo;
           const img = info.imageLinks?.smallThumbnail || '';
           return `
-            <div class="res-item" onclick='selectBook(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+            <div class="res-item" onclick='selectSearchResult(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
               <img class="res-img" src="${img}">
               <div>
                 <div style="font-weight:bold; font-size:13px; color:white;">${info.title}</div>
-                <div style="font-size:11px; color:#aaa;">${info.authors?.[0] || '?'} - ${info.publisher || ''}</div>
+                <div style="font-size:11px; color:#aaa;">${info.authors?.[0] || '?'}</div>
               </div>
             </div>
           `;
         }).join('');
         resBox.classList.add('has-data');
       }
-    } catch(err) { console.error(err); }
+    } catch(err) { console.error("Errore API", err); }
   }, 500);
 });
 
-function selectBook(apiData) {
+// Quando selezioni un risultato, compila i campi MA li lascia modificabili
+function selectSearchResult(apiData) {
   const info = apiData.volumeInfo;
   
-  // Prepara oggetto temporaneo
-  tempBookData = {
-    title: info.title,
-    author: info.authors?.[0] || "Sconosciuto",
-    publisher: info.publisher || "Editore non noto",
-    pages: info.pageCount || 150, // Fallback per spessore libro
-    cover: info.imageLinks?.thumbnail?.replace('http:', 'https:') || '', // High res se possibile
-    googleId: apiData.id
-  };
-
-  // Popola UI
-  document.getElementById('selTitle').textContent = tempBookData.title;
-  document.getElementById('inpAuthor').value = tempBookData.author;
-  document.getElementById('inpPages').value = tempBookData.pages + " pag.";
+  document.getElementById('inpTitle').value = info.title || "";
+  document.getElementById('inpAuthor').value = info.authors?.[0] || "";
+  document.getElementById('inpPages').value = info.pageCount || 200;
   
-  // Assegna colore casuale in base al genere o titolo se vuoi, qui random
-  const colors = ['bk-red','bk-blue','bk-green','bk-black','bk-white'];
-  document.getElementById('inpColor').value = colors[Math.floor(Math.random()*colors.length)];
-
-  resBox.classList.remove('has-data');
-  inpSearch.value = "";
+  // Salva la cover in variabile temp (non mostrata nell'input)
+  tempCover = info.imageLinks?.thumbnail?.replace('http:', 'https:') || '';
+  
+  resBox.classList.remove('has-data'); // Chiudi tendina
+  document.getElementById('inpSearch').value = ""; // Pulisci ricerca
 }
 
-// --- SALVATAGGIO ---
+// --- SALVATAGGIO (MANUALE O AUTOMATICO) ---
 function saveBook() {
-  if(!tempBookData) return alert("Seleziona prima un libro dalla ricerca!");
+  const title = document.getElementById('inpTitle').value;
+  const author = document.getElementById('inpAuthor').value;
+  const pages = document.getElementById('inpPages').value || 150;
+  
+  if(!title) return alert("Inserisci almeno il titolo del libro!");
   
   const newBook = {
     id: crypto.randomUUID(),
-    ...tempBookData,
+    title: title,
+    author: author,
+    pages: parseInt(pages),
+    cover: tempCover, // Usa la cover trovata o vuota
     status: document.getElementById('inpStatus').value,
     styleClass: document.getElementById('inpColor').value,
     note: document.getElementById('inpNote').value,
@@ -411,85 +360,62 @@ function saveBook() {
   books.push(newBook);
   localStorage.setItem(LS_KEY, JSON.stringify(books));
   
-  // Feedback visivo
+  // Feedback
   const msg = document.getElementById('saveMsg');
   msg.style.opacity = 1;
   setTimeout(() => msg.style.opacity = 0, 2000);
   
-  // Reset parziale
-  tempBookData = null;
-  document.getElementById('selTitle').textContent = "Pronto per il prossimo";
+  // Reset Form
+  document.getElementById('inpTitle').value = "";
+  document.getElementById('inpAuthor').value = "";
+  document.getElementById('inpPages').value = "";
   document.getElementById('inpNote').value = "";
+  tempCover = "";
   
   renderLibrary3D();
 }
 
-function deleteBook() {
-  if(!currentFocusId) return;
-  if(!confirm("Rimuovere questo libro?")) return;
-  
-  books = books.filter(b => b.id !== currentFocusId);
-  localStorage.setItem(LS_KEY, JSON.stringify(books));
-  closeDetail();
-  renderLibrary3D();
-}
-
-// --- MOTORE DI RENDERING 3D (PROCEDURALE) ---
+// --- RENDER 3D SCAFFALI ---
 function renderLibrary3D() {
   const shelfContainer = document.getElementById('bookshelf');
-  shelfContainer.innerHTML = ''; // Pulisci scena
+  shelfContainer.innerHTML = ''; 
 
-  // Filtra solo libri "fisici" (Letto/Da Leggere). 
-  // Quelli "In lettura" potremmo metterli su un tavolo separato in futuro (v4.0)
-  // Per ora li mettiamo tutti sugli scaffali per riempire la stanza.
   const shelfBooks = books.sort((a,b) => b.addedAt - a.addedAt);
 
   if(shelfBooks.length === 0) {
-    // Messaggio vuoto elegante
-    shelfContainer.innerHTML = `<div style="text-align:center; margin-top:100px; color:#555; font-family:'Cinzel'">La biblioteca è vuota.<br>Aggiungi volumi dal pannello.</div>`;
+    shelfContainer.innerHTML = `<div style="text-align:center; margin-top:100px; color:#888; font-family:'Cinzel'; text-shadow:0 2px 5px black;">La biblioteca è vuota.<br>Clicca su "Gestisci Libri"</div>`;
     return;
   }
 
-  // Calcoliamo quanti scaffali servono. Ipotizziamo max 15 libri per scaffale.
-  const BOOKS_PER_SHELF = 15;
+  const BOOKS_PER_SHELF = 14; // Capacità scaffale
   const numShelves = Math.ceil(shelfBooks.length / BOOKS_PER_SHELF);
-  
   let bookIndex = 0;
 
-  // Genera Righe Scaffale
   for(let i=0; i<numShelves; i++) {
     const row = document.createElement('div');
     row.className = 'shelf-row';
     
-    // Riempi la riga
     for(let j=0; j<BOOKS_PER_SHELF; j++) {
       if(bookIndex >= shelfBooks.length) break;
-      
       const b = shelfBooks[bookIndex];
-      const spine = document.createElement('div');
       
-      // Classi base + colore scelto
+      const spine = document.createElement('div');
       spine.className = `book-spine ${b.styleClass}`;
       
-      // Calcolo spessore basato sulle pagine (min 20px, max 60px)
-      const thickness = Math.max(24, Math.min(b.pages / 10, 50)); 
+      // Spessore basato sulle pagine (min 20px, max 50px)
+      const thickness = Math.max(22, Math.min(b.pages / 10, 45)); 
       spine.style.width = `${thickness}px`;
       
-      // Calcolo altezza random per realismo (tra 85% e 98% dello scaffale)
-      const height = 85 + (b.title.length % 14); 
+      // Altezza variabile
+      const height = 88 + (b.title.length % 12); 
       spine.style.height = `${height}%`;
 
-      // Etichetta
       spine.innerHTML = `<span class="spine-label">${b.title}</span>`;
-      
-      // Interazione
       spine.onclick = () => openDetail(b);
 
       row.appendChild(spine);
       bookIndex++;
     }
-    
-    // Aggiungi riga (appendendo in cima per ordine logico visivo o bottom up)
     shelfContainer.appendChild(row);
   }
 }
@@ -504,9 +430,7 @@ function openDetail(book) {
   document.getElementById('d-cover').src = book.cover || '';
   document.getElementById('d-title').textContent = book.title;
   document.getElementById('d-author').textContent = book.author;
-  document.getElementById('d-publisher').textContent = book.publisher;
-  document.getElementById('d-comment').textContent = book.note || "Nessuna nota personale.";
-  
+  document.getElementById('d-comment').textContent = book.note || "Nessuna nota.";
   document.getElementById('detailOverlay').classList.add('active');
 }
 
@@ -515,18 +439,26 @@ function closeDetail() {
   currentFocusId = null;
 }
 
+function deleteBook() {
+  if(!currentFocusId) return;
+  if(!confirm("Eliminare definitivamente?")) return;
+  books = books.filter(b => b.id !== currentFocusId);
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+  closeDetail();
+  renderLibrary3D();
+}
+
 function exportJSON() {
   const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
   const a = document.createElement('a');
-  a.href = data; a.download = 'biblioteca_backup.json';
+  a.href = data; a.download = 'biblioteca.json';
   a.click();
 }
 
-// --- AVVIO ---
+// Start
 renderLibrary3D();
-
-// Apri il manager se vuoto
-if(books.length === 0) setTimeout(toggleManager, 1000);
+// Apri pannello se vuoto
+if(books.length === 0) setTimeout(toggleManager, 800);
 
 </script>
 </body>
