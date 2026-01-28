@@ -3,533 +3,616 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Libreria Immersiva v1.3</title>
+  <title>Libreria 2.0 - Immersive & Italian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
   <style>
     :root{
-      --bg:#050505;
-      /* Glassmorphism panel */
-      --panel:rgba(20, 25, 35, 0.7);
-      --panel-border:rgba(255,255,255,0.1);
-      --text:#e9eef6;
-      --muted:#9aa8bd;
-      --accent:#7aa2ff;
-      --shadow:0 10px 40px rgba(0,0,0,0.8);
-      --font:system-ui,-apple-system,sans-serif;
+      --bg: #050505;
+      /* Glassmorphism avanzato */
+      --glass: rgba(20, 25, 30, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-highlight: rgba(255, 255, 255, 0.05);
+      
+      --accent: #60a5fa; /* Blu moderno */
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      --shadow-soft: 0 10px 30px rgba(0,0,0,0.5);
+      --shadow-deep: 0 20px 60px rgba(0,0,0,0.8);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    
     body{
-      margin:0; font-family:var(--font); color:var(--text); background:var(--bg);
-      min-height:100vh; overflow-x:hidden;
+      margin:0; font-family: 'Inter', sans-serif; 
+      color:var(--text-main); background:var(--bg);
+      height:100vh; overflow:hidden; /* App fullscreen */
     }
 
-    /* Sfondo generale (quando non sei in Stanza) */
-    body:not(.is-room)::before{
+    /* BACKGROUND SFUMATO (Fallback se manca immagine) */
+    body::before{
       content:""; position:fixed; inset:0; z-index:-1;
-      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #000 70%);
+      background: radial-gradient(circle at top center, #1e293b, #020617);
     }
 
-    .wrap{ max-width:1400px; margin:0 auto; padding:20px; position:relative; z-index:1; }
-
-    /* HEADER & NAV */
-    header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; backdrop-filter:blur(5px); }
-    .title h1{ margin:0; font-size:22px; font-weight:700; letter-spacing:-0.5px; }
-    
-    .nav-pills{ display:flex; background:rgba(255,255,255,0.05); padding:4px; border-radius:12px; border:1px solid var(--panel-border); }
-    .nav-btn{
-      background:transparent; border:0; color:var(--muted); padding:6px 16px; 
-      font-weight:600; font-size:13px; cursor:pointer; border-radius:8px; transition:all .2s;
+    /* --- UI LAYOUT --- */
+    .app-container{
+      display: grid; grid-template-rows: auto 1fr;
+      height: 100%; max-width: 1600px; margin: 0 auto;
+      padding: 20px; gap: 20px;
     }
-    .nav-btn.active{ background:rgba(255,255,255,0.1); color:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
 
-    .btn{
-      padding:8px 16px; border-radius:8px; border:1px solid var(--panel-border);
-      background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; font-size:13px; font-weight:600;
-      transition:all .2s;
-    }
-    .btn:hover{ background:rgba(255,255,255,0.15); }
-    .btn.primary{ background:var(--accent); border-color:var(--accent); color:#000; }
-
-    /* LAYOUT SWITCHER */
-    .view-section{ display:none; animation:fadeIn .3s ease; }
-    .view-section.active{ display:block; }
-    @keyframes fadeIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-
-    /* --- VISTA LISTA (Classica) --- */
-    .form-panel{
-      background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
-      padding:20px; backdrop-filter:blur(20px); margin-bottom:20px;
-      display:grid; grid-template-columns: 2fr 1fr auto; gap:15px; align-items:end;
+    /* HEADER TRASPARENTE */
+    header{
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 15px 25px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 16px; backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-soft);
     }
     
-    input, select{
-      width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--panel-border);
-      color:#fff; padding:12px; border-radius:10px; outline:none; font-size:14px;
-    }
-    input:focus{ border-color:var(--accent); }
+    .brand h1{ margin:0; font-size:20px; font-weight:800; letter-spacing:-0.5px; display:flex; align-items:center; gap:10px;}
+    .brand span{ font-size:11px; font-weight:400; color:var(--text-muted); background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;}
+
+    .controls{ display:flex; gap:10px; }
     
-    .list-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px; }
-    .book-card{
-      display:flex; gap:15px; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border);
-      padding:12px; border-radius:12px; cursor:pointer; transition:background .2s;
+    button{
+      background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+      color: var(--text-main); padding: 8px 16px; border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-size: 13px; transition: all .2s;
     }
-    .book-card:hover{ background:rgba(255,255,255,0.08); }
-    .bc-img{ width:50px; height:75px; object-fit:cover; border-radius:4px; background:#222; }
+    button:hover{ background: rgba(255,255,255,0.15); transform: translateY(-1px); }
+    button.active{ background: var(--text-main); color: #000; }
+    button.primary{ background: var(--accent); color: #000; border-color: var(--accent); }
+
+    /* --- VIEWPORT --- */
+    .viewport{ position:relative; width:100%; height:100%; overflow:hidden; border-radius:20px; border:1px solid var(--glass-border); }
+
+    /* VISTA 1: LISTA DATA-ENTRY */
+    .view-list{
+      position:absolute; inset:0; background:rgba(10,10,12,0.9);
+      padding:30px; overflow-y:auto; display:none; z-index:10;
+    }
+    .view-list.visible{ display:block; }
+
+    /* Form Grid */
+    .editor-grid{
+      display:grid; grid-template-columns: 250px 1fr; gap:30px; max-width:1000px; margin:0 auto;
+    }
+    .cover-preview{
+      width:100%; aspect-ratio:2/3; background:#1e293b; border-radius:12px;
+      border:2px dashed var(--glass-border); display:flex; align-items:center; justify-content:center;
+      overflow:hidden; position:relative;
+    }
+    .cover-preview img{ width:100%; height:100%; object-fit:cover; }
     
-    /* --- VISTA STANZA (IMMERSIVA) --- */
-    .room-container{
-      position:relative; width:100%; aspect-ratio: 16 / 9; /* Forza aspetto widescreen */
-      background:#000; border-radius:20px; overflow:hidden;
-      box-shadow: 0 0 0 1px var(--panel-border), 0 50px 100px #000;
-    }
+    .form-fields{ display:flex; flex-direction:column; gap:20px; }
     
-    .room-bg{
-      width:100%; height:100%; object-fit:cover;
-      /* Filtro per scurire leggermente e integrare meglio gli elementi */
-      filter: brightness(0.7) contrast(1.1);
-      transform: scale(1.02); /* Evita bordi bianchi */
+    .input-group label{ display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; font-weight:600;}
+    input, select, textarea{
+      width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border);
+      color:#fff; padding:12px; border-radius:8px; outline:none; font-family:inherit;
     }
-
-    /* ZONE DELIMITATE - Ora usiamo Flexbox precisi */
-    .zone{
-      position:absolute; 
-      /* Debug visuale: passa col mouse sulla stanza per vedere le griglie */
-      border:1px dashed rgba(255,255,255,0.0);
-      transition: border-color .3s;
-    }
-    .room-container:hover .zone{ border-color:rgba(255,255,255,0.1); }
-
-    /* 1. SCAFFALE ALTO (Libri Letti) - Posizionamento Dorsi */
-    .zone-shelf-high {
-      top: 18%; left: 52%; width: 28%; height: 11%; /* Coordinate ipotetiche stanza standard */
-      display:flex; align-items:flex-end; justify-content:flex-start; gap:1px;
-      perspective: 600px;
-    }
-
-    /* 2. SCAFFALE BASSO (Da Leggere) */
-    .zone-shelf-low {
-      top: 34%; left: 52%; width: 28%; height: 11%;
-      display:flex; align-items:flex-end; justify-content:flex-start; gap:1px;
-    }
-
-    /* 3. TAVOLO (In Lettura) - Prospettiva 3D */
-    .zone-table {
-      bottom: 15%; left: 20%; width: 40%; height: 25%;
-      display:flex; align-items:center; justify-content:center; gap:20px;
-      perspective: 1000px; /* Magia 3D */
-      z-index: 10;
-    }
-
-    /* 4. WISHLIST (Angolo/Pavimento/Altro scaffale) */
-    .zone-wish {
-      bottom: 5%; right: 5%; width: 15%; height: 15%;
-      display:grid; grid-template-columns:repeat(3, 1fr); gap:5px;
-      opacity: 0.8; transform: rotate(-5deg);
-    }
-
-    /* --- OGGETTI LIBRO --- */
+    input:focus, textarea:focus{ border-color:var(--accent); background:rgba(0,0,0,0.5); }
     
-    /* STILE A: DORSO (Per scaffali) */
-    .spine-book {
-      width: 16px; /* Spessore libro */
-      height: 90%; /* Altezza relativa allo scaffale */
-      background: linear-gradient(to right, #444, #222 20%, #444 40%, #222);
-      border-radius: 2px;
-      cursor:pointer;
-      position:relative;
-      transition: transform .2s, height .2s;
-      box-shadow: 1px 0 2px rgba(0,0,0,0.5);
-    }
-    .spine-book:hover { transform: translateY(-5px) scale(1.1); z-index:100; background:#555; }
-    /* Etichetta titolo che appare solo in hover */
-    .spine-book::after {
-      content: attr(title);
-      position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
-      background:black; color:white; padding:4px 8px; font-size:10px; 
-      white-space:nowrap; border-radius:4px; pointer-events:none; opacity:0;
-    }
-    .spine-book:hover::after{ opacity:1; }
-
-    /* STILE B: COPERTINA 3D (Per tavolo) */
-    .table-book {
-      width: 100px; aspect-ratio: 2/3;
-      position: relative;
-      transform-style: preserve-3d;
-      transform: rotateX(50deg) rotateZ(-10deg) translateZ(0); /* Appoggiato sul tavolo */
-      box-shadow: -10px 20px 20px rgba(0,0,0,0.6); /* Ombra realistica distante */
-      transition: transform .3s;
-      cursor: pointer;
-      border-radius: 4px 10px 10px 4px; /* Simula curvatura pagine */
-      background: #fff;
-    }
-    .table-book img {
-      width:100%; height:100%; object-fit:cover; border-radius:2px;
-    }
-    .table-book:hover {
-      transform: rotateX(0deg) rotateZ(0deg) scale(1.1) translateZ(50px); /* Si alza in piedi */
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-      z-index: 100;
-    }
-
-    /* STILE C: MINIATURA (Wishlist) */
-    .wish-book { width:100%; aspect-ratio:2/3; background:#333; opacity:0.6; border:1px dashed #fff; cursor:pointer; }
-    .wish-book:hover { opacity:1; transform:scale(1.1); }
-
-
-    /* --- MODAL FOCUS --- */
-    .overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999;
-      display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px);
-    }
-    .overlay.on{ display:flex; }
-    
-    .focus-panel{
-      width:90%; max-width:500px; background:#1a1d24; border:1px solid var(--panel-border);
-      border-radius:20px; padding:30px; box-shadow:0 50px 100px #000;
-      display:flex; flex-direction:column; gap:20px;
-    }
-    
-    .fp-head{ display:flex; gap:20px; }
-    .fp-cover{ width:120px; height:180px; object-fit:cover; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
-    .fp-info h2{ margin:0 0 5px; font-size:20px; line-height:1.2; }
-    .fp-info p{ color:var(--muted); margin:0; font-size:14px; }
-    
-    .fp-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    
-    /* DROPDOWN RICERCA FIX */
-    .search-wrap{ position:relative; }
+    /* Search Dropdown */
+    .search-box{ position:relative; }
     .dropdown{
-      position:absolute; top:110%; left:0; right:0; background:#222; 
-      border:1px solid var(--panel-border); border-radius:10px; z-index:500;
-      max-height:300px; overflow-y:auto; display:none; box-shadow:0 20px 50px rgba(0,0,0,1);
+      position:absolute; top:100%; left:0; right:0; background:#1e293b; 
+      border:1px solid var(--glass-border); border-radius:8px; z-index:100;
+      max-height:250px; overflow-y:auto; margin-top:5px; display:none;
+      box-shadow: var(--shadow-deep);
     }
-    .dd-item{ padding:10px; display:flex; gap:10px; cursor:pointer; border-bottom:1px solid #333; }
-    .dd-item:hover{ background:#333; }
+    .dd-item{ padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; display:flex; gap:10px; align-items:center; }
+    .dd-item:hover{ background:rgba(255,255,255,0.05); }
     
-    /* Toast notifica */
-    .toast{ 
-        position:fixed; bottom:20px; right:20px; background:var(--accent); color:#000; 
-        padding:10px 20px; border-radius:8px; font-weight:bold; transform:translateY(100px); transition:0.3s;
+    /* VISTA 2: STANZA 3D */
+    .view-room{
+      position:absolute; inset:0; 
+      perspective: 1500px; /* Prospettiva globale della scena */
+      overflow:hidden;
+      display:none;
     }
-    .toast.on{ transform:translateY(0); }
+    .view-room.visible{ display:block; }
 
+    .room-bg{
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+      transform: scale(1.05); /* Zoom leggero per evitare bordi */
+      filter: brightness(0.75) contrast(1.1); /* Atmosfera */
+      z-index: 0;
+    }
+
+    /* ZONE LOGICHE (Contenitori Invisibili) */
+    .zone{ position:absolute; z-index:10; }
+    
+    /* Debug Mode: aggiungi classe .debug al body per vedere i box */
+    body.debug .zone{ border: 1px dashed red; background: rgba(255,0,0,0.1); }
+
+    /* Tavolo: posizionato in basso a sinistra rispetto alla foto */
+    .zone-table{
+      bottom: 12%; left: 25%; width: 40%; height: 30%;
+      display:flex; align-items:center; justify-content:center; gap: 40px;
+      /* Il piano del tavolo è inclinato nella foto, simuliamo col 3D */
+      transform-style: preserve-3d;
+      perspective: 800px;
+    }
+
+    /* Scaffali: Sfondo destra */
+    .zone-shelf-1{ top: 16%; left: 51%; width: 28%; height: 11%; display:flex; align-items:flex-end; gap:2px; }
+    .zone-shelf-2{ top: 32%; left: 51%; width: 28%; height: 11%; display:flex; align-items:flex-end; gap:2px; }
+    
+    /* Wishlist */
+    .zone-wish{ bottom: 5%; right: 5%; width: 15%; height: 15%; display:flex; flex-wrap:wrap; gap:5px; transform:rotate(-5deg); opacity:0.8; }
+
+    /* --- IL LIBRO 3D (CUBE ENGINE) --- */
+    .book-3d{
+      position: relative;
+      width: 140px; aspect-ratio: 2/3;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      /* Default state: Appoggiato sul tavolo */
+      transform: rotateX(60deg) rotateZ(-15deg);
+    }
+    
+    .book-3d:hover{
+      /* Hover state: Si solleva e raddrizza leggermente */
+      transform: rotateX(40deg) rotateZ(-5deg) translateZ(30px);
+    }
+
+    /* Facce del libro */
+    .face{ position: absolute; inset:0; backface-visibility: hidden; }
+    
+    /* Copertina */
+    .face-front{ 
+      transform: translateZ(12px); /* Spessore metà libro */
+      background: #333; border-radius: 2px;
+      box-shadow: inset 2px 0 5px rgba(255,255,255,0.2); /* Luce sul bordo */
+    }
+    .face-front img{ width:100%; height:100%; object-fit:cover; border-radius:2px; }
+
+    /* Pagine laterali (Spessore) */
+    .face-right{
+      width: 24px; height: 100%; left: 100%; top:0;
+      transform: rotateY(90deg) translateZ(-12px); /* Posiziona sul lato */
+      background: linear-gradient(to right, #eee, #ddd 20%, #eee 40%, #ccc); /* Texture pagine */
+    }
+    .face-bottom{
+      width: 100%; height: 24px; top: 100%; left:0;
+      transform: rotateX(-90deg) translateZ(-12px);
+      background: #ddd;
+    }
+    
+    /* Dorso (Spine) - Non visibile quando piatto, ma serve per completezza */
+    .face-spine{
+      width: 24px; height: 100%; right: 100%; top:0;
+      transform: rotateY(-90deg) translateZ(-12px);
+      background: #222;
+    }
+
+    /* Ombra realistica sul tavolo (separata dal libro per prospettiva) */
+    .book-shadow{
+      position:absolute; width:100%; height:100%; top:15px; left:15px;
+      background: rgba(0,0,0,0.6);
+      filter: blur(10px);
+      transform: translateZ(-30px); /* Sotto il libro */
+      pointer-events: none;
+    }
+
+    /* --- LIBRI SU SCAFFALE (Solo Dorso 2D avanzato) --- */
+    .spine-item{
+      width: 20px; height: 90%; 
+      background: linear-gradient(90deg, #333, #555 30%, #333);
+      border-radius: 2px; cursor: pointer; position: relative;
+      transition: transform 0.2s;
+      box-shadow: 1px 0 3px rgba(0,0,0,0.5);
+    }
+    .spine-item:hover{ transform: scaleY(1.05) translateY(-2px); z-index:100; background:#666; }
+    /* Tooltip titolo */
+    .spine-item:hover::after{
+      content: attr(data-title);
+      position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,0.9); padding:5px 10px; border-radius:4px;
+      white-space:nowrap; font-size:12px; pointer-events:none; z-index:200;
+    }
+
+    /* MODAL DETTAGLI */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px);
+      z-index:2000; display:none; align-items:center; justify-content:center;
+    }
+    .modal-backdrop.on{ display:flex; }
+    
+    .modal-card{
+      background: #151920; border:1px solid var(--glass-border);
+      width: 500px; padding: 0; border-radius: 16px; overflow:hidden;
+      box-shadow: var(--shadow-deep);
+    }
+    .modal-header{
+      padding:20px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--glass-border);
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .modal-body{ padding:25px; display:grid; grid-template-columns: 120px 1fr; gap:20px; }
+    .modal-footer{
+      padding:20px; border-top:1px solid var(--glass-border); display:flex; gap:10px; justify-content:flex-end;
+    }
+    
+    .rating-stars{ color: #fbbf24; font-size:18px; letter-spacing:2px; }
+    .badge{ padding:4px 8px; border-radius:4px; font-size:11px; text-transform:uppercase; font-weight:700; border:1px solid rgba(255,255,255,0.2); }
+    .badge.reading{ color: #fbbf24; border-color:#fbbf24; }
+    .badge.read{ color: #4ade80; border-color:#4ade80; }
+    
   </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="app-container">
+  
   <header>
-    <div class="title">
-      <h1>My Library</h1>
-      <span style="font-size:12px; color:var(--muted);">Versione Immersiva 1.3</span>
+    <div class="brand">
+      <h1>La Mia Libreria <span>2.0</span></h1>
     </div>
-    
-    <div class="nav-pills">
-      <button class="nav-btn active" onclick="switchView('list')">Lista Dati</button>
-      <button class="nav-btn" onclick="switchView('room')">Stanza 3D</button>
+    <div class="controls">
+      <button id="nav-list" onclick="setView('list')">Gestione Dati</button>
+      <button id="nav-room" onclick="setView('room')" class="primary">Stanza Immersiva</button>
+      <button onclick="exportData()" title="Backup">💾</button>
     </div>
-    
-    <button class="btn" onclick="exportData()">Backup JSON</button>
   </header>
 
-  <div id="view-list" class="view-section active">
+  <div class="viewport">
     
-    <div class="form-panel">
-      <div class="search-wrap">
-        <label style="font-size:11px; color:var(--muted); text-transform:uppercase;">Cerca Libro (OpenLibrary)</label>
-        <input type="text" id="inpSearch" placeholder="Es. 1984, Orwell..." autocomplete="off">
-        <div class="dropdown" id="ddResults"></div>
-      </div>
-      
-      <div>
-        <label style="font-size:11px; color:var(--muted); text-transform:uppercase;">Stato</label>
-        <select id="inpStatus">
-          <option value="to_read">📚 Da Leggere (Scaffale Basso)</option>
-          <option value="reading">📖 In Lettura (Tavolo)</option>
-          <option value="read">✅ Letto (Scaffale Alto)</option>
-          <option value="wishlist">💸 Wishlist (Angolo)</option>
-        </select>
-      </div>
-      
-      <button class="btn primary" onclick="saveBook()" style="height:44px;">Salva Libro</button>
-    </div>
-
-    <div class="list-grid" id="listContainer"></div>
-  </div>
-
-  <div id="view-room" class="view-section">
-    <div class="room-container">
-      <img src="./assets/room.jpg" class="room-bg" onerror="this.style.display='none'; document.querySelector('.room-container').style.background='#222'">
-      
-      <div class="zone zone-shelf-high" id="shelfHigh" title="Libri Letti"></div>
-      
-      <div class="zone zone-shelf-low" id="shelfLow" title="Da Leggere"></div>
-      
-      <div class="zone zone-table" id="tableZone" title="In Lettura"></div>
-      
-      <div class="zone zone-wish" id="wishZone" title="Wishlist"></div>
-      
-      <div style="position:absolute; top:20px; left:20px; color:rgba(255,255,255,0.5); font-size:12px; pointer-events:none;">
-        Passa il mouse per evidenziare le zone
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="overlay" id="focusOverlay" onclick="if(event.target===this) closeFocus()">
-  <div class="focus-panel">
-    <div class="fp-head">
-      <img src="" id="fpCover" class="fp-cover">
-      <div class="fp-info">
-        <h2 id="fpTitle">Titolo</h2>
-        <p id="fpAuthor">Autore</p>
-        <div style="margin-top:10px;">
-             <span id="fpStatusBadge" style="padding:4px 8px; border-radius:4px; font-size:11px; border:1px solid #555;">Stato</span>
+    <div id="view-list" class="view-list">
+      <div class="editor-grid">
+        
+        <div>
+          <div class="cover-preview">
+            <img id="preview-img" src="" style="display:none">
+            <span id="preview-text" style="color:var(--text-muted)">Nessuna<br>Copertina</span>
+          </div>
+          <div style="text-align:center; margin-top:10px;">
+            <div id="star-input" style="cursor:pointer; color:#555; font-size:24px;">★★★★★</div>
+            <span style="font-size:12px; color:var(--text-muted)">Voto</span>
+          </div>
         </div>
-        <p id="fpComment" style="margin-top:15px; font-style:italic; opacity:0.7;">...</p>
+
+        <div class="form-fields">
+          <div class="search-box">
+            <div class="input-group">
+              <label>Cerca Libro (Edizioni Italiane)</label>
+              <input id="inpSearch" placeholder="Es. Calvino, Eco, Baricco..." autocomplete="off">
+            </div>
+            <div class="dropdown" id="ddResults"></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div class="input-group">
+              <label>Autore</label>
+              <input id="inpAuthor" readonly style="opacity:0.7">
+            </div>
+            <div class="input-group">
+              <label>Stato</label>
+              <select id="inpStatus">
+                <option value="reading">📖 In Lettura (Tavolo)</option>
+                <option value="to_read">📚 Da Leggere (Scaffale Basso)</option>
+                <option value="read">✅ Letto (Scaffale Alto)</option>
+                <option value="wishlist">💸 Wishlist (Angolo)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>La tua Recensione / Note</label>
+            <textarea id="inpComment" rows="4" placeholder="Cosa ne pensi?"></textarea>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+             <span id="msg-save" style="font-size:12px; color:#4ade80; opacity:0; transition:opacity .3s">Salvato!</span>
+             <div>
+               <button onclick="clearForm()">Pulisci</button>
+               <button class="primary" onclick="saveBook()">Salva Libro</button>
+             </div>
+          </div>
+
+          <div style="margin-top:20px; border-top:1px solid var(--glass-border); padding-top:20px;">
+            <label>Libri in memoria:</label>
+            <div id="mini-list" style="display:flex; gap:10px; overflow-x:auto; padding:10px 0;"></div>
+          </div>
+
+        </div>
       </div>
     </div>
-    <div class="fp-actions">
-      <button class="btn" onclick="cycleStatus()">Sposta Libro</button>
-      <button class="btn" style="border-color:#fb7185; color:#fb7185;" onclick="deleteCurrent()">Elimina</button>
-      <div style="flex:1"></div>
-      <button class="btn" onclick="searchAmazon()">Amazon</button>
+
+    <div id="view-room" class="view-room visible">
+      <img src="./assets/room.jpg" class="room-bg" onerror="this.style.display='none'">
+      
+      <div class="zone zone-shelf-1" id="shelf-high"></div>
+      <div class="zone zone-shelf-2" id="shelf-low"></div>
+      <div class="zone zone-table" id="table-surface"></div>
+      <div class="zone zone-wish" id="wish-corner"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modal-focus" onclick="if(event.target===this) closeModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="margin:0">Dettagli Libro</h3>
+      <button onclick="closeModal()" style="padding:4px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="m-cover" style="width:100%; border-radius:8px; object-fit:cover;">
+      <div>
+        <h2 id="m-title" style="margin:0 0 5px 0; font-size:20px;">Titolo</h2>
+        <p id="m-author" style="color:var(--text-muted); margin:0 0 10px 0;">Autore</p>
+        <span id="m-badge" class="badge">Stato</span>
+        <div id="m-stars" class="rating-stars" style="margin:10px 0;"></div>
+        <p id="m-comment" style="font-size:14px; line-height:1.5; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">...</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="deleteBook()" style="color:#fb7185; border-color:rgba(251,113,133,0.3);">Elimina</button>
+      <button class="primary" onclick="closeModal()">Chiudi</button>
     </div>
   </div>
 </div>
-
-<div class="toast" id="toast">Salvato!</div>
 
 <script>
-// --- DATI E STATO ---
-const LS_KEY = "library_v1_3";
+// --- CORE DATA ---
+const LS_KEY = "lib_v2_ultimate";
 let books = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
 let tempBook = null; 
-let currentId = null;
+let currentRating = 0;
+let focusId = null;
 
-// --- GESTIONE VISTE ---
-function switchView(viewName) {
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-  
-  document.getElementById('view-'+viewName).classList.add('active');
-  // Trova il bottone corretto (semplificato)
-  if(viewName === 'list') document.querySelector('.nav-btn:first-child').classList.add('active');
-  else document.querySelector('.nav-btn:last-child').classList.add('active');
-
-  document.body.classList.toggle('is-room', viewName === 'room');
-  
-  if(viewName === 'list') renderList();
-  if(viewName === 'room') renderRoom();
+// --- INIT ---
+function init(){
+    setView('room'); // Partiamo dalla stanza per effetto wow
+    renderMiniList();
+    renderRoom();
+    setupStars();
 }
 
-// --- LOGICA RICERCA (OpenLibrary) ---
+// --- NAVIGATION ---
+function setView(mode){
+    document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.remove('visible'));
+    document.getElementById('view-'+mode).classList.add('visible');
+    
+    document.getElementById('nav-list').classList.toggle('active', mode==='list');
+    document.getElementById('nav-room').classList.toggle('active', mode==='room');
+    
+    if(mode === 'room') renderRoom();
+    if(mode === 'list') renderMiniList();
+}
+
+// --- SEARCH ENGINE (ITALIANO FORZATO) ---
 const inpSearch = document.getElementById('inpSearch');
-const ddResults = document.getElementById('ddResults');
+const dd = document.getElementById('ddResults');
 let timer;
 
 inpSearch.addEventListener('input', (e) => {
-  clearTimeout(timer);
-  const q = e.target.value.trim();
-  if(q.length < 3) { ddResults.style.display='none'; return; }
-  
-  timer = setTimeout(async () => {
-    const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=5`);
-    const data = await res.json();
+    const q = e.target.value.trim();
+    if(q.length < 3) { dd.style.display='none'; return; }
     
-    ddResults.innerHTML = data.docs.map(d => {
-      const img = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '';
-      return `
-        <div class="dd-item" onclick="selectBook('${d.title.replace(/'/g,"\\'")}', '${(d.author_name?.[0]||"").replace(/'/g,"\\'")}', '${img}')">
-          <img src="${img}" style="width:30px; height:40px; background:#333; object-fit:cover;">
-          <div>
-            <div style="font-weight:bold; font-size:13px; color:#fff;">${d.title}</div>
-            <div style="font-size:11px; color:#999;">${d.author_name?.[0]||'?'}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    ddResults.style.display = 'block';
-  }, 400);
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+        // TRUCCO: Aggiungo &language=ita per filtrare i risultati
+        const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&language=ita&limit=6`;
+        try{
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            dd.innerHTML = data.docs.map(d => {
+                const img = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '';
+                // Fallback titolo/autore
+                const t = (d.title || "Senza titolo").replace(/'/g, "&apos;");
+                const a = (d.author_name?.[0] || "Sconosciuto").replace(/'/g, "&apos;");
+                
+                return `
+                <div class="dd-item" onclick="selectBook('${t}', '${a}', '${img}')">
+                    <div style="width:30px; height:45px; background:#333; flex-shrink:0;">
+                        ${img ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">` : ''}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; color:#fff;">${t}</div>
+                        <div style="font-size:12px; color:#999;">${a}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            dd.style.display = 'block';
+        } catch(e){ console.error(e); }
+    }, 400);
 });
 
-function selectBook(title, author, cover) {
-  inpSearch.value = title;
-  tempBook = { title, author, cover };
-  ddResults.style.display = 'none';
+function selectBook(title, author, cover){
+    document.getElementById('inpSearch').value = title;
+    document.getElementById('inpAuthor').value = author;
+    
+    // Aggiorna preview
+    const prevImg = document.getElementById('preview-img');
+    const prevTxt = document.getElementById('preview-text');
+    
+    if(cover){
+        prevImg.src = cover.replace('-S.jpg', '-L.jpg'); // Prova alta qualità
+        prevImg.style.display = 'block';
+        prevTxt.style.display = 'none';
+    } else {
+        prevImg.style.display = 'none';
+        prevTxt.style.display = 'block';
+    }
+    
+    tempBook = { title, author, cover: cover ? cover.replace('-S.jpg', '-M.jpg') : '' };
+    dd.style.display = 'none';
 }
 
-// --- CRUD ---
-function saveBook() {
-  const title = inpSearch.value;
-  if(!title) return alert("Serve un titolo!");
-  
-  const newBook = {
-    id: crypto.randomUUID(),
-    title: title,
-    author: tempBook?.author || "Sconosciuto",
-    cover: tempBook?.cover || "",
-    status: document.getElementById('inpStatus').value,
-    added: Date.now(),
-    ...tempBook
-  };
-  
-  books.push(newBook);
-  localStorage.setItem(LS_KEY, JSON.stringify(books));
-  
-  renderList();
-  showToast("Libro Aggiunto!");
-  inpSearch.value = "";
-  tempBook = null;
+// --- RATING SYSTEM ---
+function setupStars(){
+    const starContainer = document.getElementById('star-input');
+    starContainer.innerHTML = '';
+    for(let i=1; i<=5; i++){
+        const s = document.createElement('span');
+        s.innerText = '★';
+        s.onclick = () => { currentRating = i; updateStarsUI(i); };
+        starContainer.appendChild(s);
+    }
+    updateStarsUI(0);
 }
 
-function deleteCurrent() {
-  if(!currentId) return;
-  if(!confirm("Sicuro?")) return;
-  books = books.filter(b => b.id !== currentId);
-  localStorage.setItem(LS_KEY, JSON.stringify(books));
-  closeFocus();
-  // Ricarica la vista corrente
-  if(document.body.classList.contains('is-room')) renderRoom(); else renderList();
+function updateStarsUI(n){
+    const stars = document.getElementById('star-input').children;
+    for(let i=0; i<5; i++){
+        stars[i].style.color = i < n ? '#fbbf24' : '#444';
+    }
 }
 
-// --- RENDER LISTA ---
-function renderList() {
-  const container = document.getElementById('listContainer');
-  container.innerHTML = books.map(b => `
-    <div class="book-card" onclick="openFocus('${b.id}')">
-      <img src="${b.cover}" class="bc-img" onerror="this.style.opacity=0.3">
-      <div>
-        <div style="font-weight:bold; margin-bottom:4px;">${b.title}</div>
-        <div style="font-size:12px; color:var(--muted);">${b.author}</div>
-        <div style="margin-top:8px; font-size:10px; padding:2px 6px; border:1px solid #444; display:inline-block; border-radius:4px;">
-          ${mapStatus(b.status)}
+// --- SAVING ---
+function saveBook(){
+    if(!tempBook && !document.getElementById('inpSearch').value) return alert("Cerca un libro prima!");
+    
+    const finalBook = {
+        id: crypto.randomUUID(),
+        title: document.getElementById('inpSearch').value,
+        author: document.getElementById('inpAuthor').value || "Sconosciuto",
+        cover: tempBook?.cover || "",
+        status: document.getElementById('inpStatus').value,
+        comment: document.getElementById('inpComment').value,
+        rating: currentRating,
+        timestamp: Date.now()
+    };
+    
+    books.push(finalBook);
+    localStorage.setItem(LS_KEY, JSON.stringify(books));
+    
+    // Feedback
+    const msg = document.getElementById('msg-save');
+    msg.style.opacity = 1;
+    setTimeout(() => msg.style.opacity = 0, 2000);
+    
+    renderMiniList();
+    clearForm();
+}
+
+function clearForm(){
+    document.getElementById('inpSearch').value = "";
+    document.getElementById('inpAuthor').value = "";
+    document.getElementById('inpComment').value = "";
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('preview-text').style.display = 'block';
+    tempBook = null;
+    currentRating = 0;
+    updateStarsUI(0);
+}
+
+// --- RENDER ROOM (3D ENGINE) ---
+function renderRoom(){
+    const zones = {
+        table: document.getElementById('table-surface'),
+        shelf1: document.getElementById('shelf-high'),
+        shelf2: document.getElementById('shelf-low'),
+        wish: document.getElementById('wish-corner')
+    };
+    
+    // Pulisci
+    Object.values(zones).forEach(z => z.innerHTML = '');
+    
+    books.forEach(b => {
+        // LOGICA TAVOLO (3D REALE)
+        if(b.status === 'reading'){
+            const cube = document.createElement('div');
+            cube.className = 'book-3d';
+            cube.onclick = () => openModal(b.id);
+            cube.innerHTML = `
+                <div class="book-shadow"></div>
+                <div class="face face-bottom"></div>
+                <div class="face face-right"></div>
+                <div class="face face-spine"></div>
+                <div class="face face-front">
+                    ${b.cover ? `<img src="${b.cover}">` : `<div style="padding:10px; font-size:10px;">${b.title}</div>`}
+                </div>
+            `;
+            zones.table.appendChild(cube);
+        }
+        // LOGICA SCAFFALI (DORSI 2D)
+        else if(b.status === 'read' || b.status === 'to_read'){
+            const spine = document.createElement('div');
+            spine.className = 'spine-item';
+            spine.setAttribute('data-title', b.title);
+            // Genera colore pseudo-randomico in base al titolo per variare
+            const hue = (b.title.length * 50) % 360;
+            spine.style.background = `linear-gradient(90deg, hsl(${hue}, 30%, 20%), hsl(${hue}, 30%, 35%) 40%, hsl(${hue}, 30%, 20%))`;
+            spine.style.height = (80 + (b.title.length % 20)) + '%';
+            spine.onclick = () => openModal(b.id);
+            
+            if(b.status === 'read') zones.shelf1.appendChild(spine);
+            else zones.shelf2.appendChild(spine);
+        }
+        // LOGICA WISHLIST
+        else {
+            const item = document.createElement('img');
+            item.src = b.cover || '';
+            item.style.width = '30px'; item.style.height='45px'; item.style.objectFit='cover';
+            item.style.opacity = 0.7; item.style.cursor='pointer';
+            item.onclick = () => openModal(b.id);
+            zones.wish.appendChild(item);
+        }
+    });
+}
+
+// --- RENDER MINI LIST ---
+function renderMiniList(){
+    const list = document.getElementById('mini-list');
+    list.innerHTML = books.map(b => `
+        <div style="flex:0 0 60px; cursor:pointer;" onclick="openModal('${b.id}')">
+            <img src="${b.cover}" style="width:60px; height:90px; object-fit:cover; border-radius:4px; background:#333;">
+            <div style="font-size:10px; overflow:hidden; white-space:nowrap; margin-top:4px;">${b.title}</div>
         </div>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
 }
 
-// --- RENDER STANZA (IL CUORE DEL FIX) ---
-function renderRoom() {
-  // Pulisci le zone
-  ['shelfHigh', 'shelfLow', 'tableZone', 'wishZone'].forEach(id => document.getElementById(id).innerHTML = '');
-
-  // Ordina libri (per esempio alfabetico o per data)
-  const sorted = [...books].sort((a,b) => b.added - a.added);
-
-  sorted.forEach(b => {
-    let el;
+// --- MODAL & ACTIONS ---
+function openModal(id){
+    focusId = id;
+    const b = books.find(x => x.id === id);
+    if(!b) return;
     
-    // CASO 1: SCAFFALI (DORSI VERTICALI)
-    if (b.status === 'read' || b.status === 'to_read') {
-      el = document.createElement('div');
-      el.className = 'spine-book';
-      el.title = b.title + " - " + b.author;
-      
-      // Simula colore dorso casuale se non c'è logica specifica, o basato su titolo
-      const hue = (b.title.length * 40) % 360;
-      el.style.background = `linear-gradient(to right, hsl(${hue}, 20%, 30%), hsl(${hue}, 20%, 40%) 30%, hsl(${hue}, 20%, 20%))`;
-      
-      // Altezza variabile random per realismo
-      const h = 85 + (b.title.length % 15); 
-      el.style.height = h + "%";
-      
-      el.onclick = () => openFocus(b.id);
-      
-      // Destinazione
-      const dest = b.status === 'read' ? 'shelfHigh' : 'shelfLow';
-      document.getElementById(dest).appendChild(el);
-    }
+    document.getElementById('m-title').innerText = b.title;
+    document.getElementById('m-author').innerText = b.author;
+    document.getElementById('m-cover').src = b.cover;
+    document.getElementById('m-badge').innerText = b.status.toUpperCase().replace('_', ' ');
+    document.getElementById('m-badge').className = 'badge ' + b.status;
+    document.getElementById('m-comment').innerText = b.comment || "Nessuna recensione inserita.";
+    document.getElementById('m-stars').innerHTML = '★'.repeat(b.rating) + '<span style="color:#444">' + '★'.repeat(5-b.rating) + '</span>';
     
-    // CASO 2: TAVOLO (COPERTINE 3D)
-    else if (b.status === 'reading') {
-      el = document.createElement('div');
-      el.className = 'table-book';
-      el.onclick = () => openFocus(b.id);
-      
-      if(b.cover) {
-        el.innerHTML = `<img src="${b.cover}">`;
-      } else {
-        el.innerHTML = `<div style="padding:10px; font-size:10px; color:#333; text-align:center; height:100%; display:flex; align-items:center; justify-content:center; background:#eee;">${b.title}</div>`;
-      }
-      
-      document.getElementById('tableZone').appendChild(el);
-    }
-    
-    // CASO 3: WISHLIST (MINIATURE)
-    else if (b.status === 'wishlist') {
-      el = document.createElement('div');
-      el.className = 'wish-book';
-      if(b.cover) el.style.backgroundImage = `url(${b.cover})`;
-      el.style.backgroundSize = 'cover';
-      el.onclick = () => openFocus(b.id);
-      document.getElementById('wishZone').appendChild(el);
-    }
-  });
+    document.getElementById('modal-focus').classList.add('on');
 }
 
-// --- FOCUS MODAL ---
-function openFocus(id) {
-  currentId = id;
-  const b = books.find(x => x.id === id);
-  if(!b) return;
-  
-  document.getElementById('fpTitle').innerText = b.title;
-  document.getElementById('fpAuthor').innerText = b.author;
-  document.getElementById('fpCover').src = b.cover || '';
-  document.getElementById('fpStatusBadge').innerText = mapStatus(b.status);
-  document.getElementById('focusOverlay').classList.add('on');
+function closeModal(){
+    document.getElementById('modal-focus').classList.remove('on');
 }
 
-function closeFocus() {
-  document.getElementById('focusOverlay').classList.remove('on');
-  currentId = null;
+function deleteBook(){
+    if(!confirm("Sicuro?")) return;
+    books = books.filter(b => b.id !== focusId);
+    localStorage.setItem(LS_KEY, JSON.stringify(books));
+    closeModal();
+    if(document.getElementById('view-room').classList.contains('visible')) renderRoom();
+    else renderMiniList();
 }
 
-function cycleStatus() {
-  const b = books.find(x => x.id === currentId);
-  const states = ['wishlist', 'to_read', 'reading', 'read'];
-  const idx = states.indexOf(b.status);
-  b.status = states[(idx + 1) % states.length];
-  saveData();
-  openFocus(b.id); // Refresh UI
-  if(document.body.classList.contains('is-room')) renderRoom();
+function exportData(){
+    const data = JSON.stringify(books, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'libreria_backup.json';
+    a.click();
 }
 
-function searchAmazon() {
-  const b = books.find(x => x.id === currentId);
-  window.open(`https://www.amazon.it/s?k=${encodeURIComponent(b.title + " " + b.author)}`, '_blank');
-}
-
-// --- UTILS ---
-function mapStatus(s) {
-  const map = { 'read': 'Letto', 'to_read': 'Da Leggere', 'reading': 'In Lettura', 'wishlist': 'Wishlist' };
-  return map[s] || s;
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.innerText = msg; t.classList.add('on');
-  setTimeout(()=>t.classList.remove('on'), 2000);
-}
-
-function saveData() {
-  localStorage.setItem(LS_KEY, JSON.stringify(books));
-}
-
-function exportData() {
-  const data = JSON.stringify(books, null, 2);
-  const blob = new Blob([data], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'library.json';
-  a.click();
-}
-
-// Init
-switchView('list');
+// Start
+init();
 
 </script>
 </body>
