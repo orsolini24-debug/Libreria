@@ -3,616 +3,530 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Libreria 2.0 - Immersive & Italian</title>
+  <title>Libreria 3.0 - Google Books & Real 3D</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;500;800&family=Libre+Baskerville:ital@0;1&display=swap" rel="stylesheet">
   
   <style>
     :root{
-      --bg: #050505;
-      /* Glassmorphism avanzato */
-      --glass: rgba(20, 25, 30, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.15);
-      --glass-highlight: rgba(255, 255, 255, 0.05);
+      --bg-color: #050505;
+      --wood-dark: #2a1b15;
+      --wood-light: #4a3b32;
+      --wood-top: #5c4033;
+      --shadow-shelf: rgba(0,0,0,0.8);
       
-      --accent: #60a5fa; /* Blu moderno */
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      
-      --shadow-soft: 0 10px 30px rgba(0,0,0,0.5);
-      --shadow-deep: 0 20px 60px rgba(0,0,0,0.8);
+      --ui-glass: rgba(20, 20, 24, 0.85);
+      --ui-border: rgba(255,255,255,0.1);
+      --accent: #d4af37; /* Oro antico */
     }
 
-    *{ box-sizing:border-box; }
-    
     body{
-      margin:0; font-family: 'Inter', sans-serif; 
-      color:var(--text-main); background:var(--bg);
-      height:100vh; overflow:hidden; /* App fullscreen */
+      margin:0; overflow:hidden; background:var(--bg-color);
+      font-family: 'Inter', sans-serif; color:white;
+      height:100vh; width:100vw;
     }
 
-    /* BACKGROUND SFUMATO (Fallback se manca immagine) */
-    body::before{
-      content:""; position:fixed; inset:0; z-index:-1;
-      background: radial-gradient(circle at top center, #1e293b, #020617);
+    /* --- LAYOUT GENERALE --- */
+    .app-wrapper{
+      position: relative; width:100%; height:100%;
+      display: flex; flex-direction: column;
     }
 
-    /* --- UI LAYOUT --- */
-    .app-container{
-      display: grid; grid-template-rows: auto 1fr;
-      height: 100%; max-width: 1600px; margin: 0 auto;
-      padding: 20px; gap: 20px;
-    }
-
-    /* HEADER TRASPARENTE */
+    /* HEADER MINIMAL */
     header{
+      position: absolute; top:0; left:0; right:0; z-index: 1000;
       display:flex; justify-content:space-between; align-items:center;
-      padding: 15px 25px;
-      background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: 16px; backdrop-filter: blur(12px);
-      box-shadow: var(--shadow-soft);
+      padding: 15px 30px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+      pointer-events: none; /* Lascia cliccare la stanza sotto */
     }
-    
-    .brand h1{ margin:0; font-size:20px; font-weight:800; letter-spacing:-0.5px; display:flex; align-items:center; gap:10px;}
-    .brand span{ font-size:11px; font-weight:400; color:var(--text-muted); background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;}
+    header * { pointer-events: auto; } /* Riattiva click sui bottoni */
 
-    .controls{ display:flex; gap:10px; }
+    h1{ font-family: 'Cinzel', serif; font-size: 20px; color: var(--accent); margin:0; text-shadow:0 2px 10px black;}
     
-    button{
-      background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
-      color: var(--text-main); padding: 8px 16px; border-radius: 8px;
-      cursor: pointer; font-weight: 600; font-size: 13px; transition: all .2s;
+    .actions button{
+      background: var(--ui-glass); border: 1px solid var(--ui-border);
+      color: #eee; padding: 8px 16px; border-radius: 6px; cursor: pointer;
+      backdrop-filter: blur(10px); transition: .2s; font-size:12px;
     }
-    button:hover{ background: rgba(255,255,255,0.15); transform: translateY(-1px); }
-    button.active{ background: var(--text-main); color: #000; }
-    button.primary{ background: var(--accent); color: #000; border-color: var(--accent); }
+    .actions button:hover{ background: white; color:black; }
+    .actions button.primary{ border-color: var(--accent); color: var(--accent); }
+    .actions button.primary:hover{ background: var(--accent); color: black; }
 
-    /* --- VIEWPORT --- */
-    .viewport{ position:relative; width:100%; height:100%; overflow:hidden; border-radius:20px; border:1px solid var(--glass-border); }
-
-    /* VISTA 1: LISTA DATA-ENTRY */
-    .view-list{
-      position:absolute; inset:0; background:rgba(10,10,12,0.9);
-      padding:30px; overflow-y:auto; display:none; z-index:10;
-    }
-    .view-list.visible{ display:block; }
-
-    /* Form Grid */
-    .editor-grid{
-      display:grid; grid-template-columns: 250px 1fr; gap:30px; max-width:1000px; margin:0 auto;
-    }
-    .cover-preview{
-      width:100%; aspect-ratio:2/3; background:#1e293b; border-radius:12px;
-      border:2px dashed var(--glass-border); display:flex; align-items:center; justify-content:center;
-      overflow:hidden; position:relative;
-    }
-    .cover-preview img{ width:100%; height:100%; object-fit:cover; }
-    
-    .form-fields{ display:flex; flex-direction:column; gap:20px; }
-    
-    .input-group label{ display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; font-weight:600;}
-    input, select, textarea{
-      width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border);
-      color:#fff; padding:12px; border-radius:8px; outline:none; font-family:inherit;
-    }
-    input:focus, textarea:focus{ border-color:var(--accent); background:rgba(0,0,0,0.5); }
-    
-    /* Search Dropdown */
-    .search-box{ position:relative; }
-    .dropdown{
-      position:absolute; top:100%; left:0; right:0; background:#1e293b; 
-      border:1px solid var(--glass-border); border-radius:8px; z-index:100;
-      max-height:250px; overflow-y:auto; margin-top:5px; display:none;
-      box-shadow: var(--shadow-deep);
-    }
-    .dd-item{ padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; display:flex; gap:10px; align-items:center; }
-    .dd-item:hover{ background:rgba(255,255,255,0.05); }
-    
-    /* VISTA 2: STANZA 3D */
-    .view-room{
-      position:absolute; inset:0; 
-      perspective: 1500px; /* Prospettiva globale della scena */
-      overflow:hidden;
-      display:none;
-    }
-    .view-room.visible{ display:block; }
-
-    .room-bg{
-      position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-      transform: scale(1.05); /* Zoom leggero per evitare bordi */
-      filter: brightness(0.75) contrast(1.1); /* Atmosfera */
-      z-index: 0;
+    /* --- SCENA 3D (IL CUORE) --- */
+    .room-viewport{
+      flex: 1; position: relative; overflow: hidden;
+      perspective: 1200px; /* Profondità di campo */
+      display: flex; align-items: flex-end; justify-content: center;
     }
 
-    /* ZONE LOGICHE (Contenitori Invisibili) */
-    .zone{ position:absolute; z-index:10; }
-    
-    /* Debug Mode: aggiungi classe .debug al body per vedere i box */
-    body.debug .zone{ border: 1px dashed red; background: rgba(255,0,0,0.1); }
+    /* Sfondo Atmosferico (Muro/Finestra) */
+    .room-bg-layer{
+      position: absolute; inset: -50px; 
+      background-image: url('./assets/room.jpg'); 
+      background-size: cover; background-position: center;
+      filter: brightness(0.4) blur(0px); z-index: 0;
+      /* Se l'utente non ha l'immagine, usiamo un gradiente elegante */
+      background-color: #1a1a1a;
+    }
 
-    /* Tavolo: posizionato in basso a sinistra rispetto alla foto */
-    .zone-table{
-      bottom: 12%; left: 25%; width: 40%; height: 30%;
-      display:flex; align-items:center; justify-content:center; gap: 40px;
-      /* Il piano del tavolo è inclinato nella foto, simuliamo col 3D */
+    /* COSTRUZIONE LIBRERIA PROCEDURALE */
+    .bookshelf-container{
+      position: relative; z-index: 10;
+      width: 90%; max-width: 1200px;
+      height: 85%;
+      margin-bottom: 0;
       transform-style: preserve-3d;
-      perspective: 800px;
+      transform: rotateX(5deg); /* Leggera inclinazione dal basso per imponenza */
+      transition: transform 0.5s ease;
+      display: flex; flex-direction: column; justify-content: flex-end;
     }
 
-    /* Scaffali: Sfondo destra */
-    .zone-shelf-1{ top: 16%; left: 51%; width: 28%; height: 11%; display:flex; align-items:flex-end; gap:2px; }
-    .zone-shelf-2{ top: 32%; left: 51%; width: 28%; height: 11%; display:flex; align-items:flex-end; gap:2px; }
-    
-    /* Wishlist */
-    .zone-wish{ bottom: 5%; right: 5%; width: 15%; height: 15%; display:flex; flex-wrap:wrap; gap:5px; transform:rotate(-5deg); opacity:0.8; }
-
-    /* --- IL LIBRO 3D (CUBE ENGINE) --- */
-    .book-3d{
+    /* Singolo Scaffale (Legno) */
+    .shelf-row{
       position: relative;
-      width: 140px; aspect-ratio: 2/3;
+      height: 160px; /* Altezza spazio libri */
+      width: 100%;
+      margin-bottom: 20px;
       transform-style: preserve-3d;
+      border-bottom: 25px solid var(--wood-dark); /* Spessore legno frontale */
+      box-shadow: 0 30px 40px var(--shadow-shelf);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent); /* Ombra interna */
+      display: flex; align-items: flex-end; padding: 0 40px; gap: 4px;
+    }
+
+    /* Piano d'appoggio (Top del legno) */
+    .shelf-row::after{
+      content:''; position: absolute; bottom: -25px; left: 0; width: 100%; height: 60px;
+      background: var(--wood-top);
+      transform-origin: top; transform: rotateX(90deg);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    
+    /* Spalle laterali (Montanti) */
+    .bookshelf-container::before, .bookshelf-container::after{
+      content:''; position: absolute; top:0; bottom:0; width: 40px;
+      background: var(--wood-light); transform-style: preserve-3d;
+      box-shadow: inset 0 0 20px black;
+    }
+    .bookshelf-container::before{ left: -40px; transform: rotateY(90deg); transform-origin: right;}
+    .bookshelf-container::after{ right: -40px; transform: rotateY(-90deg); transform-origin: left;}
+
+
+    /* --- LIBRI 3D AVANZATI --- */
+    .book-spine{
+      position: relative;
+      width: 32px; /* Larghezza standard dorso */
+      height: 130px; /* Altezza base */
+      border-radius: 2px 4px 4px 2px;
       cursor: pointer;
-      transition: transform 0.3s ease;
-      /* Default state: Appoggiato sul tavolo */
-      transform: rotateX(60deg) rotateZ(-15deg);
-    }
-    
-    .book-3d:hover{
-      /* Hover state: Si solleva e raddrizza leggermente */
-      transform: rotateX(40deg) rotateZ(-5deg) translateZ(30px);
+      transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+      transform-origin: bottom center;
+      /* Texture dorso generica fallback */
+      background: linear-gradient(to right, #444, #666 20%, #444 40%, #222);
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
     }
 
-    /* Facce del libro */
-    .face{ position: absolute; inset:0; backface-visibility: hidden; }
-    
-    /* Copertina */
-    .face-front{ 
-      transform: translateZ(12px); /* Spessore metà libro */
-      background: #333; border-radius: 2px;
-      box-shadow: inset 2px 0 5px rgba(255,255,255,0.2); /* Luce sul bordo */
-    }
-    .face-front img{ width:100%; height:100%; object-fit:cover; border-radius:2px; }
-
-    /* Pagine laterali (Spessore) */
-    .face-right{
-      width: 24px; height: 100%; left: 100%; top:0;
-      transform: rotateY(90deg) translateZ(-12px); /* Posiziona sul lato */
-      background: linear-gradient(to right, #eee, #ddd 20%, #eee 40%, #ccc); /* Texture pagine */
-    }
-    .face-bottom{
-      width: 100%; height: 24px; top: 100%; left:0;
-      transform: rotateX(-90deg) translateZ(-12px);
-      background: #ddd;
-    }
-    
-    /* Dorso (Spine) - Non visibile quando piatto, ma serve per completezza */
-    .face-spine{
-      width: 24px; height: 100%; right: 100%; top:0;
-      transform: rotateY(-90deg) translateZ(-12px);
-      background: #222;
+    .book-spine:hover{
+      transform: scale(1.05) translateZ(20px); z-index: 100;
     }
 
-    /* Ombra realistica sul tavolo (separata dal libro per prospettiva) */
-    .book-shadow{
-      position:absolute; width:100%; height:100%; top:15px; left:15px;
-      background: rgba(0,0,0,0.6);
-      filter: blur(10px);
-      transform: translateZ(-30px); /* Sotto il libro */
-      pointer-events: none;
+    /* Etichetta titolo sul dorso */
+    .spine-label{
+      position: absolute; inset:0; 
+      writing-mode: vertical-rl; text-orientation: mixed;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Libre Baskerville', serif;
+      font-size: 9px; color: rgba(255,255,255,0.8);
+      text-shadow: 0 1px 2px black;
+      padding: 5px 0; overflow: hidden;
+      white-space: nowrap; text-overflow: ellipsis;
     }
+    
+    /* Varianti di colore generate via JS */
+    .bk-red   { background: linear-gradient(to right, #5c1818, #8a2b2b 25%, #4a1010); }
+    .bk-blue  { background: linear-gradient(to right, #182b5c, #2b458a 25%, #101c4a); }
+    .bk-green { background: linear-gradient(to right, #185c2b, #2b8a45 25%, #104a20); }
+    .bk-black { background: linear-gradient(to right, #222, #444 25%, #111); }
+    .bk-white { background: linear-gradient(to right, #ccc, #eee 25%, #bbb); color:#111; }
+    .bk-white .spine-label { color: #222; text-shadow:none; }
 
-    /* --- LIBRI SU SCAFFALE (Solo Dorso 2D avanzato) --- */
-    .spine-item{
-      width: 20px; height: 90%; 
-      background: linear-gradient(90deg, #333, #555 30%, #333);
-      border-radius: 2px; cursor: pointer; position: relative;
-      transition: transform 0.2s;
-      box-shadow: 1px 0 3px rgba(0,0,0,0.5);
-    }
-    .spine-item:hover{ transform: scaleY(1.05) translateY(-2px); z-index:100; background:#666; }
-    /* Tooltip titolo */
-    .spine-item:hover::after{
-      content: attr(data-title);
-      position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
-      background:rgba(0,0,0,0.9); padding:5px 10px; border-radius:4px;
-      white-space:nowrap; font-size:12px; pointer-events:none; z-index:200;
-    }
 
-    /* MODAL DETTAGLI */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(5px);
-      z-index:2000; display:none; align-items:center; justify-content:center;
+    /* --- INTERFACCIA GESTIONE (A SCOMPARSA) --- */
+    .manager-panel{
+      position: fixed; top: 70px; right: 30px; bottom: 30px; width: 400px;
+      background: var(--ui-glass);
+      border: 1px solid var(--ui-border);
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      box-shadow: -20px 0 60px rgba(0,0,0,0.7);
+      transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2000;
+      display: flex; flex-direction: column;
     }
-    .modal-backdrop.on{ display:flex; }
+    .manager-panel.open{ transform: translateX(0); }
+
+    .mp-header{ padding: 20px; border-bottom: 1px solid var(--ui-border); display:flex; justify-content:space-between; align-items:center;}
+    .mp-body{ flex:1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
     
-    .modal-card{
-      background: #151920; border:1px solid var(--glass-border);
-      width: 500px; padding: 0; border-radius: 16px; overflow:hidden;
-      box-shadow: var(--shadow-deep);
+    /* Search Box */
+    .search-group{ position: relative; }
+    .search-input{
+      width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--ui-border);
+      padding: 12px; color: white; border-radius: 8px; font-family: inherit;
     }
-    .modal-header{
-      padding:20px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--glass-border);
-      display:flex; justify-content:space-between; align-items:center;
-    }
-    .modal-body{ padding:25px; display:grid; grid-template-columns: 120px 1fr; gap:20px; }
-    .modal-footer{
-      padding:20px; border-top:1px solid var(--glass-border); display:flex; gap:10px; justify-content:flex-end;
-    }
+    .search-input:focus{ border-color: var(--accent); outline: none; }
     
-    .rating-stars{ color: #fbbf24; font-size:18px; letter-spacing:2px; }
-    .badge{ padding:4px 8px; border-radius:4px; font-size:11px; text-transform:uppercase; font-weight:700; border:1px solid rgba(255,255,255,0.2); }
-    .badge.reading{ color: #fbbf24; border-color:#fbbf24; }
-    .badge.read{ color: #4ade80; border-color:#4ade80; }
+    .results-dropdown{
+      margin-top: 10px; background: #1a1a1a; border-radius: 8px; overflow: hidden;
+      max-height: 0; transition: max-height 0.3s;
+    }
+    .results-dropdown.has-data{ max-height: 300px; overflow-y: auto; border: 1px solid var(--ui-border); }
     
+    .res-item{
+      display: flex; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background .2s;
+    }
+    .res-item:hover{ background: rgba(255,255,255,0.1); }
+    .res-img{ width: 40px; height: 60px; object-fit: cover; background: #333; }
+
+    /* Form Details */
+    .form-row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    label{ font-size:11px; text-transform: uppercase; color: #888; margin-bottom: 5px; display:block;}
+    select, textarea{ width:100%; background: rgba(0,0,0,0.3); border: 1px solid var(--ui-border); color:white; padding:10px; border-radius:6px; }
+
+    /* --- MODAL DETTAGLIO --- */
+    .detail-overlay{
+      position: fixed; inset:0; background: rgba(0,0,0,0.8); z-index: 3000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(5px);
+    }
+    .detail-overlay.active{ opacity: 1; pointer-events: auto; }
+    
+    .book-detail-card{
+      background: #151515; width: 600px; max-width: 90%;
+      border: 1px solid var(--ui-border); border-radius: 12px;
+      display: grid; grid-template-columns: 200px 1fr; overflow: hidden;
+      box-shadow: 0 50px 100px black; transform: scale(0.9); transition: transform 0.3s;
+    }
+    .detail-overlay.active .book-detail-card{ transform: scale(1); }
+    
+    .bd-cover{ width: 100%; height: 100%; object-fit: cover; background: #222; }
+    .bd-info{ padding: 30px; display: flex; flex-direction: column; }
+    .bd-title{ font-family: 'Cinzel', serif; font-size: 24px; margin: 0 0 5px 0; color: var(--accent); line-height: 1.2;}
+    .bd-meta{ font-size: 14px; color: #888; margin-bottom: 20px; }
+    .bd-comment{ flex: 1; font-style: italic; color: #ccc; line-height: 1.6; font-size: 14px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
+    
+    .bd-actions{ margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
+
   </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="app-wrapper">
   
   <header>
-    <div class="brand">
-      <h1>La Mia Libreria <span>2.0</span></h1>
-    </div>
-    <div class="controls">
-      <button id="nav-list" onclick="setView('list')">Gestione Dati</button>
-      <button id="nav-room" onclick="setView('room')" class="primary">Stanza Immersiva</button>
-      <button onclick="exportData()" title="Backup">💾</button>
+    <h1>BIBLIOTHECA <span style="font-size:12px; color:#666; font-family:sans-serif; letter-spacing:1px; margin-left:10px;">3.0</span></h1>
+    <div class="actions">
+      <button onclick="exportJSON()">Backup Dati</button>
+      <button class="primary" onclick="toggleManager()">+ Aggiungi / Gestisci</button>
     </div>
   </header>
 
-  <div class="viewport">
+  <div class="room-viewport" id="roomScene">
+    <div class="room-bg-layer"></div> <div class="bookshelf-container" id="bookshelf">
+       </div>
+  </div>
+
+  <div class="manager-panel" id="managerPanel">
+    <div class="mp-header">
+      <h3 style="margin:0">Gestione Biblioteca</h3>
+      <button onclick="toggleManager()" style="background:transparent; border:none; color:#888; cursor:pointer; font-size:20px;">✕</button>
+    </div>
     
-    <div id="view-list" class="view-list">
-      <div class="editor-grid">
+    <div class="mp-body">
+      <div class="search-group">
+        <label>Cerca Nuovi Libri (Google Books API)</label>
+        <input class="search-input" id="inpSearch" placeholder="Es. Italo Calvino, Adelphi..." autocomplete="off">
+        <div class="results-dropdown" id="searchResults"></div>
+      </div>
+
+      <hr style="border:0; border-top:1px solid var(--ui-border); width:100%;">
+
+      <div>
+        <label>Titolo Selezionato</label>
+        <div id="selTitle" style="font-weight:bold; margin-bottom:10px; color:var(--accent);">Nessun libro selezionato</div>
         
-        <div>
-          <div class="cover-preview">
-            <img id="preview-img" src="" style="display:none">
-            <span id="preview-text" style="color:var(--text-muted)">Nessuna<br>Copertina</span>
-          </div>
-          <div style="text-align:center; margin-top:10px;">
-            <div id="star-input" style="cursor:pointer; color:#555; font-size:24px;">★★★★★</div>
-            <span style="font-size:12px; color:var(--text-muted)">Voto</span>
-          </div>
+        <div class="form-row">
+           <div>
+             <label>Autore</label>
+             <input id="inpAuthor" class="search-input" style="padding:8px;" readonly>
+           </div>
+           <div>
+             <label>Pagine</label>
+             <input id="inpPages" class="search-input" style="padding:8px;" readonly>
+           </div>
+        </div>
+        
+        <div class="form-row" style="margin-top:15px;">
+           <div>
+             <label>Stato</label>
+             <select id="inpStatus">
+               <option value="read">Letto (Scaffale)</option>
+               <option value="reading">In Lettura</option>
+               <option value="toread">Da Leggere</option>
+             </select>
+           </div>
+           <div>
+             <label>Colore Dorso</label>
+             <select id="inpColor">
+               <option value="bk-red">Rosso Antico</option>
+               <option value="bk-blue">Blu Notte</option>
+               <option value="bk-green">Verde Bosco</option>
+               <option value="bk-black">Nero Pelle</option>
+               <option value="bk-white">Pergamena</option>
+             </select>
+           </div>
         </div>
 
-        <div class="form-fields">
-          <div class="search-box">
-            <div class="input-group">
-              <label>Cerca Libro (Edizioni Italiane)</label>
-              <input id="inpSearch" placeholder="Es. Calvino, Eco, Baricco..." autocomplete="off">
-            </div>
-            <div class="dropdown" id="ddResults"></div>
-          </div>
-
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-            <div class="input-group">
-              <label>Autore</label>
-              <input id="inpAuthor" readonly style="opacity:0.7">
-            </div>
-            <div class="input-group">
-              <label>Stato</label>
-              <select id="inpStatus">
-                <option value="reading">📖 In Lettura (Tavolo)</option>
-                <option value="to_read">📚 Da Leggere (Scaffale Basso)</option>
-                <option value="read">✅ Letto (Scaffale Alto)</option>
-                <option value="wishlist">💸 Wishlist (Angolo)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>La tua Recensione / Note</label>
-            <textarea id="inpComment" rows="4" placeholder="Cosa ne pensi?"></textarea>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-             <span id="msg-save" style="font-size:12px; color:#4ade80; opacity:0; transition:opacity .3s">Salvato!</span>
-             <div>
-               <button onclick="clearForm()">Pulisci</button>
-               <button class="primary" onclick="saveBook()">Salva Libro</button>
-             </div>
-          </div>
-
-          <div style="margin-top:20px; border-top:1px solid var(--glass-border); padding-top:20px;">
-            <label>Libri in memoria:</label>
-            <div id="mini-list" style="display:flex; gap:10px; overflow-x:auto; padding:10px 0;"></div>
-          </div>
-
+        <div style="margin-top:15px;">
+          <label>Note / Recensione</label>
+          <textarea id="inpNote" rows="3"></textarea>
         </div>
+
+        <button class="primary" style="width:100%; margin-top:20px; padding:12px;" onclick="saveBook()">Salva nella Libreria</button>
+        <div id="saveMsg" style="text-align:center; color:#4ade80; margin-top:5px; opacity:0; transition:0.3s;">Salvato con successo</div>
       </div>
     </div>
-
-    <div id="view-room" class="view-room visible">
-      <img src="./assets/room.jpg" class="room-bg" onerror="this.style.display='none'">
-      
-      <div class="zone zone-shelf-1" id="shelf-high"></div>
-      <div class="zone zone-shelf-2" id="shelf-low"></div>
-      <div class="zone zone-table" id="table-surface"></div>
-      <div class="zone zone-wish" id="wish-corner"></div>
-    </div>
-
   </div>
 
 </div>
 
-<div class="modal-backdrop" id="modal-focus" onclick="if(event.target===this) closeModal()">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3 style="margin:0">Dettagli Libro</h3>
-      <button onclick="closeModal()" style="padding:4px 10px;">✕</button>
-    </div>
-    <div class="modal-body">
-      <img id="m-cover" style="width:100%; border-radius:8px; object-fit:cover;">
-      <div>
-        <h2 id="m-title" style="margin:0 0 5px 0; font-size:20px;">Titolo</h2>
-        <p id="m-author" style="color:var(--text-muted); margin:0 0 10px 0;">Autore</p>
-        <span id="m-badge" class="badge">Stato</span>
-        <div id="m-stars" class="rating-stars" style="margin:10px 0;"></div>
-        <p id="m-comment" style="font-size:14px; line-height:1.5; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">...</p>
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this) closeDetail()">
+  <div class="book-detail-card">
+    <img src="" id="d-cover" class="bd-cover">
+    <div class="bd-info">
+      <div class="bd-title" id="d-title">Titolo</div>
+      <div class="bd-meta">di <span id="d-author" style="color:white;">Autore</span> &bull; <span id="d-publisher">Editore</span></div>
+      
+      <div class="bd-comment" id="d-comment">
+        Nessuna nota.
       </div>
-    </div>
-    <div class="modal-footer">
-      <button onclick="deleteBook()" style="color:#fb7185; border-color:rgba(251,113,133,0.3);">Elimina</button>
-      <button class="primary" onclick="closeModal()">Chiudi</button>
+
+      <div class="bd-actions">
+        <button onclick="deleteBook()" style="background:#311; color:#f87171; border:1px solid #522; padding:8px 16px; border-radius:6px; cursor:pointer;">Elimina</button>
+        <button onclick="closeDetail()" class="primary" style="background:var(--accent); color:black; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">Chiudi</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// --- CORE DATA ---
-const LS_KEY = "lib_v2_ultimate";
+/* --- CONFIGURAZIONE & DB --- */
+const LS_KEY = "library_v3_google";
 let books = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-let tempBook = null; 
-let currentRating = 0;
-let focusId = null;
+let tempBookData = null;
+let currentFocusId = null;
 
-// --- INIT ---
-function init(){
-    setView('room'); // Partiamo dalla stanza per effetto wow
-    renderMiniList();
-    renderRoom();
-    setupStars();
-}
-
-// --- NAVIGATION ---
-function setView(mode){
-    document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.remove('visible'));
-    document.getElementById('view-'+mode).classList.add('visible');
-    
-    document.getElementById('nav-list').classList.toggle('active', mode==='list');
-    document.getElementById('nav-room').classList.toggle('active', mode==='room');
-    
-    if(mode === 'room') renderRoom();
-    if(mode === 'list') renderMiniList();
-}
-
-// --- SEARCH ENGINE (ITALIANO FORZATO) ---
+// --- GOOGLE BOOKS API (THE GAME CHANGER) ---
 const inpSearch = document.getElementById('inpSearch');
-const dd = document.getElementById('ddResults');
-let timer;
+const resBox = document.getElementById('searchResults');
+let searchTimer;
 
 inpSearch.addEventListener('input', (e) => {
-    const q = e.target.value.trim();
-    if(q.length < 3) { dd.style.display='none'; return; }
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if(q.length < 3) { resBox.classList.remove('has-data'); return; }
+
+  searchTimer = setTimeout(async () => {
+    // Cerchiamo specificatamente libri in lingua italiana o rilevanti
+    // langRestrict=it aiuta molto per Calvino, Eco, ecc.
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=it&maxResults=10&printType=books`;
     
-    clearTimeout(timer);
-    timer = setTimeout(async () => {
-        // TRUCCO: Aggiungo &language=ita per filtrare i risultati
-        const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&language=ita&limit=6`;
-        try{
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            dd.innerHTML = data.docs.map(d => {
-                const img = d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : '';
-                // Fallback titolo/autore
-                const t = (d.title || "Senza titolo").replace(/'/g, "&apos;");
-                const a = (d.author_name?.[0] || "Sconosciuto").replace(/'/g, "&apos;");
-                
-                return `
-                <div class="dd-item" onclick="selectBook('${t}', '${a}', '${img}')">
-                    <div style="width:30px; height:45px; background:#333; flex-shrink:0;">
-                        ${img ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">` : ''}
-                    </div>
-                    <div>
-                        <div style="font-weight:600; color:#fff;">${t}</div>
-                        <div style="font-size:12px; color:#999;">${a}</div>
-                    </div>
-                </div>`;
-            }).join('');
-            dd.style.display = 'block';
-        } catch(e){ console.error(e); }
-    }, 400);
+    try {
+      const req = await fetch(url);
+      const data = await req.json();
+      
+      if(data.items) {
+        resBox.innerHTML = data.items.map(item => {
+          const info = item.volumeInfo;
+          const img = info.imageLinks?.smallThumbnail || '';
+          return `
+            <div class="res-item" onclick='selectBook(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+              <img class="res-img" src="${img}">
+              <div>
+                <div style="font-weight:bold; font-size:13px; color:white;">${info.title}</div>
+                <div style="font-size:11px; color:#aaa;">${info.authors?.[0] || '?'} - ${info.publisher || ''}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        resBox.classList.add('has-data');
+      }
+    } catch(err) { console.error(err); }
+  }, 500);
 });
 
-function selectBook(title, author, cover){
-    document.getElementById('inpSearch').value = title;
-    document.getElementById('inpAuthor').value = author;
+function selectBook(apiData) {
+  const info = apiData.volumeInfo;
+  
+  // Prepara oggetto temporaneo
+  tempBookData = {
+    title: info.title,
+    author: info.authors?.[0] || "Sconosciuto",
+    publisher: info.publisher || "Editore non noto",
+    pages: info.pageCount || 150, // Fallback per spessore libro
+    cover: info.imageLinks?.thumbnail?.replace('http:', 'https:') || '', // High res se possibile
+    googleId: apiData.id
+  };
+
+  // Popola UI
+  document.getElementById('selTitle').textContent = tempBookData.title;
+  document.getElementById('inpAuthor').value = tempBookData.author;
+  document.getElementById('inpPages').value = tempBookData.pages + " pag.";
+  
+  // Assegna colore casuale in base al genere o titolo se vuoi, qui random
+  const colors = ['bk-red','bk-blue','bk-green','bk-black','bk-white'];
+  document.getElementById('inpColor').value = colors[Math.floor(Math.random()*colors.length)];
+
+  resBox.classList.remove('has-data');
+  inpSearch.value = "";
+}
+
+// --- SALVATAGGIO ---
+function saveBook() {
+  if(!tempBookData) return alert("Seleziona prima un libro dalla ricerca!");
+  
+  const newBook = {
+    id: crypto.randomUUID(),
+    ...tempBookData,
+    status: document.getElementById('inpStatus').value,
+    styleClass: document.getElementById('inpColor').value,
+    note: document.getElementById('inpNote').value,
+    addedAt: Date.now()
+  };
+
+  books.push(newBook);
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+  
+  // Feedback visivo
+  const msg = document.getElementById('saveMsg');
+  msg.style.opacity = 1;
+  setTimeout(() => msg.style.opacity = 0, 2000);
+  
+  // Reset parziale
+  tempBookData = null;
+  document.getElementById('selTitle').textContent = "Pronto per il prossimo";
+  document.getElementById('inpNote').value = "";
+  
+  renderLibrary3D();
+}
+
+function deleteBook() {
+  if(!currentFocusId) return;
+  if(!confirm("Rimuovere questo libro?")) return;
+  
+  books = books.filter(b => b.id !== currentFocusId);
+  localStorage.setItem(LS_KEY, JSON.stringify(books));
+  closeDetail();
+  renderLibrary3D();
+}
+
+// --- MOTORE DI RENDERING 3D (PROCEDURALE) ---
+function renderLibrary3D() {
+  const shelfContainer = document.getElementById('bookshelf');
+  shelfContainer.innerHTML = ''; // Pulisci scena
+
+  // Filtra solo libri "fisici" (Letto/Da Leggere). 
+  // Quelli "In lettura" potremmo metterli su un tavolo separato in futuro (v4.0)
+  // Per ora li mettiamo tutti sugli scaffali per riempire la stanza.
+  const shelfBooks = books.sort((a,b) => b.addedAt - a.addedAt);
+
+  if(shelfBooks.length === 0) {
+    // Messaggio vuoto elegante
+    shelfContainer.innerHTML = `<div style="text-align:center; margin-top:100px; color:#555; font-family:'Cinzel'">La biblioteca è vuota.<br>Aggiungi volumi dal pannello.</div>`;
+    return;
+  }
+
+  // Calcoliamo quanti scaffali servono. Ipotizziamo max 15 libri per scaffale.
+  const BOOKS_PER_SHELF = 15;
+  const numShelves = Math.ceil(shelfBooks.length / BOOKS_PER_SHELF);
+  
+  let bookIndex = 0;
+
+  // Genera Righe Scaffale
+  for(let i=0; i<numShelves; i++) {
+    const row = document.createElement('div');
+    row.className = 'shelf-row';
     
-    // Aggiorna preview
-    const prevImg = document.getElementById('preview-img');
-    const prevTxt = document.getElementById('preview-text');
-    
-    if(cover){
-        prevImg.src = cover.replace('-S.jpg', '-L.jpg'); // Prova alta qualità
-        prevImg.style.display = 'block';
-        prevTxt.style.display = 'none';
-    } else {
-        prevImg.style.display = 'none';
-        prevTxt.style.display = 'block';
+    // Riempi la riga
+    for(let j=0; j<BOOKS_PER_SHELF; j++) {
+      if(bookIndex >= shelfBooks.length) break;
+      
+      const b = shelfBooks[bookIndex];
+      const spine = document.createElement('div');
+      
+      // Classi base + colore scelto
+      spine.className = `book-spine ${b.styleClass}`;
+      
+      // Calcolo spessore basato sulle pagine (min 20px, max 60px)
+      const thickness = Math.max(24, Math.min(b.pages / 10, 50)); 
+      spine.style.width = `${thickness}px`;
+      
+      // Calcolo altezza random per realismo (tra 85% e 98% dello scaffale)
+      const height = 85 + (b.title.length % 14); 
+      spine.style.height = `${height}%`;
+
+      // Etichetta
+      spine.innerHTML = `<span class="spine-label">${b.title}</span>`;
+      
+      // Interazione
+      spine.onclick = () => openDetail(b);
+
+      row.appendChild(spine);
+      bookIndex++;
     }
     
-    tempBook = { title, author, cover: cover ? cover.replace('-S.jpg', '-M.jpg') : '' };
-    dd.style.display = 'none';
+    // Aggiungi riga (appendendo in cima per ordine logico visivo o bottom up)
+    shelfContainer.appendChild(row);
+  }
 }
 
-// --- RATING SYSTEM ---
-function setupStars(){
-    const starContainer = document.getElementById('star-input');
-    starContainer.innerHTML = '';
-    for(let i=1; i<=5; i++){
-        const s = document.createElement('span');
-        s.innerText = '★';
-        s.onclick = () => { currentRating = i; updateStarsUI(i); };
-        starContainer.appendChild(s);
-    }
-    updateStarsUI(0);
+// --- GESTIONE UI ---
+function toggleManager() {
+  document.getElementById('managerPanel').classList.toggle('open');
 }
 
-function updateStarsUI(n){
-    const stars = document.getElementById('star-input').children;
-    for(let i=0; i<5; i++){
-        stars[i].style.color = i < n ? '#fbbf24' : '#444';
-    }
+function openDetail(book) {
+  currentFocusId = book.id;
+  document.getElementById('d-cover').src = book.cover || '';
+  document.getElementById('d-title').textContent = book.title;
+  document.getElementById('d-author').textContent = book.author;
+  document.getElementById('d-publisher').textContent = book.publisher;
+  document.getElementById('d-comment').textContent = book.note || "Nessuna nota personale.";
+  
+  document.getElementById('detailOverlay').classList.add('active');
 }
 
-// --- SAVING ---
-function saveBook(){
-    if(!tempBook && !document.getElementById('inpSearch').value) return alert("Cerca un libro prima!");
-    
-    const finalBook = {
-        id: crypto.randomUUID(),
-        title: document.getElementById('inpSearch').value,
-        author: document.getElementById('inpAuthor').value || "Sconosciuto",
-        cover: tempBook?.cover || "",
-        status: document.getElementById('inpStatus').value,
-        comment: document.getElementById('inpComment').value,
-        rating: currentRating,
-        timestamp: Date.now()
-    };
-    
-    books.push(finalBook);
-    localStorage.setItem(LS_KEY, JSON.stringify(books));
-    
-    // Feedback
-    const msg = document.getElementById('msg-save');
-    msg.style.opacity = 1;
-    setTimeout(() => msg.style.opacity = 0, 2000);
-    
-    renderMiniList();
-    clearForm();
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('active');
+  currentFocusId = null;
 }
 
-function clearForm(){
-    document.getElementById('inpSearch').value = "";
-    document.getElementById('inpAuthor').value = "";
-    document.getElementById('inpComment').value = "";
-    document.getElementById('preview-img').style.display = 'none';
-    document.getElementById('preview-text').style.display = 'block';
-    tempBook = null;
-    currentRating = 0;
-    updateStarsUI(0);
+function exportJSON() {
+  const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
+  const a = document.createElement('a');
+  a.href = data; a.download = 'biblioteca_backup.json';
+  a.click();
 }
 
-// --- RENDER ROOM (3D ENGINE) ---
-function renderRoom(){
-    const zones = {
-        table: document.getElementById('table-surface'),
-        shelf1: document.getElementById('shelf-high'),
-        shelf2: document.getElementById('shelf-low'),
-        wish: document.getElementById('wish-corner')
-    };
-    
-    // Pulisci
-    Object.values(zones).forEach(z => z.innerHTML = '');
-    
-    books.forEach(b => {
-        // LOGICA TAVOLO (3D REALE)
-        if(b.status === 'reading'){
-            const cube = document.createElement('div');
-            cube.className = 'book-3d';
-            cube.onclick = () => openModal(b.id);
-            cube.innerHTML = `
-                <div class="book-shadow"></div>
-                <div class="face face-bottom"></div>
-                <div class="face face-right"></div>
-                <div class="face face-spine"></div>
-                <div class="face face-front">
-                    ${b.cover ? `<img src="${b.cover}">` : `<div style="padding:10px; font-size:10px;">${b.title}</div>`}
-                </div>
-            `;
-            zones.table.appendChild(cube);
-        }
-        // LOGICA SCAFFALI (DORSI 2D)
-        else if(b.status === 'read' || b.status === 'to_read'){
-            const spine = document.createElement('div');
-            spine.className = 'spine-item';
-            spine.setAttribute('data-title', b.title);
-            // Genera colore pseudo-randomico in base al titolo per variare
-            const hue = (b.title.length * 50) % 360;
-            spine.style.background = `linear-gradient(90deg, hsl(${hue}, 30%, 20%), hsl(${hue}, 30%, 35%) 40%, hsl(${hue}, 30%, 20%))`;
-            spine.style.height = (80 + (b.title.length % 20)) + '%';
-            spine.onclick = () => openModal(b.id);
-            
-            if(b.status === 'read') zones.shelf1.appendChild(spine);
-            else zones.shelf2.appendChild(spine);
-        }
-        // LOGICA WISHLIST
-        else {
-            const item = document.createElement('img');
-            item.src = b.cover || '';
-            item.style.width = '30px'; item.style.height='45px'; item.style.objectFit='cover';
-            item.style.opacity = 0.7; item.style.cursor='pointer';
-            item.onclick = () => openModal(b.id);
-            zones.wish.appendChild(item);
-        }
-    });
-}
+// --- AVVIO ---
+renderLibrary3D();
 
-// --- RENDER MINI LIST ---
-function renderMiniList(){
-    const list = document.getElementById('mini-list');
-    list.innerHTML = books.map(b => `
-        <div style="flex:0 0 60px; cursor:pointer;" onclick="openModal('${b.id}')">
-            <img src="${b.cover}" style="width:60px; height:90px; object-fit:cover; border-radius:4px; background:#333;">
-            <div style="font-size:10px; overflow:hidden; white-space:nowrap; margin-top:4px;">${b.title}</div>
-        </div>
-    `).join('');
-}
-
-// --- MODAL & ACTIONS ---
-function openModal(id){
-    focusId = id;
-    const b = books.find(x => x.id === id);
-    if(!b) return;
-    
-    document.getElementById('m-title').innerText = b.title;
-    document.getElementById('m-author').innerText = b.author;
-    document.getElementById('m-cover').src = b.cover;
-    document.getElementById('m-badge').innerText = b.status.toUpperCase().replace('_', ' ');
-    document.getElementById('m-badge').className = 'badge ' + b.status;
-    document.getElementById('m-comment').innerText = b.comment || "Nessuna recensione inserita.";
-    document.getElementById('m-stars').innerHTML = '★'.repeat(b.rating) + '<span style="color:#444">' + '★'.repeat(5-b.rating) + '</span>';
-    
-    document.getElementById('modal-focus').classList.add('on');
-}
-
-function closeModal(){
-    document.getElementById('modal-focus').classList.remove('on');
-}
-
-function deleteBook(){
-    if(!confirm("Sicuro?")) return;
-    books = books.filter(b => b.id !== focusId);
-    localStorage.setItem(LS_KEY, JSON.stringify(books));
-    closeModal();
-    if(document.getElementById('view-room').classList.contains('visible')) renderRoom();
-    else renderMiniList();
-}
-
-function exportData(){
-    const data = JSON.stringify(books, null, 2);
-    const blob = new Blob([data], {type: 'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'libreria_backup.json';
-    a.click();
-}
-
-// Start
-init();
+// Apri il manager se vuoto
+if(books.length === 0) setTimeout(toggleManager, 1000);
 
 </script>
 </body>
