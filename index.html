@@ -13,11 +13,9 @@
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    a{color:inherit}
     header{max-width:1200px;margin:0 auto;padding:18px 16px 10px}
     h1{margin:0 0 6px;font-size:20px;font-weight:750}
     .sub{color:var(--muted);font-size:13px}
-
     main{max-width:1200px;margin:0 auto;padding:14px 16px 22px;display:grid;gap:14px}
 
     .panel{
@@ -94,31 +92,29 @@
       border-radius:16px;
       overflow:hidden;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.65)),
+        linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.60)),
         url("assets/room.jpg");
       background-size:cover;
       background-position:center;
       box-shadow: var(--shadow);
     }
-    /* overlay “luce del fuoco” */
     .room::after{
       content:"";
       position:absolute; inset:0;
       background:
-        radial-gradient(520px 340px at 72% 58%, rgba(255,150,60,.22), transparent 65%),
-        radial-gradient(340px 260px at 74% 62%, rgba(255,80,40,.14), transparent 62%),
+        radial-gradient(520px 340px at 72% 58%, rgba(255,150,60,.20), transparent 65%),
+        radial-gradient(340px 260px at 74% 62%, rgba(255,80,40,.12), transparent 62%),
         radial-gradient(520px 420px at 20% 20%, rgba(122,162,247,.10), transparent 55%);
       pointer-events:none;
       mix-blend-mode: screen;
       opacity:.9;
     }
 
-    /* Zone (hotspot) */
     .zone{
       position:absolute;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.08);
-      background: linear-gradient(180deg, rgba(16,20,27,.35), rgba(16,20,27,.55));
+      background: linear-gradient(180deg, rgba(16,20,27,.30), rgba(16,20,27,.52));
       backdrop-filter: blur(4px);
       box-shadow: 0 14px 40px rgba(0,0,0,.35);
       overflow:hidden;
@@ -137,7 +133,6 @@
       z-index:2;
     }
 
-    /* Posizionamento “stanza” (desktop) */
     .zone.read { left:5%; top:14%; width:44%; height:46%; }
     .zone.reading { left:54%; top:22%; width:41%; height:40%; }
     .zone.toread { left:10%; bottom:8%; width:80%; height:26%; }
@@ -149,7 +144,6 @@
       .zone.toread{left:6%;bottom:6%;width:88%;height:22%}
     }
 
-    /* Book visuals */
     .bookBtn{
       appearance:none; border:none; background:none; padding:0; margin:0;
       cursor:pointer;
@@ -161,7 +155,6 @@
       border-radius:12px;
     }
 
-    /* Spine verticali (letti) */
     .spine{
       width:42px;
       height:160px;
@@ -195,7 +188,6 @@
       overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
     }
 
-    /* Mini spine (in lettura) */
     .miniSpine{
       width:36px; height:86px;
       border-radius:10px;
@@ -220,7 +212,6 @@
       overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
     }
 
-    /* Stack orizzontale (da leggere) */
     .hbook{
       width:min(520px, 100%);
       height:44px;
@@ -233,6 +224,7 @@
       background-size:cover;
       background-position:center;
       transform: perspective(900px) rotateX(6deg);
+      position:relative;
     }
     .hbook::before{
       content:"";
@@ -240,11 +232,10 @@
       background:linear-gradient(180deg, rgba(255,255,255,.14), transparent 45%, rgba(0,0,0,.25));
       pointer-events:none;
     }
-    .hbookInfo{display:flex;flex-direction:column;min-width:0}
+    .hbookInfo{display:flex;flex-direction:column;min-width:0;position:relative;z-index:1}
     .hbookTitle{font-weight:900;font-size:12px;color:rgba(15,18,22,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .hbookAuthor{font-size:11px;color:rgba(15,18,22,.72);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    /* Tooltip */
     .tip{
       position:absolute;
       left:50%; top:-8px;
@@ -302,16 +293,73 @@
     .modalActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
     .linkBtn{background:transparent;color:var(--text);border:1px solid rgba(34,48,65,.95);border-radius:12px;padding:9px 11px;cursor:pointer;font-weight:750}
 
-    /* piccolo indicatore auto-ricerca */
     .hint{font-size:12px;color:var(--muted);margin-top:6px}
     .ok{color:#9be7b3}
     .warn{color:#ffd06a}
+
+    /* AUTOCOMPLETE DROPDOWN */
+    .fieldWrap{position:relative; min-width:240px;}
+    .dropdown{
+      position:absolute;
+      top:calc(100% + 6px);
+      left:0;
+      width:min(560px, 90vw);
+      background:rgba(10,12,16,.96);
+      border:1px solid rgba(34,48,65,.95);
+      border-radius:14px;
+      box-shadow:0 22px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+      z-index:2000;
+    }
+    .dropdown.hidden{display:none!important}
+    .ddHeader{
+      padding:10px 12px;
+      font-size:12px;
+      color:var(--muted);
+      border-bottom:1px solid rgba(34,48,65,.55);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .ddList{
+      max-height:320px;
+      overflow:auto;
+    }
+    .ddItem{
+      display:flex;
+      gap:10px;
+      padding:10px 12px;
+      cursor:pointer;
+      align-items:center;
+      border-bottom:1px solid rgba(34,48,65,.35);
+    }
+    .ddItem:hover{background:rgba(122,162,247,.10)}
+    .ddCover{
+      width:34px;
+      height:48px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background-size:cover;
+      background-position:center;
+      flex:0 0 auto;
+    }
+    .ddMain{min-width:0}
+    .ddTitle{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ddMeta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .kbd{
+      font-size:11px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(34,48,65,.95);
+      color:var(--muted);
+    }
   </style>
 </head>
+
 <body>
   <header>
     <h1>Libreria</h1>
-    <div class="sub">Vista Lista o Stanza. Dati salvati localmente nel browser. Autore/copertina: Open Library (se attivo).</div>
+    <div class="sub">Vista Lista o Stanza. Dati salvati localmente nel browser. Ricerca titolo/autore: Open Library.</div>
   </header>
 
   <main>
@@ -328,14 +376,23 @@
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <div style="min-width:240px;">
+        <div class="fieldWrap">
           <label for="title">Titolo *</label>
-          <input id="title" placeholder="es. Demian" />
+          <input id="title" placeholder="es. Demian" autocomplete="off" />
+          <div id="suggestBox" class="dropdown hidden">
+            <div class="ddHeader">
+              <div id="ddStatus">Suggerimenti</div>
+              <div class="kbd">↑↓ invio • esc</div>
+            </div>
+            <div id="ddList" class="ddList"></div>
+          </div>
         </div>
+
         <div style="min-width:240px;">
-          <label for="author">Autore (auto se vuoto)</label>
+          <label for="author">Autore</label>
           <input id="author" placeholder="es. Hermann Hesse" />
         </div>
+
         <div>
           <label for="status">Stato *</label>
           <select id="status">
@@ -344,6 +401,7 @@
             <option value="read">Letto</option>
           </select>
         </div>
+
         <div>
           <label for="rating">Valutazione (0–5)</label>
           <select id="rating">
@@ -352,10 +410,12 @@
             <option value="4">4</option><option value="5">5</option>
           </select>
         </div>
+
         <div style="min-width:260px;">
           <label for="tags">Tag (virgole)</label>
           <input id="tags" placeholder="filosofia, romanzo, classici" />
         </div>
+
         <div>
           <button id="saveBtn" type="button">Salva</button>
         </div>
@@ -385,6 +445,7 @@
             <button id="toggleLookup" class="secondary" type="button">Lookup ON</button>
           </div>
         </div>
+
         <div class="row" style="align-items:center;">
           <button id="exportBtn" class="secondary" type="button">Esporta JSON</button>
           <button id="importBtn" class="secondary" type="button">Importa JSON</button>
@@ -410,7 +471,6 @@
       </div>
     </section>
 
-    <!-- VISTA LISTA -->
     <section id="viewList" class="grid3">
       <section class="panel">
         <h2>Da leggere</h2>
@@ -426,7 +486,6 @@
       </section>
     </section>
 
-    <!-- VISTA STANZA -->
     <section id="viewRoom" class="panel roomPanel hidden">
       <div class="room" id="room">
         <div class="zone read">
@@ -456,7 +515,6 @@
     </section>
   </main>
 
-  <!-- MODAL DETTAGLIO -->
   <div id="bookModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalBackdrop" data-close="1"></div>
     <div class="modalCard">
@@ -485,7 +543,7 @@
               <button id="modalKindle" class="linkBtn" type="button">Kindle</button>
             </div>
 
-            <div class="hint">Nota: link Audible/Kindle sono ricerche. In futuro possiamo salvare link specifici o PDF.</div>
+            <div class="hint">Nota: i link Audible/Kindle sono ricerche. In futuro possiamo salvare link/PDF specifici per libro.</div>
           </div>
         </div>
       </div>
@@ -493,7 +551,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "libreria_personale_v2";
+    const STORAGE_KEY = "libreria_personale_v3";
     const el = (id) => document.getElementById(id);
 
     const state = {
@@ -503,8 +561,13 @@
       sort: "updated_desc",
       view: "list",
       lookupEnabled: true,
-      pendingLookup: null,
-      lastLookupTitle: ""
+
+      // autocomplete
+      suggestOpen: false,
+      suggestItems: [],
+      suggestIndex: -1,
+      suggestReqId: 0,
+      selectedSuggestion: null
     };
 
     function nowIso(){ return new Date().toISOString(); }
@@ -537,6 +600,20 @@
 
     function parseTags(raw){
       return (raw || "").split(",").map(s => s.trim()).filter(Boolean);
+    }
+
+    function setHint(msg, kind){
+      const h = el("lookupHint");
+      h.textContent = msg || "";
+      h.className = "hint" + (kind ? (" " + kind) : "");
+    }
+
+    function debounce(fn, ms){
+      let t = null;
+      return (...args) => {
+        if(t) clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
     }
 
     function getFilteredSorted(){
@@ -589,6 +666,10 @@
       el("tags").value = (book.tags || []).join(", ");
       el("saveBtn").textContent = "Aggiorna";
       el("cancelEditBtn").classList.remove("hidden");
+
+      // in editing, non forzo autocomplete
+      closeSuggest();
+      state.selectedSuggestion = null;
     }
 
     function clearForm(){
@@ -600,78 +681,206 @@
       el("tags").value = "";
       el("saveBtn").textContent = "Salva";
       el("cancelEditBtn").classList.add("hidden");
-      el("lookupHint").textContent = "";
-      state.lastLookupTitle = "";
+      setHint(state.lookupEnabled ? "Lookup attivo: digita un titolo e scegli dalla tendina." : "Lookup disattivato.", state.lookupEnabled ? "ok" : "warn");
+
+      closeSuggest();
+      state.selectedSuggestion = null;
     }
 
-    // ---------- LOOKUP Open Library (autore + cover) ----------
-    function setHint(msg, kind){
-      const h = el("lookupHint");
-      h.textContent = msg || "";
-      h.className = "hint" + (kind ? (" " + kind) : "");
+    // ----------------- AUTOCOMPLETE: Open Library -----------------
+    function coverFromId(coverId){
+      return coverId ? ("https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg") : "";
     }
 
-    function debounce(fn, ms){
-      let t = null;
-      return (...args) => {
-        if(t) clearTimeout(t);
-        t = setTimeout(() => fn(...args), ms);
-      };
+    function openLibraryWorkUrl(keyOrWork){
+      if(!keyOrWork) return "";
+      // spesso è "/works/OL...W" o "/books/..."
+      if(keyOrWork.startsWith("/")) return "https://openlibrary.org" + keyOrWork;
+      return "https://openlibrary.org/works/" + keyOrWork;
     }
 
-    async function openLibraryLookup(title){
-      const clean = (title || "").trim();
-      if(!state.lookupEnabled) return null;
-      if(clean.length < 3) return null;
+    function showSuggest(items, infoText){
+      state.suggestItems = items;
+      state.suggestIndex = items.length ? 0 : -1;
+      state.suggestOpen = true;
 
-      // evita richieste ripetute uguali
-      const key = clean.toLowerCase();
-      if(state.lastLookupTitle === key) return null;
-      state.lastLookupTitle = key;
+      el("ddStatus").textContent = infoText || (items.length ? "Seleziona un risultato" : "Nessun risultato");
+      const list = el("ddList");
+      list.innerHTML = "";
 
-      setHint("Ricerca autore/copertina…", "warn");
+      if(!items.length){
+        const div = document.createElement("div");
+        div.className = "ddItem";
+        div.innerHTML = `<div class="ddMain"><div class="ddTitle">Nessun match</div><div class="ddMeta">Continua a scrivere…</div></div>`;
+        list.appendChild(div);
+      } else {
+        items.forEach((it, idx) => {
+          const row = document.createElement("div");
+          row.className = "ddItem";
+          row.dataset.idx = String(idx);
 
-      // Nota: endpoint pubblico
-      const url = "https://openlibrary.org/search.json?title=" + encodeURIComponent(clean) + "&limit=5";
-      const res = await fetch(url);
-      if(!res.ok) throw new Error("Lookup fallito");
-      const data = await res.json();
-      const doc = (data && data.docs && data.docs.length) ? data.docs[0] : null;
-      if(!doc){
-        setHint("Nessun match trovato su Open Library.", "warn");
-        return null;
+          const c = document.createElement("div");
+          c.className = "ddCover";
+          c.style.backgroundImage = it.coverUrl ? `url("${it.coverUrl}")` : "none";
+          c.style.backgroundColor = it.coverUrl ? "transparent" : "rgba(255,255,255,.06)";
+
+          const main = document.createElement("div");
+          main.className = "ddMain";
+
+          const t = document.createElement("div");
+          t.className = "ddTitle";
+          t.textContent = it.title || "(senza titolo)";
+
+          const m = document.createElement("div");
+          m.className = "ddMeta";
+          const parts = [];
+          if(it.author) parts.push(it.author);
+          if(it.firstPublishYear) parts.push(String(it.firstPublishYear));
+          if(it.editionCount) parts.push(it.editionCount + " edizioni");
+          m.textContent = parts.join(" • ") || "—";
+
+          main.appendChild(t);
+          main.appendChild(m);
+
+          row.appendChild(c);
+          row.appendChild(main);
+
+          row.addEventListener("mousedown", (e) => {
+            // mousedown (non click) per non perdere focus prima della selezione
+            e.preventDefault();
+            selectSuggest(idx);
+          });
+
+          list.appendChild(row);
+        });
       }
 
-      const author = (doc.author_name && doc.author_name.length) ? doc.author_name[0] : "";
-      const olid = doc.key || "";               // es. "/works/OLxxxxW"
-      const coverId = doc.cover_i || null;      // numero
-      const coverUrl = coverId ? ("https://covers.openlibrary.org/b/id/" + coverId + "-L.jpg") : "";
-
-      setHint("Autore/copertina trovati (Open Library).", "ok");
-      return { author, coverUrl, olid };
+      el("suggestBox").classList.remove("hidden");
+      paintSuggestActive();
     }
 
-    const onTitleInput = debounce(async () => {
-      if(state.editingId) return; // in modifica non autocompilo per non sovrascrivere
-      const title = el("title").value.trim();
-      const author = el("author").value.trim();
-      if(author) return; // se l'utente ha già scritto, non tocco
+    function paintSuggestActive(){
+      const list = el("ddList");
+      const children = Array.from(list.children);
+      children.forEach((node, i) => {
+        node.style.background = (i === state.suggestIndex) ? "rgba(122,162,247,.12)" : "transparent";
+      });
+    }
 
+    function closeSuggest(){
+      state.suggestOpen = false;
+      state.suggestItems = [];
+      state.suggestIndex = -1;
+      el("suggestBox").classList.add("hidden");
+      el("ddList").innerHTML = "";
+    }
+
+    function selectSuggest(idx){
+      const it = state.suggestItems[idx];
+      if(!it) return;
+
+      // applico titolo+autore e salvo selezione per copertina/link
+      el("title").value = it.title || "";
+      el("author").value = it.author || "";
+      state.selectedSuggestion = it;
+
+      closeSuggest();
+      setHint("Selezionato da Open Library. Puoi continuare a scrivere o salvare.", "ok");
+    }
+
+    async function fetchSuggestions(query){
+      if(!state.lookupEnabled) return;
+      if(state.editingId) return; // durante modifica, non faccio richieste automatiche
+      const q = (query || "").trim();
+      if(q.length < 2){
+        closeSuggest();
+        return;
+      }
+
+      const reqId = ++state.suggestReqId;
+      setHint("Ricerca titoli/autori…", "warn");
+
+      const url = "https://openlibrary.org/search.json?title=" + encodeURIComponent(q) + "&limit=10";
+      let data;
       try{
-        const out = await openLibraryLookup(title);
-        if(out && out.author){
-          el("author").value = out.author;
-          // salvo in memoria temporanea per il prossimo "Salva"
-          state.pendingLookup = out;
-        }
-      }catch{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error("HTTP");
+        data = await res.json();
+      } catch {
+        if(reqId !== state.suggestReqId) return;
         setHint("Lookup non disponibile (rete o blocco).", "warn");
+        closeSuggest();
+        return;
       }
-    }, 550);
+      if(reqId !== state.suggestReqId) return;
 
-    el("title").addEventListener("input", onTitleInput);
+      const docs = (data && Array.isArray(data.docs)) ? data.docs : [];
+      const items = docs.slice(0, 10).map(d => {
+        const title = d.title ? String(d.title) : "";
+        const author = (d.author_name && d.author_name.length) ? String(d.author_name[0]) : "";
+        const coverUrl = coverFromId(d.cover_i || null);
+        const openLibraryKey = d.key ? String(d.key) : ""; // "/works/OL...W"
+        const firstPublishYear = d.first_publish_year || "";
+        const editionCount = d.edition_count || "";
 
-    // ---------- RENDER LISTA ----------
+        return { title, author, coverUrl, openLibraryKey, firstPublishYear, editionCount };
+      });
+
+      if(!items.length){
+        showSuggest([], "Nessun risultato • continua a scrivere");
+        setHint("Nessun match trovato. Continua a scrivere.", "warn");
+        return;
+      }
+
+      showSuggest(items, "Suggerimenti (Open Library)");
+      setHint("Suggerimenti pronti: usa ↑↓ e invio oppure clic.", "ok");
+    }
+
+    const onTitleType = debounce(() => fetchSuggestions(el("title").value), 250);
+    el("title").addEventListener("input", () => {
+      // se l’utente cambia titolo dopo una selezione, invalidiamo la selezione
+      state.selectedSuggestion = null;
+      onTitleType();
+    });
+
+    // tastiera: navigazione dropdown
+    el("title").addEventListener("keydown", (e) => {
+      if(!state.suggestOpen) return;
+
+      if(e.key === "ArrowDown"){
+        e.preventDefault();
+        if(state.suggestItems.length){
+          state.suggestIndex = Math.min(state.suggestIndex + 1, state.suggestItems.length - 1);
+          paintSuggestActive();
+        }
+      } else if(e.key === "ArrowUp"){
+        e.preventDefault();
+        if(state.suggestItems.length){
+          state.suggestIndex = Math.max(state.suggestIndex - 1, 0);
+          paintSuggestActive();
+        }
+      } else if(e.key === "Enter"){
+        // Se la tendina è aperta, Enter seleziona
+        if(state.suggestIndex >= 0){
+          e.preventDefault();
+          selectSuggest(state.suggestIndex);
+        }
+      } else if(e.key === "Escape"){
+        e.preventDefault();
+        closeSuggest();
+      }
+    });
+
+    // chiusura dropdown se clicchi fuori
+    document.addEventListener("mousedown", (e) => {
+      const box = el("suggestBox");
+      const wrap = el("title").parentElement; // fieldWrap
+      if(state.suggestOpen && !wrap.contains(e.target)){
+        closeSuggest();
+      }
+    });
+
+    // ----------------- RENDER LISTA -----------------
     function bookCard(book){
       const tags = (book.tags || []).filter(Boolean);
       const rating = book.rating ? `★ ${book.rating}/5` : "";
@@ -767,7 +976,7 @@
       }
     }
 
-    // ---------- RENDER STANZA ----------
+    // ----------------- RENDER STANZA -----------------
     function fallbackGradient(seed){
       const s = (seed || "x").toString();
       let h = 0;
@@ -806,7 +1015,6 @@
         if(book.author) btn.appendChild(a);
       }
       btn.appendChild(t);
-
       return btn;
     }
 
@@ -818,7 +1026,6 @@
 
       const cover = (book.coverUrl || "").trim();
       btn.style.backgroundImage = cover ? `url("${cover}")` : fallbackGradient(book.title + "|" + book.author);
-      btn.style.position = "relative";
 
       const info = document.createElement("div");
       info.className = "hbookInfo";
@@ -881,7 +1088,7 @@
       }
     }
 
-    // ---------- MODAL ----------
+    // ----------------- MODAL -----------------
     function openUrl(url){
       if(!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
@@ -913,9 +1120,8 @@
         closeBookModal();
       };
 
-      // Link (ricerche)
       const q = encodeURIComponent(`${book.title || ""} ${book.author || ""}`.trim());
-      const ol = book.openLibraryKey ? ("https://openlibrary.org" + book.openLibraryKey) : ("https://openlibrary.org/search?q=" + q);
+      const ol = book.openLibraryKey ? openLibraryWorkUrl(book.openLibraryKey) : ("https://openlibrary.org/search?q=" + q);
       const audible = "https://www.audible.it/search?keywords=" + q;
       const kindle = "https://www.amazon.it/s?k=" + q + "&i=digital-text";
 
@@ -936,7 +1142,6 @@
       if(e.key === "Escape" && !el("bookModal").classList.contains("hidden")) closeBookModal();
     });
 
-    // click delegato su stanza
     el("viewRoom").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-id]");
       if(!btn) return;
@@ -944,7 +1149,7 @@
       if(book) openBookModal(book);
     });
 
-    // ---------- VISTA ----------
+    // ----------------- VISTA -----------------
     function setView(v){
       state.view = v;
       saveView();
@@ -964,7 +1169,7 @@
       }
     }
 
-    // ---------- RENDER ----------
+    // ----------------- RENDER -----------------
     function render(){
       const items = getFilteredSorted();
       const counts = { "to-read":0, "reading":0, "read":0 };
@@ -980,7 +1185,7 @@
       el("toggleLookup").textContent = state.lookupEnabled ? "Lookup ON" : "Lookup OFF";
     }
 
-    // ---------- EVENTI FORM ----------
+    // ----------------- EVENTI FORM -----------------
     el("saveBtn").addEventListener("click", () => {
       const title = el("title").value.trim();
       const status = el("status").value;
@@ -991,15 +1196,18 @@
       const ratingRaw = el("rating").value;
       const rating = ratingRaw ? Number(ratingRaw) : null;
       const tags = parseTags(el("tags").value);
-
       const ts = nowIso();
 
-      // se c’è un lookup “pending” coerente con il titolo, attaccalo al libro
+      // Aggancio: se ho selezionato un suggerimento e il titolo coincide, salvo cover/link
       let coverUrl = "";
       let openLibraryKey = "";
-      if(state.pendingLookup && normalize(state.lastLookupTitle) === normalize(title)){
-        coverUrl = state.pendingLookup.coverUrl || "";
-        openLibraryKey = state.pendingLookup.olid || "";
+
+      if(state.selectedSuggestion){
+        // “coerenza”: se l’utente ha cambiato titolo dopo selezione, scarto
+        if(normalize(state.selectedSuggestion.title) === normalize(title)){
+          coverUrl = state.selectedSuggestion.coverUrl || "";
+          openLibraryKey = state.selectedSuggestion.openLibraryKey || "";
+        }
       }
 
       if(state.editingId){
@@ -1008,7 +1216,6 @@
         upsertBook({
           ...existing,
           title, author, status, rating, tags,
-          // non sovrascrivo coverUrl esistente se già c’è
           coverUrl: existing.coverUrl || coverUrl,
           openLibraryKey: existing.openLibraryKey || openLibraryKey,
           updatedAt: ts
@@ -1023,7 +1230,6 @@
         });
       }
 
-      state.pendingLookup = null;
       clearForm();
     });
 
@@ -1032,20 +1238,22 @@
     el("search").addEventListener("input", (e) => { state.search = e.target.value; render(); });
     el("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
 
-    // Toggle vista
     el("btnList").addEventListener("click", () => setView("list"));
     el("btnRoom").addEventListener("click", () => setView("room"));
 
-    // Lookup toggle
     el("toggleLookup").addEventListener("click", () => {
       state.lookupEnabled = !state.lookupEnabled;
       saveLookup();
-      if(!state.lookupEnabled) setHint("Lookup disattivato.", "warn");
-      else setHint("Lookup attivo (Open Library).", "ok");
+      if(!state.lookupEnabled){
+        setHint("Lookup disattivato.", "warn");
+        closeSuggest();
+      } else {
+        setHint("Lookup attivo: digita un titolo e scegli dalla tendina.", "ok");
+        fetchSuggestions(el("title").value);
+      }
       render();
     });
 
-    // Export/Import/Wipe
     el("exportBtn").addEventListener("click", () => {
       el("exportText").value = JSON.stringify(state.books, null, 2);
       el("exportArea").classList.remove("hidden");
@@ -1097,7 +1305,7 @@
     load();
     setView(state.view);
     render();
-    setHint(state.lookupEnabled ? "Lookup attivo (Open Library). Scrivi un titolo e lascia Autore vuoto." : "Lookup disattivato.", state.lookupEnabled ? "ok" : "warn");
+    setHint(state.lookupEnabled ? "Lookup attivo: digita un titolo e scegli dalla tendina." : "Lookup disattivato.", state.lookupEnabled ? "ok" : "warn");
   </script>
 </body>
 </html>
